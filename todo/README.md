@@ -5,14 +5,18 @@ One file per open item. Each states why it matters — citing the paper
 never by line number, since reformatting invalidates line numbers — and what "done" looks
 like.
 
-This folder starts with the findings from the review of the initial `delayed-sampling` port
-(revision `vykonwvq`). It is **not yet the full backlog**: the systematic paper review and the
-apple-model feature gaps are still to be added.
+This folder started with the findings from the review of the initial `delayed-sampling` port.
+The fix pass that followed closed most of them: the graph invariants are now checked by
+`ensureConsistency` and exercised by the test suite, the forest predicate is derived from
+`getParents` instead of matching two distribution shapes, the dead graph helpers are wired
+in, and `Value`'s arithmetic and substitution are total and free of `unsafeCoerce`. What is
+left of those findings is below, in the first two files.
+
+It is **not yet the full backlog**: the systematic paper review and the apple-model feature
+gaps are still to be added.
 
 | Item | Slated for |
 |---|---|
-| [Graph invariants are never checked](invariants-unchecked.md) | partly rev 3, rest later |
-| [`atMostOneParent` misses expression parents](at-most-one-parent-misses-expression-parents.md) | rev 3 |
-| [Dead code in the graph-mutation helpers](dead-code-in-graph-helpers.md) | rev 3 |
-| [`Num (Value a)` is partial *and* order-dependent](value-num-is-partial-and-order-dependent.md) | rev 3 (totality), later (affine form) |
+| [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) | with the child index |
+| [`Value` has no affine normal form](value-affine-normal-form.md) | before multi-parent support |
 | [`pdf`'s catch-all hides unimplemented distributions](pdf-catch-all-hides-unimplemented.md) | later |

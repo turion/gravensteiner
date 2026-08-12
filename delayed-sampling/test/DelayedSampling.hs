@@ -2,7 +2,7 @@
 
 module DelayedSampling where
 
-import Control.Monad (forM, forM_)
+import Control.Monad (forM, forM_, unless, void)
 import Control.Monad.Bayes.Class
 import Control.Monad.Bayes.DelayedSampling
 import Control.Monad.Bayes.Sampler.Strict
@@ -17,6 +17,12 @@ shouldBeRight = either (\e -> assertFailure $ ("Expected Right, got Left (" <> (
 
 shouldBeLeft :: (Show b) => Either a b -> IO a
 shouldBeLeft = either pure $ \b -> assertFailure $ ("Expected Left, got Right (" <> (show b ++ ")"))
+
+{- | Check the graph invariants after the action, so that every test below
+  doubles as a test of 'ensureConsistency'.
+-}
+checked :: (Monad m) => DelayedSamplingT m a -> DelayedSamplingT m a
+checked action = action <* ensureConsistency
 
 test :: SpecWith ()
 test = describe "DelayedSampling" $ do
@@ -61,16 +67,17 @@ test = describe "DelayedSampling" $ do
 
   describe "observe" $ do
     it "adds a factor of the PDF when observing" $ do
-      (Right (), p) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
+      (result, p) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
         a <- normalDS (Const 0) (Const 1)
-        observe a 1
+        checked $ observe a 1
+      shouldBeRight result
       p `shouldBe` normalPdf 0 1 1
 
     it "sample reproduces observed value" $ do
       (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
         a <- normalDS (Const 0) (Const 1)
-        observe a 1
-        sample a
+        checked $ observe a 1
+        checked $ sample a
       a <- shouldBeRight result
       a `shouldBe` 1
 
@@ -79,16 +86,66 @@ test = describe "DelayedSampling" $ do
         a <- normalDS (Const 0) (Const 1)
         observe a 1
         observe a 2
-      AlreadyRealized ResolvedVariable {variable} <- error_ <$> shouldBeLeft result
-      getVariable variable `shouldBe` 0
+      err <- error_ <$> shouldBeLeft result
+      case err of
+        AlreadyRealized ResolvedVariable {variable} -> getVariable variable `shouldBe` 0
+        _ -> assertFailure $ ("Expected AlreadyRealized, got " <> show err)
 
     it "can observe variables in a hierarchical model and weight correctly" $ do
-      (_, p) <- sampleIO $ runWeightedT $ runDelayedSamplingT $ do
+      (result, p) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
         a <- normalDS (Const 0) (Const 2)
         b <- normalDS (Var a) (Const 1)
-        observe b 1
-        sample a
+        checked $ observe b 1
+        checked $ sample a
+      -- The original test discarded this result, so it could not tell a failing
+      -- program from a succeeding one; only the weight was checked.
+      void $ shouldBeRight result
       p `shouldBe` normalPdf 0 (sqrt 3) 1
+
+  describe "ensureConsistency" $ do
+    it "detects a node with two parents" $ do
+      (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
+        a <- normalDS (Const 0) (Const 1)
+        b <- normalDS (Const 0) (Const 1)
+        -- Two parents inside one affine expression, as in the Kalman filter.
+        -- This is the shape the check used to wave through.
+        _ <- normalDS (Var a + Const 2 * Var b) (Const 1)
+        ensureConsistency
+      err <- error_ <$> shouldBeLeft result
+      case err of
+        MultipleParents i parents -> do
+          i `shouldBe` 2
+          fmap (\SomeVariable {getSomeVariable} -> getVariable getSomeVariable) parents `shouldBe` [0, 1]
+        _ -> assertFailure $ ("Expected MultipleParents, got " <> show err)
+
+    it "detects a marginalized node whose parent is not marginalized (Invariant 1)" $ do
+      (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
+        a <- normalDS (Const 0) (Const 1)
+        b <- normalDS (Var a) (Const 1)
+        c <- normalDS (Var b) (Const 1)
+        -- Marginalizing c while b is still only initialized skips a step.
+        setMarginalized c $ Normal (Const 0) (Const 3)
+        ensureConsistency
+      err <- error_ <$> shouldBeLeft result
+      err `shouldBe` ParentNotMarginalised 2 1
+
+    it "detects two marginalized children of the same node (Invariant 2)" $ do
+      (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
+        a <- normalDS (Const 0) (Const 1)
+        b <- normalDS (Var a) (Const 1)
+        c <- normalDS (Var a) (Const 1)
+        setMarginalized b $ Normal (Const 0) (Const 2)
+        setMarginalized c $ Normal (Const 0) (Const 2)
+        ensureConsistency
+      err <- error_ <$> shouldBeLeft result
+      err `shouldBe` MultipleMarginalizedChildren 0 [1, 2]
+
+    it "accepts a node that refers to the same parent twice" $ do
+      result <- (shouldBeRight =<<) $ sampleIO $ evalDelayedSamplingT $ do
+        a <- normalDS (Const 0) (Const 1)
+        _ <- normalDS (Var a) (Var a)
+        ensureConsistency
+      result `shouldBe` ()
 
   describe "examples" $ do
     describe "table 1" $ do
@@ -97,12 +154,16 @@ test = describe "DelayedSampling" $ do
           x <- normalDS 0 1
           y <- normalDS (Var x) 1
           z <- normalDS (Var y) 1
-          observe z 3
+          checked $ observe z 3
           -- Have to call value for x since it isn't terminal
-          (,) <$> value x <*> sample y
+          checked $ (,) <$> value x <*> sample y
         (x, y) <- shouldBeRight result
-        -- FIXME what to test on x and y? Maybe do a few debugGraph and look at them
-        pure ()
+        -- The weight is the evidence, i.e. the marginal of z: N(0, 1 + 1 + 1).
+        p `shouldBe` normalPdf 0 (sqrt 3) 3
+        -- FIXME The posteriors of x and y deserve a statistical test of their own;
+        -- forcing them at least catches a NaN. See todo/.
+        x `shouldSatisfy` (not . isNaN)
+        y `shouldSatisfy` (not . isNaN)
     it "reproduces Figure 2 from the paper" $ do
       (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
         a <- normalDS (Const 0) (Const 1)
@@ -111,9 +172,9 @@ test = describe "DelayedSampling" $ do
         d <- normalDS (Var b) (Const 1)
         _ <- normalDS (Var c) (Const 1)
         _ <- normalDS (Var c) (Const 1)
-        graft c
+        checked $ graft c
         graph1 <- debugGraph
-        graft d
+        checked $ graft d
         graph2 <- debugGraph
         pure (graph1, graph2)
       (graph1, graph2) <- shouldBeRight result
@@ -151,10 +212,12 @@ test = describe "DelayedSampling" $ do
           posVar <- normalDS (Const 0) (Const 1)
           forM_ xs $ \x -> do
             xVar <- normalDS (Var posVar) (Const 1)
-            observe xVar x
-            True <- deallocateRealized xVar
-            pure ()
-          sample posVar
+            checked $ observe xVar x
+            -- Not just cleanup: without it the graph grows with every
+            -- observation, and lookupChildren scans all of it.
+            deallocated <- deallocateRealized xVar
+            unless deallocated $ fail "The observed variable should be realized"
+          checked $ sample posVar
         pure $ (,pos) <$> result
       result `shouldSatisfy` (\(inferred, sampled) -> abs (inferred - sampled) < 5 / sqrt 10000)
 
@@ -172,9 +235,9 @@ test = describe "DelayedSampling" $ do
             -- let mu = Var posVar + Const t * Var velVar
             let mu = Const t * Var velVar
             xVar <- normalDS mu 1
-            observe xVar x
-            True <- deallocateRealized xVar
-            pure ()
-          sample velVar
+            checked $ observe xVar x
+            deallocated <- deallocateRealized xVar
+            unless deallocated $ fail "The observed variable should be realized"
+          checked $ sample velVar
         pure $ (,vel) <$> result
       result `shouldSatisfy` \(inferred, sampled) -> abs (inferred - sampled) < 5 / sqrt 100000

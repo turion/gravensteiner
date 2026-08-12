@@ -25,10 +25,10 @@ import Control.Monad.Trans.State.Strict
 import Data.Functor.Compose (Compose (..))
 import Data.IntMap.Strict (IntMap)
 import Data.IntMap.Strict qualified as IntMap
-import Data.Maybe (fromMaybe)
+import Data.List (nub)
+import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Typeable (Typeable, cast)
 import Statistics.Function (square)
-import Unsafe.Coerce (unsafeCoerce)
 import Prelude hiding (unzip)
 
 newtype Variable a = Variable {getVariable :: Int}
@@ -45,40 +45,87 @@ instance Eq SomeVariable where
 -- I probably need const here still in order to deal with a num instance for value
 -- Would be nice to have Functor & Applicative, but that is hard because we also need typeable
 -- FIXME It would be great if I could get some kind of HOAS going here so I don't need to look up and rename variables all the time
+
+{- | An affine expression in the variables of the graph.
+
+  'Sum' and 'Product' are deliberately closed under the affine operations
+  (sums of expressions, and scaling by a constant), which is what makes the
+  'Num' instance and 'subst' total. They are not normalized, though: the same
+  expression has many spellings, and a normal form (a linear combination of
+  variables plus an offset) is still on the backlog.
+-}
 data Value a where
   Var :: (Typeable a, Eq a, Show a) => Variable a -> Value a
   Const :: a -> Value a
   -- FIXME not sure whether I should put numerical expressions here or in the distributions
-  Sum :: (Typeable a, Eq a, Show a) => Variable a -> Value a -> Value a
-  Product :: (Typeable a, Eq a, Show a, Num a) => a -> Variable a -> Value a
+  Sum :: (Typeable a, Eq a, Show a, Num a) => Value a -> Value a -> Value a
+  Product :: (Typeable a, Eq a, Show a, Num a) => a -> Value a -> Value a
 
--- FIXME we could easily implement negate etc. on constants, and fail on variables for now
-instance (Num a) => Num (Value a) where
-  Var v + value = Sum v value
-  _ + _ = error "Value.+: Not implemented"
+{- | Sum of two expressions, folding constants.
+
+  Folding matters beyond tidiness: once every variable of an expression has
+  been substituted, the result must be a 'Const' again, or
+  'isTerminalDistribution' would not recognise it as a marginal.
+-}
+plus :: (Typeable a, Eq a, Show a, Num a) => Value a -> Value a -> Value a
+plus (Const a) (Const b) = Const $ a + b
+plus (Const a) val | a == 0 = val
+plus val (Const b) | b == 0 = val
+plus val1 val2 = Sum val1 val2
+
+-- | Scale an expression by a constant, folding constants.
+scale :: (Typeable a, Eq a, Show a, Num a) => a -> Value a -> Value a
+scale a (Const b) = Const $ a * b
+scale a val
+  | a == 0 = Const 0 -- Also drops the parent edge, which is correct: the value no longer depends on the variable.
+  | a == 1 = val
+scale a (Product b val) = scale (a * b) val
+scale a val = Product a val
+
+{- | Affine expressions are closed under '+', '-' and multiplication by a
+  constant. The remaining operations are not affine, so they are only defined
+  on constants; see @todo/@ for making them unrepresentable instead.
+-}
+instance (Typeable a, Eq a, Show a, Num a) => Num (Value a) where
+  (+) = plus
+  Const a * val = scale a val
+  val * Const a = scale a val
+  val1 * val2 = error $ ("Value.*: not an affine expression: " <> (show val1 ++ " * " ++ show val2))
   fromInteger = Const . fromInteger
-  Const a * Var v = Product a v
-  _ * _ = error "Value.*: Not implemented"
-  negate = error "Value.negate: Not implemented"
-  abs = error "Value.abs: Not implemented"
-  signum = error "Value.signum: Not implemented"
+  negate = scale (-1)
+  abs = onConst "abs" abs
+  signum = onConst "signum" signum
 
-instance (Fractional a) => Fractional (Value a) where
+instance (Typeable a, Eq a, Show a, Fractional a) => Fractional (Value a) where
   fromRational = Const . fromRational
-  (/) = error "Value./: Not implemented"
+  val / Const a = scale (recip a) val
+  val1 / val2 = error $ ("Value./: not an affine expression: " <> (show val1 ++ " / " ++ show val2))
+
+-- | Lift a function that is only defined on constants, naming itself in the error message.
+onConst :: (Show a) => String -> (a -> a) -> Value a -> Value a
+onConst _ f (Const a) = Const $ f a
+onConst name _ val = error $ ("Value." <> (name ++ ": only defined on constants, not on " ++ show val))
 
 class Subst f where
-  subst :: Variable a -> a -> f b -> f b
+  subst :: (Typeable a) => Variable a -> a -> f b -> f b
+
+{- | The witness that a substitution applies to a variable: matching index /and/
+  matching type.
+
+  Returns 'Nothing' for a different variable. A matching index with a
+  mismatching type cannot occur in a well-formed graph — 'onNode' reports that
+  situation as 'TypesInconsistent' — and is likewise treated as "does not apply".
+-}
+substVar :: (Typeable a, Typeable b) => Variable a -> a -> Variable b -> Maybe b
+substVar (Variable i) a (Variable i')
+  | i == i' = cast a
+  | otherwise = Nothing
 
 instance Subst Value where
-  -- FIXME I don't know better than unsafeCoerce here. Is there no type safe way to do this?
-  subst (Variable i) a (Var (Variable i')) | i == i' = Const $ unsafeCoerce a
-  subst _ _ value@(Var _) = value
-  subst _ _ value@(Const _) = value
-  -- FIXME Need to implement more Num patterns for this to work
-  subst (Variable _) _ (Sum (Variable _) _) = error "Not yet implemented"
-  subst (Variable i) a (Product a' (Variable i')) | i == i' = unsafeCoerce $ Const $ unsafeCoerce a * a'
-  subst _ _ value@(Product _ _) = value
+  subst var a val@(Var var') = maybe val Const $ substVar var a var'
+  subst _ _ val@(Const _) = val
+  subst var a (Sum val1 val2) = plus (subst var a val1) (subst var a val2)
+  subst var a (Product b val) = scale b $ subst var a val
 
 class GetParents f where
   getParents :: f a -> [SomeVariable]
@@ -87,8 +134,8 @@ instance GetParents Value where
   getParents (Var var) = [SomeVariable var]
   getParents (Const _) = []
   -- FIXME I don't know whether this is the right approach. Should expressions have
-  getParents (Sum var val) = SomeVariable var : getParents val
-  getParents (Product _ var) = [SomeVariable var]
+  getParents (Sum val1 val2) = getParents val1 <> getParents val2
+  getParents (Product _ val) = getParents val
 
 deriving instance (Show a) => Show (Value a)
 
@@ -173,7 +220,7 @@ isTerminalDistribution _ = False
 
 data SomeNode = forall a. (Eq a, Show a, Typeable a) => SomeNode {getSomeNode :: Node a}
 
-substSome :: Variable a -> a -> SomeNode -> SomeNode
+substSome :: (Typeable a) => Variable a -> a -> SomeNode -> SomeNode
 substSome v a SomeNode {getSomeNode} = SomeNode $ subst v a getSomeNode
 
 getParentsSome :: SomeNode -> [SomeVariable]
@@ -202,16 +249,77 @@ empty = Graph mempty 0
 checkEveryNode :: (forall a. Node a -> Maybe b) -> Graph -> Maybe (Int, b)
 checkEveryNode f = asum . fmap (\(n, SomeNode {getSomeNode}) -> (n,) <$> f getSomeNode) . IntMap.toAscList . nodes
 
+{- | The graph must be a forest: every node has at most one parent.
+
+  Multiple parents would need supernodes, which are not implemented, so this
+  reports the offending node and its parents instead.
+-}
 atMostOneParent :: Graph -> Maybe (Int, [SomeVariable])
 atMostOneParent = checkEveryNode atMostOneParentNode
   where
     atMostOneParentNode :: Node a -> Maybe [SomeVariable]
     atMostOneParentNode = currentDistribution >=> atMostOneParentDistribution
 
+    -- Deduplicated, since several references to the same variable are still one
+    -- parent. Deriving this from 'getParents' rather than matching on
+    -- 'Distribution' constructors covers every expression shape, and every
+    -- distribution added later.
     atMostOneParentDistribution :: Distribution a -> Maybe [SomeVariable]
-    atMostOneParentDistribution (Normal (Var var1) (Var var2)) = Just [SomeVariable var1, SomeVariable var2]
-    atMostOneParentDistribution (Beta (Var var1) (Var var2)) = Just [SomeVariable var1, SomeVariable var2]
-    atMostOneParentDistribution _ = Nothing
+    atMostOneParentDistribution dist = case nub $ getParents dist of
+      parents@(_ : _ : _) -> Just parents
+      _ -> Nothing
+
+-- | Whether the node is marginalized, i.e. in state /M/ in the paper's terms.
+isMarginalized :: SomeNode -> Bool
+isMarginalized SomeNode {getSomeNode = Initialized {marginalDistribution = Just _}} = True
+isMarginalized _ = False
+
+-- | The (deduplicated) indices of the parents of a node.
+parentIndices :: SomeNode -> [Int]
+parentIndices = nub . fmap (\SomeVariable {getSomeVariable} -> getVariable getSomeVariable) . getParentsSome
+
+{- | Invariant 1 of the paper: if a node is in /M/, then so is its parent.
+  Returns the offending node and parent.
+
+  A realized parent satisfies the invariant: its value has been substituted
+  into the child, so there is nothing left to marginalize over. A parent that
+  is absent from the graph has been deallocated, which substitutes likewise.
+-}
+parentsMarginalized :: Graph -> Maybe (Int, Int)
+parentsMarginalized Graph {nodes} =
+  listToMaybe
+    [ (i, parent)
+    | (i, node) <- IntMap.toAscList nodes
+    , isMarginalized node
+    , parent <- parentIndices node
+    , maybe False isInitializedOnly $ IntMap.lookup parent nodes
+    ]
+  where
+    isInitializedOnly someNode = not (isMarginalized someNode) && not (isRealized someNode)
+
+-- | Whether the node is realized, i.e. in state /R/ in the paper's terms.
+isRealized :: SomeNode -> Bool
+isRealized SomeNode {getSomeNode = Realized _} = True
+isRealized _ = False
+
+{- | Invariant 2 of the paper: a node has at most one child in /M/.
+  Returns the offending node and its marginalized children.
+
+  Realized nodes are exempt. The invariant is what keeps the marginalized nodes
+  a path, so that conditioning only ever travels in one direction; once a value
+  is known, its children are independent roots and any number of them may be
+  marginalized. 'realize' does exactly that to all children of the node it
+  realizes.
+-}
+marginalizedChildren :: Graph -> Maybe (Int, [Int])
+marginalizedChildren Graph {nodes} =
+  listToMaybe
+    [ (i, children)
+    | (i, node) <- IntMap.toAscList nodes
+    , not $ isRealized node
+    , let children = [child | (child, childNode) <- IntMap.toAscList nodes, isMarginalized childNode, i `elem` parentIndices childNode]
+    , length children > 1
+    ]
 
 data ResolvedVariable
   = forall a.
@@ -246,7 +354,10 @@ data Error
   | NotMarginal
   | HasMarginalizedChildren ResolvedVariable
   | MultipleParents Int [SomeVariable]
-  | ParentNotMarginalised Int Int -- FIXME need to implement check for that
+  | -- | Invariant 1: the node (first field) is marginalized, but its parent (second field) is not.
+    ParentNotMarginalised Int Int
+  | -- | Invariant 2: the node (first field) has more than one marginalized child.
+    MultipleMarginalizedChildren Int [Int]
   | IncorrectParent Int Int
   | NoParent ResolvedVariable
   | UnsupportedConditioning SomeDistribution SomeDistribution
@@ -285,11 +396,20 @@ maybeThrow = mapM_ throw
 except :: (Monad m) => Either Error a -> DelayedSamplingT m a
 except = either throw pure
 
--- FIXME use regularly, at least in tests
+{- | Check the three structural properties the algorithm relies on: the graph is
+  a forest, and the paper's Invariants 1 and 2.
+
+  Each check walks the whole graph, so this is not meant to be called from
+  library code on every operation; the test suite calls it after the graph
+  changes. Making it cheap enough for library code needs an explicit child
+  index in 'Graph'.
+-}
 ensureConsistency :: (Monad m) => DelayedSamplingT m ()
-ensureConsistency = do
+ensureConsistency = addTrace "ensureConsistency" $ do
   graph <- DelayedSamplingT $ lift get
   maybeThrow $ uncurry MultipleParents <$> atMostOneParent graph
+  maybeThrow $ uncurry ParentNotMarginalised <$> parentsMarginalized graph
+  maybeThrow $ uncurry MultipleMarginalizedChildren <$> marginalizedChildren graph
 
 addTrace :: (Functor m) => String -> DelayedSamplingT m a -> DelayedSamplingT m a
 addTrace msg = DelayedSamplingT . withExceptT (\errortrace@ErrorTrace {trace} -> errortrace {trace = msg : trace}) . getDelayedSamplingT
@@ -352,9 +472,21 @@ lookupChildren var = do
   nodes <- DelayedSamplingT $ lift $ gets nodes
   pure $ fmap (uncurry unsafeResolvedVariable) $ filter ((SomeVariable var `elem`) . getParentsSome . snd) $ IntMap.toAscList nodes
 
+{- | The initial and the marginal distribution of a marginalized node.
+
+  Every caller has just gone through 'lookupTerminal', which throws unless the
+  node is marginalized, so the error is unreachable — but spelling it out keeps
+  the structured 'Error' instead of degrading to a 'Fail' from an incomplete
+  pattern bind.
+-}
+requireMarginalized :: (Monad m) => Node a -> DelayedSamplingT m (Distribution a, Distribution a)
+requireMarginalized node = tryElse NotMarginal $ case node of
+  Initialized {initialDistribution, marginalDistribution = Just marginalDistribution} -> Just (initialDistribution, marginalDistribution)
+  _ -> Nothing
+
 realize :: (MonadDistribution m, Typeable a, Show a, Eq a) => Variable a -> a -> DelayedSamplingT m a
 realize var a = addTrace "realize" $ do
-  Initialized {initialDistribution, marginalDistribution = Just _} <- lookupTerminal var
+  (initialDistribution, _marginalDistribution) <- requireMarginalized =<< lookupTerminal var
   parentMaybe <- getParent var
   forM_ parentMaybe $ \SomeVariable {getSomeVariable = parentVar} -> do
     parent <- lookupVar parentVar
@@ -380,13 +512,12 @@ marginalize var = addTrace "marginalize" $ do
   parent <- lookupVar parentVar
   case node of
     Initialized {initialDistribution} -> do
-      marginalDistribution <-
-        Just <$> case parent of
-          Realized b -> pure $ subst parentVar b initialDistribution
-          Initialized {marginalDistribution = Just parentDistribution} -> do
-            marginalizeDistribution initialDistribution parentDistribution
-          Initialized {marginalDistribution = Nothing} -> throw NotMarginal
-      onNode (put node {marginalDistribution}) var
+      marginalDistribution <- case parent of
+        Realized b -> pure $ subst parentVar b initialDistribution
+        Initialized {marginalDistribution = Just parentDistribution} -> do
+          marginalizeDistribution initialDistribution parentDistribution
+        Initialized {marginalDistribution = Nothing} -> throw NotMarginal
+      setMarginalized var marginalDistribution
     Realized _ -> throw . AlreadyRealized =<< resolve var
 
 -- FIXME I don't check here anymore whether the var is the right one. Should I?
@@ -398,7 +529,7 @@ marginalizeDistribution ::
   Distribution b ->
   DelayedSamplingT m (Distribution a)
 marginalizeDistribution (Normal (Var _) (Const variance)) (Normal (Const parentMean) (Const parentVariance)) = pure $ Normal (Const parentMean) (Const $ variance + parentVariance)
-marginalizeDistribution (Normal (Product c _var) (Const variance)) (Normal (Const parentMean) (Const parentVariance)) = pure $ Normal (Const $ c * parentMean) (Const $ variance + square c * parentVariance)
+marginalizeDistribution (Normal (Product c (Var _var)) (Const variance)) (Normal (Const parentMean) (Const parentVariance)) = pure $ Normal (Const $ c * parentMean) (Const $ variance + square c * parentVariance)
 marginalizeDistribution childDist parentDist = throw $ UnsupportedConditioning (SomeDistribution childDist) (SomeDistribution parentDist)
 
 conditionDist :: (Monad m, Typeable b, Typeable a) => b -> Distribution b -> Variable a -> Distribution a -> DelayedSamplingT m (Distribution a)
@@ -409,7 +540,7 @@ conditionDist b (Normal (Var parentVar') (Const variance)) parentVar (Normal (Co
           newMean = (b / variance + parentMean / parentVariance) / precision
        in pure $ Normal (Const newMean) (Const $ 1 / precision)
     else throw $ IncorrectParent (getVariable parentVar) (getVariable parentVar')
-conditionDist b (Normal (Product c parentVar') (Const variance)) parentVar (Normal (Const parentMean) (Const parentVariance)) =
+conditionDist b (Normal (Product c (Var parentVar')) (Const variance)) parentVar (Normal (Const parentMean) (Const parentVariance)) =
   if parentVar == parentVar'
     then
       if c == 0
@@ -433,10 +564,9 @@ sample var = addTrace "sample" $ do
     Realized a -> pure a
     _ -> do
       -- FIXME It's a bit inefficient to lookup twice
-      Initialized {marginalDistribution = Just marginalDistribution} <- lookupTerminal var
+      (_initialDistribution, marginalDistribution) <- requireMarginalized =<< lookupTerminal var
       a <- sampleMarginal marginalDistribution
       realize var a
-      pure a
 
 sampleMarginal :: (MonadDistribution m) => Distribution a -> DelayedSamplingT m a
 sampleMarginal =
@@ -481,8 +611,8 @@ normalDS mean variance = initialize $ Normal mean variance
 observe :: (MonadMeasure m, Typeable a, Show a, Eq a) => Variable a -> a -> DelayedSamplingT m ()
 observe variable a = addTrace "observe" do
   graft variable
-  Initialized {marginalDistribution = Just marginalDistribution} <- lookupTerminal variable
-  realize variable a
+  (_initialDistribution, marginalDistribution) <- requireMarginalized =<< lookupTerminal variable
+  void $ realize variable a
   p <- pdf marginalDistribution a
   lift $ score p
 
@@ -516,12 +646,13 @@ prune var = addTrace "prune" do
   void $ sample var
 
 -- FIXME this is just a step of marginalizing and might have a better name in the paper
--- FIXME unsafe, doesn't check whether already realized
+
+-- | Record the marginal distribution of a node, which must not be realized yet.
 setMarginalized :: (Monad m, Typeable a, Show a, Eq a) => Variable a -> Distribution a -> DelayedSamplingT m ()
 setMarginalized variable marginalDistribution = flip onNode variable $ do
   node <- get
   case node of
-    Realized _ -> error "Already realized" -- FIXME should really have a local monad with error
+    Realized _ -> lift $ Left $ AlreadyRealized ResolvedVariable {variable, node}
     initialized@Initialized {} -> put initialized {marginalDistribution = Just marginalDistribution}
 
 -- FIXME this should be linear in the variable
