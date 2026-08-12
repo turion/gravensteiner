@@ -1,0 +1,31 @@
+cabal-version: 3.0
+name: gravensteiner
+version: 0.1.0.0
+synopsis: Bayesian identification of apple cultivars
+description:
+  A Bayesian model that identifies an apple cultivar from observed
+  properties such as its colour proportions.
+
+license: MIT
+license-file: LICENSE
+author: Manuel Bärenz
+maintainer: programming@manuelbaerenz.de
+build-type: Simple
+extra-doc-files: CHANGELOG.md
+
+common warnings
+  ghc-options: -Wall
+
+executable gravensteiner
+  import: warnings
+  main-is: Main.hs
+  build-depends:
+    base >=4.18 && <4.22,
+    containers,
+    log-domain,
+    math-functions ^>=0.3,
+    monad-bayes ^>=1.3,
+    text,
+
+  hs-source-dirs: app
+  default-language: GHC2021

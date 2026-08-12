@@ -1,0 +1,5 @@
+-- One entry per package directory. Globs (*/*.cabal) would be nicer, but
+-- haskell-flake's cabal.project parser cannot expand them, and it needs this
+-- file to auto-discover the local packages.
+packages:
+  ./gravensteiner

@@ -1,4 +1,4 @@
-# Revision history for apfelbayes
+# Revision history for gravensteiner
 
 ## 0.1.0.0 -- YYYY-mm-dd
 
