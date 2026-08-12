@@ -3,3 +3,4 @@
 -- file to auto-discover the local packages.
 packages:
   ./gravensteiner
+  ./delayed-sampling

@@ -1,0 +1,55 @@
+cabal-version: 3.0
+name: delayed-sampling
+version: 0.1.0.0
+synopsis: Delayed sampling for monad-bayes
+description:
+  An implementation of delayed sampling (Murray, Lundén, Kudlicka, Broman &
+  Schön, <https://arxiv.org/abs/1708.07787>) on top of monad-bayes: a graph of
+  analytically tractable relationships is maintained alongside the running
+  probabilistic program, so that random variables are conditioned on as many
+  observations as possible and only sampled once the program forces a value.
+
+  Ported from the @dev_delayed_sampling@ branch of
+  <https://github.com/turion/monad-bayes>.
+
+license: MIT
+license-file: LICENSE
+author: Manuel Bärenz
+maintainer: programming@manuelbaerenz.de
+build-type: Simple
+extra-doc-files: CHANGELOG.md
+
+common opts
+  -- Deliberately no -Werror: the warnings on the ported code are real
+  -- findings, tracked in todo/.
+  ghc-options: -Wall
+  default-language: GHC2021
+  default-extensions:
+    BlockArguments
+    LambdaCase
+    TupleSections
+
+library
+  import: opts
+  exposed-modules: Control.Monad.Bayes.DelayedSampling
+  hs-source-dirs: src
+  build-depends:
+    base >=4.18 && <4.22,
+    containers >=0.6 && <0.9,
+    monad-bayes ^>=1.3,
+    statistics >=0.16 && <0.17,
+    transformers >=0.5 && <0.7,
+
+test-suite delayed-sampling-test
+  import: opts
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules: DelayedSampling
+  hs-source-dirs: test
+  build-depends:
+    HUnit,
+    base,
+    containers,
+    delayed-sampling,
+    hspec,
+    monad-bayes,
