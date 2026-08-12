@@ -1,4 +1,4 @@
-# `Value` has no affine normal form, and no way to reject non-affine expressions
+# `Value` has no affine normal form
 
 ## Why it matters
 
@@ -6,25 +6,9 @@ Affine transformation is one of the paper's two core ingredients (the other bein
 conjugate priors), and `Value` is where it lives. The fix pass on the port made `Sum` and
 `Product` closed under the affine operations, gave them the constant-folding smart
 constructors `plus` and `scale`, made `Num`/`Fractional`/`subst` total on the affine
-subset, and removed the `unsafeCoerce` uses. Two things it did not fix.
-
-### 1. Non-affine operations are still runtime errors
-
-`Num` forces `(*)`, `abs` and `signum` to exist, and `Fractional` forces `(/)`. Only the
-affine cases can be honoured:
-
-- `val1 * val2` where neither side is a `Const` is genuinely not affine,
-- `abs` and `signum` are only defined on constants,
-- `val1 / val2` needs a constant divisor.
-
-Each of those now `error`s with a message naming the expression, which is a diagnosis
-rather than a fix. Making them unrepresentable means giving up the `Num` instance in
-favour of explicit combinators, or indexing `Value` by whether it is constant so that
-`(*)` can demand a constant operand. The trade-off is readability: `Num` is what lets a
-model be written as `Var pos + Const t * Var vel`, exactly as the paper's examples spell
-it.
-
-### 2. No normal form, so conditioning matches spellings rather than structure
+subset, and removed the `unsafeCoerce` uses. It left the representation unnormalized, and
+it left the non-affine operations as runtime errors — the latter is
+[its own item](drop-num-for-affine-combinators.md).
 
 `Value` is an unnormalized expression tree: the same affine function has many spellings,
 and `Sum` can nest arbitrarily. `marginalizeDistribution` and `conditionDist` pattern-match
@@ -36,8 +20,9 @@ likewise recognises only fully folded constants.
 Replacing the two constructors with a normalized linear combination (a map from variable
 index to coefficient, plus an offset) would let those functions match on structure instead:
 one clause for "affine in the parent", with the coefficient read off the map. It also makes
-`getParents` exact by construction, and is a prerequisite for supernodes / multi-parent
-support and for the apple model's derived observations.
+`getParents` exact by construction, collapses `Var x + Var x` into `2 · x` so that repeated
+mentions of one parent become supportable, and is a prerequisite for supernodes /
+multi-parent support and for the apple model's derived observations.
 
 ## Also
 

@@ -18,5 +18,6 @@ gaps are still to be added.
 | Item | Slated for |
 |---|---|
 | [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) | with the child index |
+| [Drop `Num` for affine combinators](drop-num-for-affine-combinators.md) | soon — mechanical |
 | [`Value` has no affine normal form](value-affine-normal-form.md) | before multi-parent support |
 | [`pdf`'s catch-all hides unimplemented distributions](pdf-catch-all-hides-unimplemented.md) | later |
