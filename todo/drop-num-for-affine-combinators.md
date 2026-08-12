@@ -65,7 +65,8 @@ way. The index is worth having for a different reason, though: `Normal` currentl
 inference function (`marginalizeDistribution`, `conditionDist`, `pdf`, `sampleMarginal`)
 matches `Const variance` and would throw on it. That test only passes because it calls
 nothing but `ensureConsistency`. A constancy index turns that into a type error, and is the
-same machinery the type-level marginal/conditional distinction wants.
+same machinery
+[the marginal/conditional distinction](no-type-level-marginal-conditional.md) wants.
 
 ## Can `Var + Var` be implemented?
 
