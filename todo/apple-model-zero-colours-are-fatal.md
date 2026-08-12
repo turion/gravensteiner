@@ -1,0 +1,57 @@
+# Exact zeros in the colour proportions make every density NaN or infinite
+
+## Why it matters
+
+This is not a subtle statistical objection — it is why the executable dies. Every entry of
+`initialTraining` has exact zeros: `Observation "Jonathan" $ Apple {colours = Just $ noColours
+{red = 0.9, yellow = 0.1}}` leaves green and brown at 0, because `noColours` sets all four to 0
+and each observation overrides only the colours it mentions.
+
+**In the hyperprior update.** `updateDirichletColours` computes
+`greenPrior - Nonnegative (log $ getInterval green)` — with `green = 0` that is
+`-log 0.1 - (-Infinity)` = `+Infinity`. So after a single training apple, two of the four
+`DirichletColoursPrior` components are infinite.
+
+**In the hyperprior density.** `dirichletColoursLikelihood` then evaluates
+`Exp (negate $ sum ...)` over terms `greenPrior * greenDirichlet` = ∞, giving `Exp (-Infinity)` —
+i.e. 0 — in the numerator, and in the denominator `beta [finite, finite, ∞, ∞]`, which is
+`exp (sum (logGamma <$> as) - logGamma (sum as))` = `exp (∞ - ∞)` = `NaN`. The quotient is `NaN`.
+`sampleDirichletColours` hands those weights to `proper . fromWeightedList`, which is exactly the
+`System.Random.MWC.Distributions.categorical: bad weights!` the executable currently exits with.
+
+**In the likelihood, independently.** `coloursLikelihood` computes
+`getInterval green ** (getNonnegative greenDirichlet - 1)`, i.e. `0 ** (α - 1)`: `+Infinity` for
+α < 1 and `0` for α > 1. `sampleDirichletColours` proposes α ~ Gamma(1, 1), so α < 1 with
+probability 1 − e⁻¹ ≈ 0.63. Even with the hyperprior fixed, `identify` on the query apple
+(`red = 0.9, yellow = 0.1`) is singular.
+
+The underlying fact is structural, not numerical: **the Dirichlet's support is the *open* simplex.**
+A composition with a component of exactly 0 is not an unlikely observation to be handled with care,
+it is outside the support, and no amount of floating-point hygiene fixes that. Real apples really
+do have zero brown, so this is a modelling error, not a data-entry error.
+
+## Done when
+
+The fix depends on the choice made in
+[the reformulation options](apple-model-reformulation-options.md), and each option answers it
+differently:
+
+- **Counts / Dirichlet-multinomial (A):** nothing to do. *n*_green = 0 is an ordinary multinomial
+  outcome with positive probability. This is a strong argument for A.
+- **Logistic-normal (B):** alr(0) = −∞ too, so B needs the structural-zero layer — a per-colour
+  presence indicator (Bernoulli, Beta prior) with the logistic-normal over the present parts. B
+  does not get this for free.
+- **Status quo (C):** the observations must be regularised, e.g. *x* ← (1 − ε)·*x* + ε/4 with a
+  stated ε, or `Interval`'s smart constructor tightened to the open interval so a 0 cannot be
+  built. Regularisation is a fudge — it asserts every apple is slightly brown — but it is what the
+  current model needs in order to run at all.
+
+Independently of the choice:
+
+- A test that folding `initialTraining` through `updateModel` leaves every `DirichletColoursPrior`
+  component finite, and that every weight reaching `proper` is finite and non-negative. There is
+  no test suite for `gravensteiner` at all right now.
+- `dirichletColoursNormalizable` belongs in that test suite rather than in `main` — its own FIXME
+  says so. Note that `main` checks only `initialSortColours`: the condition that matters is that
+  Σₖ exp(−*v*ₖ/η) < 1 still holds *after every update*, and since an update raises both *v*ₖ and
+  η the condition is not monotone, so checking the initial value alone proves nothing.

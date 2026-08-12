@@ -1,0 +1,61 @@
+# A trained model cannot be extracted from the graph or loaded back into one
+
+## Why it matters
+
+The apple model is meant to be *trained once and used many times*: `Model = Map Name AppleSortPrior`
+is a serialisable summary of everything learned, `updateModel` folds observations into it, and
+`identify` reads it. That works today only because the conjugate update is done by hand in pure
+Haskell. Port it to delayed sampling and the learned state moves *into* the graph, where
+
+```haskell
+newtype Variable a = Variable {getVariable :: Int}
+
+data Graph = Graph { nodes :: IntMap SomeNode, maxKey :: Int }
+```
+
+a `Variable` is an index into a per-run `IntMap` and means nothing outside the
+`DelayedSamplingT` computation that created it. Training in one process and identifying in another
+therefore needs a way out of the graph and back in.
+
+## What already exists, and what is actually missing
+
+Less is missing than it looks, but it is undocumented and not obviously safe. The module has **no
+export list** (`module Control.Monad.Bayes.DelayedSampling where`), so all of this is already
+public:
+
+- `lookupVar :: Variable a -> DelayedSamplingT m (Node a)` and
+  `currentDistribution :: Node a -> Maybe (Distribution a)` together read a node's distribution.
+- `initialize :: Distribution a -> DelayedSamplingT m (Variable a)` puts a distribution back in.
+
+So `graft var >> (currentDistribution <$> lookupVar var)` is the extraction recipe and `initialize`
+is the loader. Three things stand between that and a usable feature:
+
+1. **The `graft` is not optional.** `currentDistribution` returns `fromMaybe initialDistribution
+   marginalDistribution`, and `marginalDistribution` is only populated by `marginalize`. Read a node
+   that has not been grafted and you get its *prior*, silently — the same shape of value, so
+   nothing signals the mistake. A `marginal :: Variable a -> DelayedSamplingT m (Distribution a)`
+   that grafts first and is named for what it returns is the fix, and it is a handful of lines.
+2. **The result may not be self-contained.** A `Distribution` can reference variables (`Var`), and
+   such a value is meaningless in another graph. Extraction must either require a
+   variable-free distribution or fail with an `Error` — which is exactly the marginal/conditional
+   distinction that [no type-level marginal/conditional](no-type-level-marginal-conditional.md)
+   proposes to make a type-level property. If that lands, "extractable" and "marginal" become the
+   same predicate and this item gets its correctness guarantee for free.
+3. **There is no serialisation.** `Distribution` derives `Show` and `Eq` and nothing else — no
+   `Read`, no `ToJSON`, no `Binary`. `Show` output is not a persistence format, and `debugGraph`
+   /`debugGraphIO` are debug aids (the latter just `print`s every node). Whether persistence should
+   be `Distribution`'s problem or the model's — i.e. write out `Map Name AppleSortPrior` derived
+   *from* the marginals, keeping the file format independent of the library's internals — is worth
+   deciding rather than defaulting.
+
+## Done when
+
+- `marginal :: Variable a -> DelayedSamplingT m (Distribution a)` exists, grafts, and rejects (or
+  makes impossible) a distribution that still references variables.
+- A round-trip test: build a graph, observe, extract the marginals, start a fresh graph with
+  `initialize` from them, observe more, and check the posterior equals the one from doing all the
+  observations in a single graph. That equality is the whole point of a conjugate model, and nothing
+  currently tests it — it is also a sharp test of the conjugate updates themselves, sharper than the
+  existing statistical acceptance tests, since it compares two exact computations rather than a
+  sample against a tolerance.
+- A decision on the persistence format, recorded.

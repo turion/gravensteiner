@@ -37,6 +37,13 @@ that a particle's `Error` must kill that particle rather than the whole populati
 Secondary: `observe` needs `MonadMeasure m` and reaches the weight by `lift . score`, so
 whatever order is chosen must keep `score` reachable.
 
+Worth knowing which way the dependency runs with the apple model: SMC is **not** on the critical
+path for it. Under either serious reformulation the model is fully conjugate, so its cultivar
+posterior is a finite sum of closed-form predictives and delayed sampling never samples anything —
+which makes the apple model a good *demonstration* of the Rao-Blackwellization limit below rather
+than a client of this item. See
+[the apple model's reformulation options](apple-model-reformulation-options.md).
+
 ## Done when
 
 - A documented transformer stack in which each particle owns its graph and resampling moves

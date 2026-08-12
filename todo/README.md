@@ -5,7 +5,7 @@ One file per open item. Each states why it matters — citing the paper
 never by line number, since reformatting invalidates line numbers — and what "done" looks
 like.
 
-Two sources so far. The **port review** and the fix pass that followed it: that pass closed
+Three sources. The **port review** and the fix pass that followed it: that pass closed
 most of its own findings (the graph invariants are now checked by `ensureConsistency` and
 exercised by the test suite, the forest predicate is derived from `getParents` instead of
 matching two distribution shapes, the dead graph helpers are wired in, and `Value`'s arithmetic
@@ -13,9 +13,26 @@ and substitution are total and free of `unsafeCoerce`), leaving the remainders b
 **paper review** contributes the rest: the port implements the paper's operations
 (`Initialize`, `Marginalize`, `Sample`, `Observe`, `Realize`, `Graft`, `Prune`) and its three
 node states faithfully enough that the structural gaps are elsewhere — in what the graph can
-represent, what the types can rule out, and what the package is ever run inside.
+represent, what the types can rule out, and what the package is ever run inside. The **apple model
+study** contributes the last group: what `gravensteiner/app/Main.hs` needs before it can be ported,
+plus the model's own open questions.
 
-Still to be added: the feature gaps that specifically block porting the apple cultivar model.
+Two things came out of that study that are worth reading before picking anything up.
+
+The apple model currently does its conjugate update **by hand** —
+`updateDirichletColours`/`updateModel` are the update, and no inference monad appears outside
+`identify`. So porting it is a rewrite, not a wrapping, and the model should change while it is
+being rewritten; the likelihood is chosen for hand-derivability rather than for fitting apples, and
+it has a fatal defect at zero. Hence
+[the reformulation options](apple-model-reformulation-options.md), which is a decision to make
+before any port begins, because the two serious candidates need *different* features from
+`delayed-sampling`.
+
+Conversely, the port is less blocked than the feature list suggests. Weight, size and shape ratios
+are scalar normal-normal chains that work **today**, a finite discrete latent can be enumerated
+outside the graph with no new features, and the graph, transformer and all seven public operations
+are already polymorphic in the carrier type — the scalar-only assumption lives in the
+`Distribution` GADT and its five interpreters, and nowhere else.
 
 ## Correctness
 
@@ -55,3 +72,23 @@ Still to be added: the feature gaps that specifically block porting the apple cu
 | [No SMC integration — the paper's whole payoff is unrealised](no-smc-integration.md) | the point of the package |
 | [Delayed sampling is not transparent to monad-bayes models](not-transparent-to-monad-bayes-models.md) | needs a decision, not code |
 | [The paper's own future work](paper-future-work.md) | research-grade |
+
+## The apple model — what it needs from `delayed-sampling`
+
+| Item | Slated for |
+|---|---|
+| [`Distribution` is scalar-only, so there is no `Dirichlet` node](vector-valued-variables-and-dirichlet.md) | the single largest gap |
+| [Nothing discrete exists, so the cultivar cannot be a node](discrete-nodes-and-dirichlet-categorical.md) | with the vectors — a categorical's parameter is a vector |
+| [A finite discrete latent should be enumerated, not sampled](exact-enumeration-of-discrete-latents.md) | route (1) needs nothing new — do that first |
+| [No record of variables, and no partial observation](records-of-variables-and-partial-observation.md) | cheapest item here; pure sugar over the existing API |
+| [A trained model cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) | the pieces exist; needs a name and a round-trip test |
+| [Training must not grow the graph](streaming-training-with-bounded-memory.md) | follows from the realized-node fix + child index |
+
+## The apple model — its own open questions
+
+| Item | Slated for |
+|---|---|
+| [The likelihood is not settled — three reformulations](apple-model-reformulation-options.md) | **decide before porting** |
+| [Exact zeros in the colour proportions are fatal](apple-model-zero-colours-are-fatal.md) | now — this is why the executable crashes |
+| [The planned features, and which are absorbable](apple-features-and-their-conjugate-pairs.md) | three of them work today |
+| [Cleanups that are not delayed-sampling features](apple-model-cleanups.md) | independent of everything else |

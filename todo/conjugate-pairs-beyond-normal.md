@@ -43,7 +43,7 @@ criterion, so near-identical files per pair would only repeat this table.
 | beta-Bernoulli / beta-binomial | the existing `Beta` becoming real; per-observer reliability in the apple model | a discrete child, hence exact enumeration rather than sampling |
 | gamma-Poisson, gamma-exponential | count and waiting-time data, with the gamma as a conjugate prior on a rate | a `Gamma` constructor; a discrete child for the Poisson case |
 | normal-gamma / normal-inverse-gamma | unknown mean *and* variance for a normal — the standard next step for the existing normal machinery | a `Gamma` constructor, plus a variance that is itself a variable, which the current `Normal` shape forbids |
-| Dirichlet-categorical / Dirichlet-multinomial | the apple model's colour simplex and cultivar identity | vector-valued variables |
+| Dirichlet-categorical / Dirichlet-multinomial | the apple model's colour simplex and cultivar identity | [vector-valued variables](vector-valued-variables-and-dirichlet.md), and [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) |
 
 Two cautions about how this interacts with the rest of the backlog.
 
@@ -57,7 +57,8 @@ uses should not be conflated when scoping the work.
 **Discrete latents want enumeration, not sampling.** A categorical or Bernoulli latent is usually
 better marginalized *exactly* — the posterior over cultivars is the answer the apple model is
 asking for — which is delayed sampling composed with an enumeration monad rather than a conjugate
-update. That is a separate design question, recorded with the apple model's gaps.
+update. That is a separate design question, recorded in
+[exact enumeration of discrete latents](exact-enumeration-of-discrete-latents.md).
 
 **Normal-gamma collides with the constancy requirement** on `Normal`'s variance described in
 [the marginal/conditional distinction](no-type-level-marginal-conditional.md): making the variance
