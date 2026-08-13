@@ -42,15 +42,18 @@ fits, reports and is *measured*, on a single appearance feature, against a schem
 to be re-collected. Deliberately **not** in it: R1–R4, the multi-parent critical path, which is a
 session of its own and which this one exists to give a validated harness to land against.
 
+Items 1-5 are done. Items 6-7 are blocked on [a seed corpus](seed-corpus-needed.md), which does not
+exist yet in the workspace.
+
 | | Item | Why it is in this session |
 |---|---|---|
-| 1 | [The v1 schema review](model-v1-review.md), **Tier 1 only** | The label is missing from `Judgement`, so nothing can be trained or predicted. Tree and `Person` are embedded by value, which silently collapses two levels of the hierarchy. A documented tree (nursery invoice, gene-bank accession) is the only supervision the data will ever contain, and is recorded as an ordinary `Judgement` (trust in it learned from data, not read off a self-reported `certainty`), not a separate provenance field. All cheap now, some unrecoverable once field collection starts. |
-| 2 | [Descriptions are not observations](cultivar-descriptions-are-not-observations.md) + R12's `Observed` | Both must exist **before** literature ingestion: the corpus cannot be re-read cheaply, and the adjective vocabulary is part of the data rather than of the reader. |
-| 3 | [References to a realized node](references-to-realized-nodes-are-inconsistent.md) | A verified one-line fix (`Realized _ -> pure ()`) for a reachable failing program. Folding observations against long-lived parameter nodes is exactly the pattern that provokes it. |
-| 4 | [`Graph` has no child index](graph-has-no-child-index.md) | Every operation is O(\|graph\|) without it, and a performance workaround (`deallocateRealized` by hand) is currently part of the expected API usage. Prerequisite for R11. |
-| 5 | [Records of variables](records-of-variables-and-partial-observation.md) — R8 | Cheapest item in the backlog: pure sugar over the existing API, no graph changes. With a dozen optional features there are more observation patterns than can be written by hand. |
-| 6 | The scalar end-to-end harness — [requirements](model-v1-delayed-sampling-requirements.md), *What is already supported today* | One feature, one level, labels observed, using only `conditionDist`'s two existing clauses. Every later requirement should be validated against a working pipeline rather than in isolation. |
-| 7 | [No evaluation harness](no-evaluation-harness.md) | Every modelling decision so far rests on an argument, not a measurement, and the seed corpus makes accuracy and calibration measurable for the first time. The held-out split has to be fixed **before** the corpus is used. |
+| 1 | [The v1 schema review](model-v1-review.md), **Tier 1 only** — *(done)* | The label is missing from `Judgement`, so nothing can be trained or predicted. Tree and `Person` are embedded by value, which silently collapses two levels of the hierarchy. A documented tree (nursery invoice, gene-bank accession) is the only supervision the data will ever contain, and is recorded as an ordinary `Judgement` (trust in it learned from data, not read off a self-reported `certainty`), not a separate provenance field. All cheap now, some unrecoverable once field collection starts. |
+| 2 | [Descriptions are not observations](cultivar-descriptions-are-not-observations.md) + R12's `Observed` — *(type-level shapes done; conjugate-update wiring still open)* | Both must exist **before** literature ingestion: the corpus cannot be re-read cheaply, and the adjective vocabulary is part of the data rather than of the reader. |
+| 3 | [References to a realized node](references-to-realized-nodes-are-inconsistent.md) — *(done)* | A verified one-line fix (`Realized _ -> pure ()`) for a reachable failing program. Folding observations against long-lived parameter nodes is exactly the pattern that provokes it. |
+| 4 | [`Graph` has no child index](graph-has-no-child-index.md) — *(done)* | Every operation is O(\|graph\|) without it, and a performance workaround (`deallocateRealized` by hand) is currently part of the expected API usage. Prerequisite for R11. |
+| 5 | [Records of variables](records-of-variables-and-partial-observation.md) — R8 — *(done)* | Cheapest item in the backlog: pure sugar over the existing API, no graph changes. With a dozen optional features there are more observation patterns than can be written by hand. |
+| 6 | The scalar end-to-end harness — [requirements](model-v1-delayed-sampling-requirements.md), *What is already supported today* — *(blocked on [a seed corpus](seed-corpus-needed.md))* | One feature, one level, labels observed, using only `conditionDist`'s two existing clauses. Every later requirement should be validated against a working pipeline rather than in isolation. |
+| 7 | [No evaluation harness](no-evaluation-harness.md) — *(blocked on [a seed corpus](seed-corpus-needed.md))* | Every modelling decision so far rests on an argument, not a measurement, and the seed corpus makes accuracy and calibration measurable for the first time. The held-out split has to be fixed **before** the corpus is used. |
 
 ## The specification
 
@@ -99,6 +102,7 @@ early.
 | [No record of variables, and no partial observation](records-of-variables-and-partial-observation.md) | R8 | cheapest item here; pure sugar over the existing API |
 | [`Observed` collapses `NotMentioned`/`NotMeasured` into `NotObserved`](mention-vs-not-measured-deferred.md) | R12 | low priority — needs a source class first |
 | [Nothing measures whether the model works](no-evaluation-harness.md) | — | with the seed corpus, not after it |
+| [No seed corpus exists yet](seed-corpus-needed.md) | — | blocks items 6-7 above |
 
 ## Library correctness and hygiene
 

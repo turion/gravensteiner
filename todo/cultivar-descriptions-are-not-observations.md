@@ -1,5 +1,12 @@
 # Cultivar descriptions are not fruit observations
 
+> **Progress:** the type-level shapes — `Observed`, `Described`, `Elicited`, `Spread`,
+> `Description` and `Observations.descriptions` — have landed in `Gravensteiner.Model`. Still
+> outstanding: the conjugate-update wiring that lets a `Description` actually contribute to a
+> posterior (needs [R7](model-v1-delayed-sampling-requirements.md)'s `Gamma`/inverse-gamma, not
+> yet implemented), the `kappa_max` calibration choice, and the decay/calibration tests described
+> below. Only the shapes exist so far, not the behaviour.
+
 ## Why it matters
 
 The corpus will be built from two kinds of datum and they are not the same kind of thing:

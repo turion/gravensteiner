@@ -1,5 +1,8 @@
 # Nothing measures whether the model works
 
+> **Blocked:** on [a seed corpus](seed-corpus-needed.md), which does not exist yet in the
+> workspace — see that file for what's needed before this one can proceed.
+
 ## Why it matters
 
 Every modelling decision recorded in this backlog was made on statistical reasoning alone. The

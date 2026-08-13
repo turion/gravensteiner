@@ -1,5 +1,15 @@
 # Observation model v1 — review and the additions that matter most
 
+> **Progress:** Tier 1 is implemented in `Gravensteiner.Model` — `Judgement` has `cultivar`/
+> `uuid`, `Collection.tree` and `Judgement.pomologist`/`Fruit.observer` are `UUID` references
+> rather than by-value embeddings, and a documented tree is recorded as an ordinary `Judgement`
+> per the corrected shape below. The last Tier 1 bullet ("book and photo descriptions are
+> observations of a different thing") is implemented too, as the source class (`Source`) and
+> `Description` entity described in
+> [descriptions are not observations](cultivar-descriptions-are-not-observations.md) — see that
+> file's own progress note for what of *that* item still remains (the conjugate-update wiring,
+> not yet the type-level shapes).
+>
 > **Correction:** the Tier 1 item below originally suggested a `Provenance` field on `Tree`
 > distinguishing documented / attributed / unknown cultivar identity. That was wrong — a nursery
 > invoice or a gene test is not exempt from error, it is just another `Judgement`. `Provenance` was
