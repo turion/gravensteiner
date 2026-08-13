@@ -44,7 +44,7 @@ session of its own and which this one exists to give a validated harness to land
 
 | | Item | Why it is in this session |
 |---|---|---|
-| 1 | [The v1 schema review](model-v1-review.md), **Tier 1 only** | The label is missing from `Judgement`, so nothing can be trained or predicted. Tree and `Person` are embedded by value, which silently collapses two levels of the hierarchy. Reference-tree provenance is the only supervision the data will ever contain. All cheap now, some unrecoverable once field collection starts. |
+| 1 | [The v1 schema review](model-v1-review.md), **Tier 1 only** | The label is missing from `Judgement`, so nothing can be trained or predicted. Tree and `Person` are embedded by value, which silently collapses two levels of the hierarchy. A documented tree (nursery invoice, gene-bank accession) is the only supervision the data will ever contain, and is recorded as an ordinary `Judgement` (trust in it learned from data, not read off a self-reported `certainty`), not a separate provenance field. All cheap now, some unrecoverable once field collection starts. |
 | 2 | [Descriptions are not observations](cultivar-descriptions-are-not-observations.md) + R12's `Observed` | Both must exist **before** literature ingestion: the corpus cannot be re-read cheaply, and the adjective vocabulary is part of the data rather than of the reader. |
 | 3 | [References to a realized node](references-to-realized-nodes-are-inconsistent.md) | A verified one-line fix (`Realized _ -> pure ()`) for a reachable failing program. Folding observations against long-lived parameter nodes is exactly the pattern that provokes it. |
 | 4 | [`Graph` has no child index](graph-has-no-child-index.md) | Every operation is O(\|graph\|) without it, and a performance workaround (`deallocateRealized` by hand) is currently part of the expected API usage. Prerequisite for R11. |
@@ -117,6 +117,7 @@ early.
 | Item | Slated for |
 |---|---|
 | [Delayed sampling is not transparent to monad-bayes models](not-transparent-to-monad-bayes-models.md) | needs a decision; determines whether the model is written once or twice |
+| [`Judgement` cannot yet represent a non-person judge](judgement-needs-non-person-judges.md) | not urgent — extends `Judgement` for nurseries/labs once one needs recording |
 | [The paper's own future work](paper-future-work.md) | research-grade — but the non-tree case is where this model lives |
 | [Haskell Bayesian library landscape](haskell-library-landscape.md) | done — no Hackage package competes with this project's core infrastructure |
 | [Closer study of the morphometrics paper](morphometrics-apple-paper.md) | before finalising the feature list — may identify seed corpus and discriminating features |

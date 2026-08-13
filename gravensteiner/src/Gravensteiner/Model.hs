@@ -55,9 +55,9 @@ data Fruit p = Fruit
   , russet :: p Interval
   , -- TODO Further properties to be added here, such as size, shape, etc.
 
-    observer :: p Person
-  {- ^ The person who observed the fruit and recorded its properties.
-  Often this will be the same as the pomologist who made the judgement, but not always.
+    observer :: p UUID
+  {- ^ The 'Person' (keyed into 'Database''s @people@) who observed the fruit and recorded its
+  properties. Often this will be the same as the pomologist who made the judgement, but not always.
   -}
   , -- TODO: photographs of the fruit
     uuid :: UUID
@@ -67,7 +67,8 @@ data Collection p = Collection
   { fruits :: [Fruit p]
   , date :: p Day
   -- ^ The date the collection was made
-  , tree :: Tree p
+  , tree :: UUID
+  -- ^ Keyed into 'Observations''s @trees@
   , uuid :: UUID
   }
 
@@ -82,14 +83,31 @@ data Cultivar = Cultivar
   , uuid :: UUID
   }
 
+{- | A claim that a tree is a particular cultivar, together with how much to trust it.
+
+'Judgement' is the /only/ mechanism for asserting cultivar identity, and is deliberately not
+restricted to a pomologist inspecting fruit: a nursery's planting record and a gene test result
+are judgements too, not ground truth recorded some other way. Nurseries mislabel stock, and even
+a gene test carries a small but non-negligible risk of laboratory error (e.g. mixing up two
+samples) — every source of identity is fallible.
+-}
 data Judgement p = Judgement
-  { pomologist :: Person
+  { pomologist :: UUID
+  {- ^ Keyed into 'Database''s @people@. Whoever or whatever made the judgement — a pomologist
+  examining fruit, a nursery attributing stock at planting, a lab reporting a gene test.
+  -- TODO: a nursery is a legal person, not a 'Person', and its evidence is not a 'Fruit'
+  collection but e.g. a grafting lineage; 'Judgement' cannot yet represent that distinction.
+  -}
   , tree :: UUID
+  , cultivar :: UUID
+  -- ^ The cultivar the pomologist judges the tree to be
   , collection :: p UUID
-  -- ^ The collection that was used to make this judgement
-  , certainty :: Interval
-  -- ^ The probability the pomologist would bet on this judgement being correct.
+  -- ^ The collection that was used to make this judgement, if any (e.g. absent for a gene test)
+  , certainty :: p Interval
+  -- ^ The probability the judgement's maker would bet on this judgement being correct.
+  --   This self-information is their own subjective probability, not a probability derived from the data in the database.
   , date :: p Day
+  , uuid :: UUID
   }
 
 newtype UUIDMap a = UUIDMap {getUUIDMap :: Map UUID a}

@@ -1,5 +1,17 @@
 # Observation model v1 — review and the additions that matter most
 
+> **Correction:** the Tier 1 item below originally suggested a `Provenance` field on `Tree`
+> distinguishing documented / attributed / unknown cultivar identity. That was wrong — a nursery
+> invoice or a gene test is not exempt from error, it is just another `Judgement`. `Provenance` was
+> removed rather than implemented; see
+> [judgement-needs-non-person-judges.md](judgement-needs-non-person-judges.md) for the gap this
+> leaves (a nursery or lab is not a biological `Person`, and its evidence is not a fruit
+> `collection`). Note also that `certainty` is the judge's own **self-reported** subjective
+> probability (see the Tier 2 item below), not a trust level we assign — a nursery ledger typically
+> states none at all (`certainty :: p Interval`), and how much to trust it is instead something the
+> model must learn from data, the same way pomologist accuracy is calibrated via `kappa_o`/`lambda_o`
+> rather than read off `certainty` directly.
+
 ## Why it matters
 
 `Gravensteiner.Model` is the first real schema: `Person`, `Fruit`, `Collection`, `Tree`,
@@ -56,8 +68,15 @@ tree in a variety collection or mother orchard. Those are the only supervision t
 ever contain. Without a way to record them, every label in the database is a fallible
 pomologist's opinion, the problem is clustering rather than identification, and cultivar means
 are pinned by nothing. This is the highest-value single addition after the label itself.
-Suggested shape: a provenance field on `Tree` distinguishing documented (with the document) from
-attributed from unknown.
+**Corrected shape:** not a separate field on `Tree` — a documented tree is a `Judgement`, since a
+nursery or gene-bank record is fallible too, just usually more reliable than a visual opinion. It
+is *not* a `Judgement` with `certainty` set near 1: `certainty` is the judge's own self-reported
+probability, and a nursery ledger typically states none at all. How much to trust a documented
+tree has to be learned from data instead (e.g. from disagreement with other judgements on the
+same tree), the same way pomologist accuracy is learned rather than read off `certainty` directly
+(see the Tier 2 item below). See
+[judgement-needs-non-person-judges.md](judgement-needs-non-person-judges.md) for the follow-up
+gap this leaves in `Judgement` itself.
 
 **Book and photo descriptions are observations of a different thing.** The seed database will be
 built from monographs, pomological literature and websites, and a book does not describe a fruit
@@ -86,14 +105,18 @@ interpretable at all — a March harvest is late-season in one hemisphere and im
 other. Even a coarse region is enough to start, and it costs one field. This is the one Tier-2
 item that gets *harder* to retrofit, since location is often unrecoverable after the fact.
 
-**`certainty` should be calibrated, not believed.** A self-reported betting probability is a
-genuinely rich datum and it is unusual to have it, but people are not calibrated: some say 90%
-and are right 70% of the time, others are the reverse. Used directly as *p*(correct) it imports
-each pomologist's overconfidence as if it were evidence. Used as a *covariate* through a
+**`certainty` should be calibrated, not believed.** *(implemented: `certainty :: p Interval`, with
+a haddock stating it is self-reported and not derived from the data)* A self-reported betting
+probability is a genuinely rich datum and it is unusual to have it, but people are not calibrated:
+some say 90% and are right 70% of the time, others are the reverse. Used directly as *p*(correct)
+it imports each pomologist's overconfidence as if it were evidence. Used as a *covariate* through a
 two-parameter monotone map per pomologist, it becomes exactly the "make biases visible" feature —
-and the map is estimable from disagreements between pomologists on the same tree. It should also
-be `p Interval` rather than `Interval`, since historical and third-party judgements will not
-state one.
+and the map is estimable from disagreements between pomologists on the same tree. Being
+`p Interval` rather than `Interval` matters beyond historical/third-party judgements not stating
+one: it is also what keeps documented/institutional judgements (see Tier 1's corrected "documented
+tree" item above) from having a certainty invented for them that they never actually reported.
+The calibration map itself (`kappa_o`/`lambda_o` in
+[the network design](model-v1-bayesian-network.md)) is still future modelling work, not yet coded.
 
 **How the fruit were chosen is missing.** A pomologist asked for apples from a tree does not
 sample uniformly — they pick typical fruit, or the finest, or whatever is left in October. Each
