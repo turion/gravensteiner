@@ -58,6 +58,7 @@ parts of the two apple-model groups further down.
 | Item | Slated for |
 |---|---|
 | [The v1 schema review, and the additions that matter most](model-v1-review.md) | now — some additions are unrecoverable after field collection starts |
+| [Cultivar descriptions are not fruit observations](cultivar-descriptions-are-not-observations.md) | before literature ingestion — the corpus cannot be re-read cheaply |
 | [The Bayesian network for observation model v1](model-v1-bayesian-network.md) | the specification the port is written against |
 | [What `delayed-sampling` must gain to run it](model-v1-delayed-sampling-requirements.md) | aims everything above |
 

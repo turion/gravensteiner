@@ -4,8 +4,8 @@
 
 [The network design](model-v1-bayesian-network.md) is a specification; this is the list of
 capabilities it requires, so that the backlog can be worked in an order that converges on it.
-Most rows already have a backlog item and are cross-referenced rather than restated. Eight are new,
-and one of those is deeper than anything currently recorded.
+Most rows already have a backlog item and are cross-referenced rather than restated. Five are new,
+one of those is deeper than anything currently recorded, and one earlier row is struck.
 
 The headline: **the model is not blocked on distributions, it is blocked on graph structure.**
 Almost every conjugate pair it needs is normal-normal, which the package already implements. What
@@ -27,9 +27,9 @@ itself random, and whose joint is sparse rather than tree-shaped.
 | R9 | Persistence of a sparse joint over entity latents | train once, identify later | reshapes [marginals](marginals-cannot-be-saved-or-reloaded.md) |
 | R10 | Incremental extension of a fitted graph | hundreds of collections per year | **new** |
 | R11 | Bounded memory: fruit transient, entities permanent | 10⁵ fruit, 10³ entities | [streaming](streaming-training-with-bounded-memory.md) |
-| R12 | Observation status in the type: exact / coarse / not mentioned / not measured | knowing *why* a field is absent | **new** |
+| R12 | Observation status in the type: exact / not mentioned / not measured | knowing *why* a field is absent | **new** |
 | R13 | A distribution-valued result, including an "other" outcome | reporting a ranked candidate list | [reformulation](apple-model-reformulation-options.md), change 1 |
-| R14 | Interval-censored observations | the literature corpus is almost entirely coarse | **new** |
+| R14 | ~~Interval-censored observations~~ | **struck** — descriptions are not observations; see [descriptions](cultivar-descriptions-are-not-observations.md) | dropped |
 | R15 | A moment-form serving cache extracted from the information-form fit | answering queries without refitting | **new** |
 
 ## R1 — stochastic edges, and why this is the hard one
@@ -176,29 +176,26 @@ distinguished at the point where the distinction is *known* — data entry — b
 recovered later. The phase parameter is the right place, since it is already generic:
 
 ```haskell
--- | Why a field has no exact value, recorded where it is known.
+-- | Why a fruit observation has no value, recorded where it is known.
+--   Observations are never vague: a fruit either gave a value or it did not.
 data Observed a
   = Observed a
-    -- ^ Stated exactly. Absence of a feature is @Observed 0@, not a missing value:
+    -- ^ Measured. Absence of a feature is @Observed 0@, not a missing value:
     --   "no red on this apple" is an observation, and an informative one.
-  | Coarse (Range a)
-    -- ^ Interval-censored. "medium-large", "greenish-yellow", "above medium".
-    --   Informative and *not* ignorable.
   | NotMentioned
-    -- ^ A source that could have stated it did not. Weak evidence, because authors
-    --   mention what is notable.
+    -- ^ The observer could have recorded it and did not. Weak evidence, because
+    --   people record what is notable.
   | NotMeasured
-    -- ^ The source could not produce it at all: a photograph has no weight.
-    --   Ignorable given the source class.
-  deriving (Show, Eq, Functor, Foldable, Traversable)
-
-data Range a = Range { atLeast :: Maybe a, atMost :: Maybe a }
+    -- ^ The source could not produce it at all: a photograph has no weight, and a
+    --   photograph of one side cannot give russet extent. Ignorable given the source.
   deriving (Show, Eq, Functor, Foldable, Traversable)
 ```
 
-`Range` with two `Maybe`s covers one-sided censoring ("above medium", "not russeted beyond a
-patch") as well as two-sided, and `Range Nothing Nothing` is deliberately representable-but-useless
-rather than a separate case.
+There is deliberately **no vague case**. Vagueness belongs to *cultivar descriptions*, which are
+statements about a distribution rather than about a fruit, and they get their own type — see
+[descriptions are not observations](cultivar-descriptions-are-not-observations.md). Uncertain fields
+of a real observation (half the surface is hidden, shape depends on perspective) are `NotMeasured`
+or discarded, not softened into a range.
 
 Used as the phase, `Fruit Observed` is a real-world record and `Fruit Identity` a simulated one, so
 the existing `barbies` dependency and `UUIDMap`'s indexed instances keep working unchanged.
@@ -214,42 +211,22 @@ What each case costs in the likelihood:
 | `Observed 0` on a zero-inflated feature | the presence indicator, a Bernoulli | yes (beta-Bernoulli) |
 | `NotMeasured` | none — an ungrafted variable, which is exactly what delayed sampling does | yes, free |
 | `NotMentioned` | a Bernoulli on the mention indicator, conditioned on the latent value | yes, but needs the source class |
-| `Coarse r` | `P(lo <= x <= hi)`, a difference of normal CDFs | **no** — see R14 |
 
 `NotMeasured` being free is worth stating: the ignorable case is the one delayed sampling already
 handles correctly by never grafting the variable, so the type is mostly making the *non*-ignorable
 cases visible.
 
-## R14 — interval-censored observations, which the seed corpus is made of
+## R14 — struck
 
-`Coarse` is not a rare case. Pomological literature almost never gives numbers: "fruit
-medium-large, ground colour greenish-yellow, with a faint red flush on the sunny side" is three
-coarse observations and zero exact ones. Since the seed database is literature, **most of the first
-corpus will arrive as `Coarse`**, and a design that only handles `Observed` would either discard it
-or silently invent point values.
-
-A censored Gaussian observation is not conjugate: the likelihood is
-`Phi((hi - mu)/s) - Phi((lo - mu)/s)`, and the resulting posterior is not Gaussian. Three ways out,
-in increasing fidelity:
-
-1. **Midpoint with inflated variance.** Treat `Coarse (lo, hi)` as `Observed ((lo+hi)/2)` with the
-   observation variance raised by `(hi-lo)²/12`, the variance of a uniform on the interval. Exactly
-   conjugate, one line, and defensible when the interval is narrow relative to the between-cultivar
-   spread. Wrong at the boundaries and for one-sided ranges.
-2. **Moment-matched Gaussian.** Replace the censored likelihood by the Gaussian with the same first
-   two moments (the truncated-normal moments, which are closed form). Keeps the graph conjugate,
-   strictly better than (1), and is one local EP-style update rather than a new inference algorithm.
-   This is the recommended target.
-3. **Latent truncated normal.** Introduce the true value as a latent constrained to the interval and
-   sample it — exact, but it is the auxiliary-variable route that
-   [the conjugate-pairs item](conjugate-pairs-beyond-normal.md) recommends avoiding, needs a
-   truncated-normal sampler, and adds one latent per coarse field, i.e. tens of thousands.
-
-Start at (1) so ingestion is not blocked, plan for (2). Either way the **vocabulary must be fixed
-before ingestion**: "medium-large" has to map to a stated numeric range, that mapping is a
-documented part of the corpus rather than a constant in the reader, and it is itself uncertain —
-different authors' "medium" differ, which is one more reason the source-class bias `e_s` is not
-optional.
+R14 said that the literature corpus is interval-censored and therefore non-conjugate. That was a
+category error: "medium-large" in a monograph is not a vague *observation of a fruit*, it is a claim
+about the cultivar's **distribution**, and no fruit was measured. Elicited into the conjugate family
+— a location, an effective count, and optionally a spread — it enters through the same normal-normal
+update as an observation and needs nothing new. So this row **removes** a requirement instead of
+adding one. The full argument, the types, and the three hazards specific to literature (books copy
+each other; books describe show fruit; a described spread constrains the total variance rather than
+any one component) are in
+[cultivar descriptions are not observations](cultivar-descriptions-are-not-observations.md).
 
 ## What is already supported today
 
@@ -266,10 +243,11 @@ waiting for R1 through R4.
 R2 → R3 → R4 is the critical path and each is a prerequisite for the next. R5 → R6 → R1 is the
 discrete path, and R1's two sub-requirements (shared-context scoring, retraction) are the ones to
 prototype early because they are the least certain. R7, R8, R11 and R13 are independent and small.
-R9, R10, R12 and R14 are decisions to record before they become expensive: **R12 and R14 before
-literature ingestion**, since the corpus cannot be re-read cheaply and the coarse-vocabulary mapping
-is part of the data rather than of the reader; R9, R10 and R15 before there is a fitted state worth
-keeping.
+R9, R10 and R12 are decisions to record before they become expensive. **R12 and the description
+elicitation belong before literature ingestion**, since the corpus cannot be re-read cheaply, the
+adjective vocabulary is part of the data rather than of the reader, and the citation-lineage problem
+(ten monographs restating one) has to be designed for rather than discovered. R9, R10 and R15 come
+before there is a fitted state worth keeping.
 
 ## Done when
 

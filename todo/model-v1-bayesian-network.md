@@ -26,11 +26,17 @@ plus overcolour** rather than a simplex, per [the review](model-v1-review.md).
 | *k* | collection | `Collection` | 10³ – 10⁴ |
 | *i* | fruit | `Fruit` | 10⁴ – 10⁵ |
 | *j* | judgement | `Judgement` | 10³ |
+| *l* | cultivar description | `Description` (to be added) | 10³ – 10⁴ |
 
 Note the two very different growth rates. Fruit and collections grow without bound as data comes
 in; cultivars, regions, source classes and years do not, and trees and observers grow slowly. That
 split is what makes bounded-memory inference possible at all, and it is the invariant the graph
 must respect.
+
+Descriptions are the odd one out: they are indexed by cultivar rather than by tree, they carry no
+year, collection or ripeness, and they are the only source of information about a cultivar nobody has
+sampled — which for a regional set of a few hundred will be most of them at first. See
+[descriptions are not observations](cultivar-descriptions-are-not-observations.md).
 
 ## The appearance vector
 
@@ -227,20 +233,30 @@ Reference trees enter as `z_t` **observed**, and they are what identifies everyt
 
 ## Attaching literature to the network
 
-A monograph entry describes a cultivar, not a fruit, so it is an observation of `mu_c` with the
-tree, year, collection and ripeness terms absent:
+A monograph does not describe a fruit, it describes a cultivar — so it is not an observation with
+some terms missing, it is a claim about `mu_c` and about the spread itself. Elicited into the
+conjugate family as a location with an effective count (and optionally a spread), it attaches
+directly to the cultivar level, bypassing tree, year, collection and ripeness:
 
 ```
-  x_lit ~ N( mu_c + e_{s} + b_{o} , S_within + S_lit )
+  elicited claim  --->  mu_c  (+ author bias b_o, + source bias e_s)
+      location m, strength kappa  ~ a pseudo-dataset of kappa equivalent fruit
 ```
 
-with `S_lit` an extra variance for "this is a summary of unknown many fruit, idealised". This is
-the structurally distinct observation kind [the review](model-v1-review.md) argues for, and it is
-what lets the seed database be used without inventing trees. Two consequences: the literature
-alone identifies `mu_c` up to the source and observer biases, which is enough to make the model
-useful before any field data exists; and because a book's `b_o` and `e_s` are confounded with what
-it describes, the literature *cannot* by itself separate bias from cultivar mean — only trees
-judged by several people, or cultivars described by several sources, can do that.
+Because the sufficient statistics are those of a normal-inverse-gamma update, this needs nothing the
+Gaussian hierarchy does not already have, and several descriptions of one cultivar accumulate exactly
+as datasets do. The full treatment, including why an interval would be the wrong representation, is
+in [descriptions are not observations](cultivar-descriptions-are-not-observations.md).
+
+Three consequences for this network. The literature alone identifies `mu_c` up to the author and
+source biases, which is enough to make the model useful before any field data exists — and it is what
+carries the rare cultivars. Because a book's `b_o` and `e_s` are confounded with what it describes,
+the literature **cannot** by itself separate bias from cultivar mean; only trees judged by several
+people, or cultivars described by several independent sources, can do that. And a described *spread*
+constrains `S_tree + S_ty + S_within` jointly rather than any one of them, since a book describes what
+one typically sees across trees and years — so the decomposition into levels comes only from field
+data, and attributing a book's spread to `S_within` would make the model overconfident about new
+trees.
 
 ## Inference
 
