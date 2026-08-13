@@ -133,8 +133,8 @@ thinnest, and it is once again crossed rather than tree-shaped.
 - [Vector-valued variables](vector-valued-variables-and-dirichlet.md) — the multivariate normal is
   the needed half; combined with [russet is not a colour](russet-is-not-a-colour.md), the Dirichlet
   half has no remaining client.
-- [Records of variables](records-of-variables-and-partial-observation.md) — rises in value, since
-  every entity at every level carries the same appearance record.
+- Records of variables (R8, done — see `Control.Monad.Bayes.DelayedSampling.Record`) — rises in
+  value, since every entity at every level carries the same appearance record.
 - [Marginals cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) — under a
   crossed design the "trained model" is a joint Gaussian over all entities, not a per-cultivar
   summary, so persistence is a **sparse precision** matrix rather than a `Map Name` (R9).

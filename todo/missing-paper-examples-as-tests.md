@@ -39,10 +39,6 @@ mishandled. `UnsupportedConditioning`, `NotMarginal` from `pdf`, `NotImplemented
 `HasMarginalizedChildren` from `lookupTerminal` are all unexercised. A regression that turned
 one of them into a wrong number instead of an error would pass the suite.
 
-**Realizing then extending.** The program in
-[references to realized nodes](references-to-realized-nodes-are-inconsistent.md) — create a child of
-an already-realized variable and graft it — fails today, and there is no test that says so.
-
 ## Done when
 
 One test per paper example, with analytic comparisons rather than smoke tests wherever the

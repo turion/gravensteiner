@@ -68,8 +68,9 @@ side: that item should be done with vectors in mind, or it will have to be done 
 - **A shape functor**: `Dirichlet :: f (Value Double) -> Distribution (f Double)` for a
   `Representable`/`Traversable` `f`. Then `Colours` itself is the carrier — `Distribution Colours`
   — the field names survive into the graph, `Show` output stays readable, and this composes
-  directly with [records of variables](records-of-variables-and-partial-observation.md), which
-  wants a record-of-`Variable` layer anyway. Most attractive, least conventional.
+  directly with the record-of-variables sugar (R8, done — see
+  `Control.Monad.Bayes.DelayedSampling.Record`), which wants a record-of-`Variable` layer anyway.
+  Most attractive, least conventional.
 
 **Covariance representation.** A multivariate normal needs a covariance *matrix* in a slot where
 `Normal` has a `Value Double` variance. The existing normal-normal `conditionDist` computes with

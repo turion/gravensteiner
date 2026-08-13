@@ -49,11 +49,26 @@ exist yet in the workspace.
 |---|---|---|
 | 1 | [The v1 schema review](model-v1-review.md), **Tier 1 only** — *(done)* | The label is missing from `Judgement`, so nothing can be trained or predicted. Tree and `Person` are embedded by value, which silently collapses two levels of the hierarchy. A documented tree (nursery invoice, gene-bank accession) is the only supervision the data will ever contain, and is recorded as an ordinary `Judgement` (trust in it learned from data, not read off a self-reported `certainty`), not a separate provenance field. All cheap now, some unrecoverable once field collection starts. |
 | 2 | [Descriptions are not observations](cultivar-descriptions-are-not-observations.md) + R12's `Observed` — *(type-level shapes done; conjugate-update wiring still open)* | Both must exist **before** literature ingestion: the corpus cannot be re-read cheaply, and the adjective vocabulary is part of the data rather than of the reader. |
-| 3 | [References to a realized node](references-to-realized-nodes-are-inconsistent.md) — *(done)* | A verified one-line fix (`Realized _ -> pure ()`) for a reachable failing program. Folding observations against long-lived parameter nodes is exactly the pattern that provokes it. |
-| 4 | [`Graph` has no child index](graph-has-no-child-index.md) — *(done)* | Every operation is O(\|graph\|) without it, and a performance workaround (`deallocateRealized` by hand) is currently part of the expected API usage. Prerequisite for R11. |
-| 5 | [Records of variables](records-of-variables-and-partial-observation.md) — R8 — *(done)* | Cheapest item in the backlog: pure sugar over the existing API, no graph changes. With a dozen optional features there are more observation patterns than can be written by hand. |
+| 3 | References to a realized node — *(done, item removed — see `graft`'s `Realized _ -> pure ()` case and the regression test in `delayed-sampling/test/DelayedSampling.hs`)* | A verified one-line fix for a reachable failing program. Folding observations against long-lived parameter nodes is exactly the pattern that provokes it. |
+| 4 | `Graph` has no child index — *(done, item removed — see `children :: IntMap IntSet` on `Graph`)* | Every operation was O(\|graph\|) without it, and a performance workaround (`deallocateRealized` by hand) was part of the expected API usage. Prerequisite for R11. |
+| 5 | Records of variables — R8 — *(done, item removed — see `Control.Monad.Bayes.DelayedSampling.Record`)* | Cheapest item in the backlog: pure sugar over the existing API, no graph changes. With a dozen optional features there are more observation patterns than can be written by hand. |
 | 6 | The scalar end-to-end harness — [requirements](model-v1-delayed-sampling-requirements.md), *What is already supported today* — *(blocked on [a seed corpus](seed-corpus-needed.md))* | One feature, one level, labels observed, using only `conditionDist`'s two existing clauses. Every later requirement should be validated against a working pipeline rather than in isolation. |
 | 7 | [No evaluation harness](no-evaluation-harness.md) — *(blocked on [a seed corpus](seed-corpus-needed.md))* | Every modelling decision so far rests on an argument, not a measurement, and the seed corpus makes accuracy and calibration measurable for the first time. The held-out split has to be fixed **before** the corpus is used. |
+
+## Shortlist — the most immediate items
+
+Everything unblocked from this session is done. In priority order, what's next:
+
+1. [Closer study of the morphometrics paper](morphometrics-apple-paper.md) — cheapest possible next
+   step (reading, not code) and the lead for item 2.
+2. [No seed corpus exists yet](seed-corpus-needed.md) — the actual blocker for items 6-7 above.
+3. [Conjugate pairs beyond `Normal`](conjugate-pairs-beyond-normal.md), R7's `Gamma`/inverse-gamma —
+   needed by item 4.
+4. [Descriptions are not observations](cultivar-descriptions-are-not-observations.md)'s remaining
+   conjugate-update wiring — needed before literature ingestion, i.e. before the seed corpus can
+   actually be used.
+5. [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) —
+   cheap now that the child index exists; a correctness/diagnosis fix, not a feature.
 
 ## The specification
 
@@ -98,19 +113,16 @@ early.
 | Item | R | Slated for |
 |---|---|---|
 | [A trained model cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) | R9, R15 | before there is a fitted state worth keeping |
-| [Training must not grow the graph](streaming-training-with-bounded-memory.md) | R10, R11 | follows from the realized-node fix + child index |
-| [No record of variables, and no partial observation](records-of-variables-and-partial-observation.md) | R8 | cheapest item here; pure sugar over the existing API |
+| [Training must not grow the graph](streaming-training-with-bounded-memory.md) | R10, R11 | the realized-node fix and child index it leaned on are done; inlining on realize is what's left |
 | [`Observed` collapses `NotMentioned`/`NotMeasured` into `NotObserved`](mention-vs-not-measured-deferred.md) | R12 | low priority — needs a source class first |
 | [Nothing measures whether the model works](no-evaluation-harness.md) | — | with the seed corpus, not after it |
-| [No seed corpus exists yet](seed-corpus-needed.md) | — | blocks items 6-7 above |
+| [No seed corpus exists yet](seed-corpus-needed.md) | — | blocks items 6-7 above — see [the morphometrics paper](morphometrics-apple-paper.md) for a lead |
 
 ## Library correctness and hygiene
 
 | Item | Slated for |
 |---|---|
-| [References to a realized node are handled inconsistently](references-to-realized-nodes-are-inconsistent.md) | next — has a reachable failing program and a verified one-line fix |
-| [`Graph` has no child index, so every operation scans every node](graph-has-no-child-index.md) | next — prerequisite for several others |
-| [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) | with the child index |
+| [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) | the child index it needed is done; the scan itself is not |
 | [`observe` takes a `Variable`, not a `Value`](observe-takes-a-variable-not-a-value.md) | single-variable case is cheap now |
 | [`pdf`'s catch-all hides unimplemented distributions](pdf-catch-all-hides-unimplemented.md) | later |
 | [The paper's examples are only partly covered by tests](missing-paper-examples-as-tests.md) | alongside each fix |
@@ -123,8 +135,7 @@ early.
 | [Delayed sampling is not transparent to monad-bayes models](not-transparent-to-monad-bayes-models.md) | needs a decision; determines whether the model is written once or twice |
 | [`Judgement` cannot yet represent a non-person judge](judgement-needs-non-person-judges.md) | not urgent — extends `Judgement` for nurseries/labs once one needs recording |
 | [The paper's own future work](paper-future-work.md) | research-grade — but the non-tree case is where this model lives |
-| [Haskell Bayesian library landscape](haskell-library-landscape.md) | done — no Hackage package competes with this project's core infrastructure |
-| [Closer study of the morphometrics paper](morphometrics-apple-paper.md) | before finalising the feature list — may identify seed corpus and discriminating features |
+| [Closer study of the morphometrics paper](morphometrics-apple-paper.md) | now more urgent than "before finalising the feature list" — it is the lead for [the missing seed corpus](seed-corpus-needed.md) |
 
 ## Decided — kept as the record
 
@@ -133,6 +144,7 @@ do.
 
 | Item | Outcome |
 |---|---|
+| [Haskell Bayesian library landscape](haskell-library-landscape.md) | **surveyed** — no Hackage package competes with this project's core infrastructure |
 | [Russet is a texture, not a colour](russet-is-not-a-colour.md) | **adopted** — the simplex premise goes, and with it the largest apparent feature gap |
 | [The likelihood question](apple-model-reformulation-options.md) | **decided** — option B, on unconstrained scales, with no composition anywhere |
 | [The target model is a deep, crossed hierarchy](apple-model-target-hierarchy.md) | **done** — written out formally in the network design; two consequences corrected |

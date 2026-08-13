@@ -22,9 +22,9 @@ behaviour to distinguish.
 Reintroduce the three-way split (or a `NotObserved SourceClass` argument) once a source class with
 a mention-propensity parameter exists, and give `observeField`'s absent-case branch on `NotMentioned`
 the Bernoulli contribution R12 describes. Until then, anything recorded under `NotObserved` has
-thrown away the "why absent" fact — the caution in
-[records of variables](records-of-variables-and-partial-observation.md) about capturing this at data
-entry still applies; it is just not enforced by the type today.
+thrown away the "why absent" fact — the caution about capturing this at data entry (R8, done —
+see `Control.Monad.Bayes.DelayedSampling.Record`) still applies; it is just not enforced by the
+type today.
 
 ## Done when
 

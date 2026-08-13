@@ -182,8 +182,8 @@ structure.
 missing all together or present all together. A book that says "greenish-yellow" without
 mentioning blush is the common case, and under the parameterisation above the fields are
 genuinely independent observations. `Colours p` with `groundColour :: p Interval` and so on is
-the shape; this is [records of variables](records-of-variables-and-partial-observation.md)
-applied one level down.
+the shape; this is the record-of-variables sugar (R8, done — see
+`Control.Monad.Bayes.DelayedSampling.Record`) applied one level down.
 
 **Absence of mention is not absence.** `Maybe` as the phase collapses three distinct situations into
 one `Nothing`: measured, could have been recorded and was not, and could not be recorded at all (a

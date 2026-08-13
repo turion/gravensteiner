@@ -23,7 +23,7 @@ itself random, and whose joint is sparse rather than tree-shaped.
 | R5 | Discrete nodes and Dirichlet-categorical | `z_t`, `phi_g`, `overcolourPattern` | [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) |
 | R6 | Exact enumeration of a discrete latent with the Gaussian part marginalized | the per-tree K-way posterior | [enumeration](exact-enumeration-of-discrete-latents.md) |
 | R7 | `Beta` with a real `pdf`, and `Gamma` | russet presence, observer accuracy, unknown variances | [conjugate pairs](conjugate-pairs-beyond-normal.md) |
-| R8 | Records of variables, per-field partial observation | `Fruit p`, `Colours p` | [records](records-of-variables-and-partial-observation.md) |
+| R8 | Records of variables, per-field partial observation | `Fruit p`, `Colours p` | done — `Control.Monad.Bayes.DelayedSampling.Record` |
 | R9 | Persistence of a sparse joint over entity latents | train once, identify later | reshapes [marginals](marginals-cannot-be-saved-or-reloaded.md) |
 | R10 | Incremental extension of a fitted graph | hundreds of collections per year | **new** |
 | R11 | Bounded memory: fruit transient, entities permanent | 10⁵ fruit, 10³ entities | [streaming](streaming-training-with-bounded-memory.md) |

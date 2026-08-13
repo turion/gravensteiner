@@ -1,5 +1,12 @@
 # Training over many apples must not grow the graph
 
+> **Update:** the two prerequisites this item leaned on are both done — `Graph` now carries a
+> child index (`children :: IntMap IntSet`) and `graft`'s realized case is `pure ()` rather than a
+> throw, with the manual `deallocateRealized` calls already removed from both Markov-chain tests
+> (see `delayed-sampling/test/DelayedSampling.hs`). What is still open is the finding below: nothing
+> yet makes `realize` inline the value and drop the node, so a training run over many apples still
+> grows the graph by one dead node per observation, just cheaply rather than quadratically.
+
 ## Why it matters
 
 `updateModel` folds over `Training = [Observation]` and keeps a fixed-size `Model` no matter how
@@ -10,19 +17,16 @@ for free: every observed apple is a **new node**, and
 data Graph = Graph { nodes :: IntMap SomeNode, maxKey :: Int }
 ```
 
-only ever grows. `realize` writes a `Realized a` node in place and, as
-[references to a realized node](references-to-realized-nodes-are-inconsistent.md) records, does not
-sever the parent edge; `deallocateRealized` removes the node but must be called explicitly. So a
-training run over *n* apples leaves *n* dead nodes in the map unless the caller cleans up — and
-because `lookupChildren` scans every node
-([no child index](graph-has-no-child-index.md)), those dead nodes make every subsequent operation
-slower. The result is quadratic.
+only ever grows.
 
-This is not hypothetical: it is the reason both Markov-chain tests in
-`delayed-sampling/test/DelayedSampling.hs` call `deallocateRealized` by hand after each step. A
-performance workaround is currently part of the expected usage of the API, and the apple model is
-exactly the same access pattern — one observed leaf per datum, hanging off a small set of
-long-lived parameter nodes — so it inherits the same problem at the same scale.
+`realize` writes a `Realized a` node in place and does not sever the parent edge;
+`deallocateRealized` removes the node but must be called explicitly. So a training run over *n*
+apples leaves *n* dead nodes in the map unless the caller cleans up. With the child index this no
+longer makes every subsequent operation slower, but the graph still only grows.
+
+A performance workaround (manual `deallocateRealized`) was part of the expected usage of the API
+until recently; the apple model is exactly the same access pattern — one observed leaf per datum,
+hanging off a small set of long-lived parameter nodes — so it inherits the same growth problem.
 
 The apple case is in one respect *worse* and in another *better* than the Markov chain. Worse: the
 parameter nodes are long-lived and shared across all cultivars under a hierarchical prior, so the
@@ -46,10 +50,7 @@ the bug above, whereas entity latents accumulating is correct and must not be "f
 
 - Observing and absorbing one datum leaves the graph at its previous size, without the caller
   calling `deallocateRealized` — which means `realize` (or `observe`) inlines the realized value
-  into its children and drops the node. That fix is described in
-  [references to a realized node](references-to-realized-nodes-are-inconsistent.md) and is cheap
-  only with the [child index](graph-has-no-child-index.md); this item is mostly a statement of *why*
-  those two matter for the apple model rather than a third piece of work.
+  into its children and drops the node, now that the child index makes that cheap.
 - A test that folds *n* observations through a fixed set of parameter nodes and asserts
   `IntMap.size . nodes` is constant in *n*, and that the wall-clock cost is linear — the existing
   tests demonstrate the workaround rather than the property.
