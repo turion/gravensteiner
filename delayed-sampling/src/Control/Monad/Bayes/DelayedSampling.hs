@@ -16,7 +16,7 @@
 module Control.Monad.Bayes.DelayedSampling where
 
 import Control.Applicative (asum)
-import Control.Monad (forM_, void, (>=>))
+import Control.Monad (forM, forM_, void, (>=>))
 import Control.Monad.Bayes.Class hiding (Distribution)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Class
@@ -28,7 +28,7 @@ import Data.IntMap.Strict qualified as IntMap
 import Data.IntSet (IntSet)
 import Data.IntSet qualified as IntSet
 import Data.List (nub, (\\))
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Maybe (catMaybes, fromMaybe, listToMaybe)
 import Data.Typeable (Typeable, cast)
 import Statistics.Function (square)
 import Prelude hiding (unzip)
@@ -502,6 +502,27 @@ lookupChildren var = do
   let childIdxs = maybe [] IntSet.toAscList $ IntMap.lookup (getVariable var) children
   pure [unsafeResolvedVariable i node | i <- childIdxs, Just node <- [IntMap.lookup i nodes]]
 
+{- | The one marginalized child Invariant 2 of the paper guarantees a
+  marginalized node has, if it has one.
+
+  Classifies every child of 'var' exactly as 'graft' and 'prune' used to
+  inline: a realized child throws 'AlreadyRealized' on that child, and two or
+  more marginalized children throw 'MultipleMarginalizedChildren' with their
+  indices in ascending order, the same order 'marginalizedChildren' reports
+  for the whole-graph check.
+-}
+marginalizedChild :: (Monad m, Typeable a, Eq a, Show a) => Variable a -> DelayedSamplingT m (Maybe ResolvedVariable)
+marginalizedChild var = do
+  children <- lookupChildren var
+  classified <- forM children $ \resolved@ResolvedVariable {node = childNode} -> case childNode of
+    Initialized {marginalDistribution = Just _} -> pure $ Just resolved
+    Initialized {marginalDistribution = Nothing} -> pure Nothing
+    Realized _ -> throw $ AlreadyRealized resolved
+  case catMaybes classified of
+    [] -> pure Nothing
+    [one] -> pure $ Just one
+    multiple -> throw $ MultipleMarginalizedChildren (getVariable var) [getVariable variable | ResolvedVariable {variable} <- multiple]
+
 {- | The initial and the marginal distribution of a marginalized node.
 
   Every caller has just gone through 'lookupTerminal', which throws unless the
@@ -653,11 +674,8 @@ graft var = addTrace "graft" do
   node <- lookupVar var
   case node of
     Initialized {marginalDistribution = Just _} -> do
-      children <- lookupChildren var
-      forM_ children $ \resolved@ResolvedVariable {node = childNode, variable = childVar} -> case childNode of
-        Initialized {marginalDistribution = Just _} -> prune childVar
-        Initialized {marginalDistribution = Nothing} -> pure ()
-        Realized _ -> addTrace "one of the children while grafting" $ throw $ AlreadyRealized resolved
+      childMaybe <- addTrace "one of the children while grafting" $ marginalizedChild var
+      forM_ childMaybe $ \ResolvedVariable {variable = childVar} -> prune childVar
     Initialized {marginalDistribution = Nothing} -> do
       parentMaybe <- getParent var
       forM_ parentMaybe $ \SomeVariable {getSomeVariable = parentVar} -> graft parentVar
@@ -670,11 +688,8 @@ prune var = addTrace "prune" do
   node <- lookupVar var
   case node of
     Initialized {marginalDistribution = Just _} -> do
-      children <- lookupChildren var
-      forM_ children $ \resolved@ResolvedVariable {node = childNode, variable = childVar} -> case childNode of
-        Initialized {marginalDistribution = Just _} -> prune childVar
-        Initialized {marginalDistribution = Nothing} -> pure ()
-        Realized _ -> addTrace "one of the children while pruning" $ throw $ AlreadyRealized resolved
+      childMaybe <- addTrace "one of the children while pruning" $ marginalizedChild var
+      forM_ childMaybe $ \ResolvedVariable {variable = childVar} -> prune childVar
     _ -> throw NotMarginal
   void $ sample var
 

@@ -111,6 +111,35 @@ test = describe "DelayedSampling" $ do
         checked $ value c
       void $ shouldBeRight result
 
+    it "raises MultipleMarginalizedChildren instead of pruning both (Invariant 2)" $ do
+      -- Deliberately inconsistent graph, so this must not be wrapped in
+      -- 'checked': 'ensureConsistency' would throw first and the test would
+      -- pass for the wrong reason.
+      (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
+        a <- normalDS (Const 0) (Const 1)
+        b <- normalDS (Var a) (Const 1)
+        c <- normalDS (Var a) (Const 1)
+        setMarginalized b $ Normal (Const 0) (Const 2)
+        setMarginalized c $ Normal (Const 0) (Const 2)
+        graft a
+      err <- error_ <$> shouldBeLeft result
+      err `shouldBe` MultipleMarginalizedChildren 0 [1, 2]
+
+  describe "prune" $ do
+    it "raises MultipleMarginalizedChildren instead of pruning both (Invariant 2)" $ do
+      -- Deliberately inconsistent graph, so this must not be wrapped in
+      -- 'checked': 'ensureConsistency' would throw first and the test would
+      -- pass for the wrong reason.
+      (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
+        a <- normalDS (Const 0) (Const 1)
+        b <- normalDS (Var a) (Const 1)
+        c <- normalDS (Var a) (Const 1)
+        setMarginalized b $ Normal (Const 0) (Const 2)
+        setMarginalized c $ Normal (Const 0) (Const 2)
+        prune a
+      err <- error_ <$> shouldBeLeft result
+      err `shouldBe` MultipleMarginalizedChildren 0 [1, 2]
+
   describe "ensureConsistency" $ do
     it "detects a node with two parents" $ do
       (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
