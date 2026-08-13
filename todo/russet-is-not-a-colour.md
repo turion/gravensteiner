@@ -1,5 +1,12 @@
 # Russet is a texture, not a colour — and the simplex premise goes with it
 
+> **Adopted.** The v1 schema in `Gravensteiner.Model` already separates russet from `Colours` and
+> drops `brown`, and the appearance parameterisation argued for here is the one chosen — see
+> [the review](model-v1-review.md) and [the network design](model-v1-bayesian-network.md). What
+> remains open is the naming (`Colours` still holds `yellow`/`red`/`green` rather than
+> `groundColour`/`overcolour`), the pattern categorical, and the elicitation protocol, which now
+> needs to reach the data-collection form and not only the type.
+
 ## Why it matters
 
 `Colours`' fourth field is named `brown`, but the thing being described is **russet**: corky

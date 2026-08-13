@@ -1,5 +1,15 @@
 # Exact zeros in the colour proportions make every density NaN or infinite
 
+> **Resolved by design; kept as the diagnosis.** The v1 schema drops the composition entirely
+> (ground colour and overcolour are independent coordinates, russet is separate), so there is no
+> simplex left to have a boundary and no colour can be a structural zero. The only zero-inflated
+> coordinate is russet extent, and its presence indicator is *observed* — the observer records
+> whether there is any russet at all — so it contributes a Bernoulli likelihood and **no latent
+> variable**. The crash analysis below still stands as the reason the old `Main.hs` executable
+> exits with `categorical: bad weights!`, and as the worked example of why a boundary-of-support
+> value is a modelling error rather than a numerical one. See
+> [the network design](model-v1-bayesian-network.md).
+
 ## Why it matters
 
 This is not a subtle statistical objection — it is why the executable dies. Every entry of

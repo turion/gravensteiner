@@ -1,5 +1,14 @@
 # The target model is a deep, crossed hierarchy — and that reorders this backlog
 
+> **Partly superseded.** The v1 schema in `Gravensteiner.Model` and
+> [the network design](model-v1-bayesian-network.md) write this hierarchy out formally, which is
+> what the "Done when" section below asked for. Two consequences below did not survive that:
+> **(4)** the label latent is per *tree*, not per apple, so the 2^n argument and the "SMC is
+> required" conclusion are both too strong; and **(5)** ripeness should not be a latent at all,
+> which makes it unconditionally conjugate rather than conditionally so. Both are corrected in
+> place. The crossed-design finding in (3) survives and is strengthened with a concrete dimension
+> estimate.
+
 ## Why it matters
 
 The intended model is not "a prior per cultivar". It is a hierarchy: individual apples come from a
@@ -50,23 +59,39 @@ This is squarely the non-tree tractable structure named in
 [the paper's own future work](paper-future-work.md), so that item is not research-grade
 decoration — it is where the target model lives.
 
-**4. The label-error model is what breaks analyticity — and it puts SMC back on the critical path.**
+**4. The label-error model is what breaks analyticity — but the grain is the tree, not the apple.**
 Rev 5 recorded that under a fully conjugate reformulation the model would be exact and therefore
-that [SMC integration](no-smc-integration.md) was not on the apple model's critical path. With
-per-apple label error that is wrong, and the correction is worth stating plainly: a latent indicator
-`z_i` per apple makes the likelihood a **mixture** over the true cultivar, which is not conjugate
-for the Gaussian means, and there are as many indicators as apples so they cannot be enumerated
-jointly (2^n). The right algorithm is exactly the paper's payoff — **sample the discrete indicators,
-keep the Gaussian hierarchy analytic**, i.e. Rao-Blackwellized SMC or a collapsed Gibbs sampler. So
-label error is not an awkward extra feature; it is the one feature that makes delayed sampling
-*earn* its keep rather than merely automate a closed form.
+that [SMC integration](no-smc-integration.md) was not on the apple model's critical path. That is
+wrong — a latent label makes the likelihood a **mixture** over the true cultivar, which is not
+conjugate for the Gaussian means — but the correction as first written overshot. It assumed one
+indicator `z_i` per apple and concluded a 2^n joint that forces sampling.
 
-**5. Ripeness stays conjugate if and only if the dates are recorded.** Ripeness enters as
-`rate × duration`. With duration observed and rate latent that is affine, hence delayable; with both
-latent it is *bilinear*, hence not. So recording harvest and observation dates is not a data-quality
-nicety, it is what keeps the model in the tractable class. Note there are two clocks and they are
-not interchangeable: on-tree maturation (bloom → harvest, weather-driven and therefore coupled to
-`w_y`) and post-harvest storage (harvest → observation), which for a stored apple can dominate.
+The v1 schema settles the grain: `Judgement` names a **tree**, so the latent is one categorical
+`z_t` per tree. That is a much better position. The count drops from O(10⁵) apples to O(10³) trees;
+each `z_t` is informed by every apple from that tree *and* every judgement of it, so its posterior
+is sharp rather than near-flat; and the labels are conditionally independent given the shared
+Gaussian latents, so a collapsed sweep visiting one tree at a time is natural and per-tree K-way
+enumeration is feasible at a few hundred cultivars. The model is still a mixture (K^|T|) and still
+not conjugate, so iteration over the discrete part remains unavoidable — but **Rao-Blackwellized
+SMC is one way to run that, not the only one**, and a collapsed Gibbs sweep is the more obvious
+fit. Label error remains the one feature that makes delayed sampling *earn* its keep rather than
+merely automate a closed form. Details in [the network design](model-v1-bayesian-network.md).
+
+**5. Ripeness should not be a latent variable at all.** The shape above writes `r_i · d_c` with a
+latent ripeness `r_i` and a latent direction `d_c`, which is *bilinear* and therefore not
+conjugate; the original conclusion was that ripeness "stays conjugate if and only if the dates are
+recorded". The sharper statement is that once the dates are recorded there is no reason to
+introduce `r_i`: **the durations are the covariates**, the only latent is the per-cultivar ripening
+direction, and the term becomes an ordinary Bayesian linear regression — affine in one latent with
+an observed coefficient, which is the case `conditionDist` already handles in its
+`Normal (Product c (Var v)) (Const variance)` clause. A latent ripeness would buy nothing the
+durations do not already carry.
+
+The two clocks stay separate and are not interchangeable: on-tree maturation (bloom → harvest,
+weather-driven and therefore coupled to `w_y`) and post-harvest storage (harvest → observation),
+which for a stored apple can dominate. Recording harvest and examination dates therefore remains a
+requirement rather than a nicety — and since bloom date is usually unrecorded, maturation has to be
+approximated from harvest day-of-year, which only means anything given the tree's location.
 
 **6. Identifiability is a data-collection constraint, not a code problem.** Each level is only
 estimable given the right overlap: a tree effect needs several apples from that tree, a year effect
@@ -114,7 +139,9 @@ thinnest, and it is once again crossed rather than tree-shaped.
 
 ## Done when
 
-Nothing here is buildable yet; it is recorded so the backlog is aimed correctly. The next concrete
-step when this is picked up is to write the generative model out formally — every level, every
-index set, and which effects are crossed with which — because that document is what determines
-whether supernodes need to be sparse, and the answer to that determines most of the remaining work.
+**Done.** The generative model is written out formally in
+[the network design](model-v1-bayesian-network.md) — every level, every index set, and which
+effects are crossed with which — against the v1 schema rather than a sketch. The answer to the
+question this file left open is that supernodes **do** need to be sparse: the entity latent vector
+is O(10⁴), so a dense factorisation is not viable. The requirements that follow from it are
+tracked in [the requirements](model-v1-delayed-sampling-requirements.md).

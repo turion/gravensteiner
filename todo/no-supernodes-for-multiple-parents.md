@@ -79,3 +79,13 @@ observers gives a joint whose dense factorisation is O(*d*³) in the total numbe
 The structure is sparse — an apple touches one tree, one year and one observer — so the useful
 target is a sparse precision representation with a fill-reducing ordering, i.e. Gaussian belief
 propagation, rather than a dense covariance that happens to be large.
+
+That last paragraph is no longer a caution but a **requirement with a number attached**.
+[The network design](model-v1-bayesian-network.md) totals the entity latent vector at **O(10⁴)** for
+a regional model (10³ trees, 10² cultivars, 10² year×region cells, 10² observers, appearance
+*d* ≈ 6), which puts a dense solve at ~10¹² flops and ~10⁸ doubles of covariance — not viable, and
+worsening with every tree added. It is tracked as R4 in
+[the requirements](model-v1-delayed-sampling-requirements.md), together with the representational
+consequence: information form makes conditioning cheap and marginalization expensive, the opposite
+of the covariance form `conditionDist` uses today, and this model conditions constantly and
+marginalizes only to report.

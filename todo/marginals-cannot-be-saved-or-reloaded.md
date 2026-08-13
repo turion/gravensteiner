@@ -1,5 +1,15 @@
 # A trained model cannot be extracted from the graph or loaded back into one
 
+> **The target shape is not a `Map`.** This file is written around extracting one marginal per
+> entity and reloading it with `initialize`. Under the crossed hierarchy in
+> [the network design](model-v1-bayesian-network.md) that is lossy in the way that matters: the
+> cultivar means are *correlated* in the posterior — they share a grand mean, a pedigree prior, and
+> every observer and year effect — so per-entity marginals discard exactly the couplings that let
+> one cultivar's data inform another's. Persistence is a **sparse precision matrix over all entity
+> latents** plus the Dirichlet, calibration and Beta parameters. The `marginal` operation and the
+> round-trip test below are still the right first step and still needed; they are just not the whole
+> feature. See R9 in [the requirements](model-v1-delayed-sampling-requirements.md).
+
 ## Why it matters
 
 The apple model is meant to be *trained once and used many times*: `Model = Map Name AppleSortPrior`

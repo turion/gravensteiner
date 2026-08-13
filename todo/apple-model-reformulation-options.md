@@ -125,6 +125,15 @@ logit scale and a presence layer for the zero-inflated ones. A's counts survive 
 *N* as the observer-precision knob for a coverage judgement, i.e. beta-binomial rather than
 Dirichlet-multinomial.
 
+**Decided.** Option B is chosen, and the parameterisation is settled concretely: ground-colour
+position on a green→yellow axis, overcolour extent as a fraction of non-russeted skin, an
+overcolour pattern categorical, and russet extent — the last being the only genuinely zero-inflated
+coordinate, and its presence indicator is *observed*, so the presence layer costs no latent
+variable. There is no alr transform and no composition anywhere in the result. See
+[the review](model-v1-review.md) for the elicitation constraint that makes this work (asking for
+non-russeted fraction avoids a bilinear `blush × (1 − russet)`) and
+[the network design](model-v1-bayesian-network.md) for the full appearance vector.
+
 **A port is possible today, before any of this lands**, at reduced fidelity: option B with a
 *diagonal* Σ makes the three alr coordinates three independent scalar chains,
 `μᵢ ~ N(mᵢ, s²)` and `yᵢ ~ N(Var μᵢ, σ²)`, which `normalDS`/`observe` already support —

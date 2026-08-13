@@ -41,12 +41,26 @@ Which way the dependency runs with the apple model depends on how far that model
 *small* version — one prior per cultivar, all observations correctly labelled — the model is fully
 conjugate, its cultivar posterior is a finite sum of closed-form predictives, and delayed sampling
 never samples anything; SMC would be a demonstration of the Rao-Blackwellization limit below rather
-than a requirement. In [the target hierarchy](apple-model-target-hierarchy.md) it is a requirement,
-because a per-apple "was this label right" indicator makes the likelihood a mixture over the true
-cultivar — not conjugate for the Gaussian means, and with one indicator per apple far too many to
-enumerate. Sampling the indicators while keeping the Gaussian hierarchy analytic *is* this item. So
-SMC is on the critical path, and the trigger is the label-error model rather than the appearance
-model.
+than a requirement.
+
+Once labels are fallible it stops being conjugate, because a latent "which cultivar is this really"
+makes the likelihood a mixture over the true cultivar. The question is then whether SMC is the
+*required* answer, and the grain of the latent decides it. An earlier version of this paragraph
+assumed one indicator per apple, concluded there were far too many to enumerate, and put SMC
+squarely on the critical path. The v1 schema attaches judgements to **trees**, so the latent is one
+categorical per tree: O(10³) of them rather than O(10⁵), each informed by every apple from that tree
+and every judgement of it, and conditionally independent given the shared Gaussian latents. That
+makes per-tree K-way enumeration inside a collapsed Gibbs sweep the more natural algorithm, with
+the Gaussian hierarchy marginalized analytically.
+
+So the honest statement is: **sampling a discrete latent while keeping the Gaussian part analytic
+is exactly this item, and SMC is one way to run it rather than the only one.** It stays valuable —
+it is the paper's own payoff, it is what a streaming deployment wants, and the variance benchmark
+below is the only real evidence the integration works — but the apple model can reach a working
+posterior through a collapsed sweep first. See [the network design](model-v1-bayesian-network.md)
+for the algorithm and [the requirements](model-v1-delayed-sampling-requirements.md) for what a
+collapsed sweep needs that this package does not yet have (chiefly: scoring K alternatives against
+one marginalized context, and undoing a conditioning step).
 
 ## Done when
 

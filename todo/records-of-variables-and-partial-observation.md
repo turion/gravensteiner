@@ -1,5 +1,15 @@
 # No way to build a record of variables, or to observe one partially
 
+> **Now has a concrete client, and a concrete shape.** The v1 schema in `Gravensteiner.Model`
+> answers the `Main.hs` FIXME below directly: `Fruit`, `Collection`, `Tree` and `Judgement` all
+> take a higher-kinded phase parameter, so `Fruit Maybe` is a partial observation and
+> `Fruit Identity` a complete one. That settles the *data* side; what this item is now about is the
+> **`Variable` side** — mapping a record of priors to a record of `Variable`s and observing a
+> `Fruit Maybe` field by field. `UUIDMap`'s indexed instances are the right shape for the entity
+> level. One gap the schema still has: `Fruit.colours` is `p Colours`, so the colour fields are
+> all-or-nothing, where a literature source typically gives ground colour and omits blush — see
+> [the review](model-v1-review.md).
+
 ## Why it matters
 
 `Main.hs` asks for this directly: `-- FIXME HKD to define priors & observations?`. The model has

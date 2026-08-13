@@ -1,5 +1,22 @@
 # Cleanups in `Main.hs` that are not delayed-sampling features
 
+> **Most of this file describes code that is being deleted.** `gravensteiner/app/Main.hs` is a
+> precursor superseded by `Gravensteiner.Model` plus
+> [the network design](model-v1-bayesian-network.md), so the `identify` faults, the debug output,
+> the `beta` numerics, the dead declarations and the `Dirichlet` hyperprior all go with it rather
+> than being fixed. Three findings **transfer** and are the reason to keep this file:
+>
+> - **The refinement newtypes do not refine anything.** `Interval` in `Gravensteiner.Model` derives
+>   `Num`, `Fractional` and `Floating` exactly as before, and now has no smart constructor at all.
+>   The same lesson applies unchanged, and is re-flagged in [the review](model-v1-review.md).
+> - **Numerics: leave log space only at the end.** A general principle, and the new model has more
+>   densities, not fewer.
+> - **No test suite, and no way to tell whether the model works.** `gravensteiner.cabal` still has
+>   no `test-suite`, and the evaluation gap below is *more* pressing now: the seed database will make
+>   held-out identification accuracy and calibration measurable for the first time, and those are the
+>   only things that can arbitrate between modelling choices made so far on statistical reasoning
+>   alone.
+
 ## Why it matters
 
 Collected in one file deliberately: none of these needs anything from `delayed-sampling`, none is a

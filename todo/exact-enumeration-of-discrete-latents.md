@@ -24,6 +24,15 @@ It is the right first port, and it should be written down as such so that nobody
 per-apple latent) is recomputed *k* times, and there is no way to condition the shared parent on
 the mixture.
 
+**This route is now the plan, and its cost is the binding constraint rather than a footnote.**
+[The network design](model-v1-bayesian-network.md) puts one categorical latent per *tree* over a
+regional set of a few hundred cultivars, and enumerating it is exactly this route — so it is on the
+critical path, not merely a first step. But *k* is now a few hundred rather than three, and the
+shared structure being recomputed is the entire crossed Gaussian block, so rebuilding it *k* times
+per tree is the dominant cost of the whole algorithm. The requirement that follows is to graft the
+shared context **once** and score *k* alternatives against it; it is recorded as R1's first
+sub-requirement in [the requirements](model-v1-delayed-sampling-requirements.md).
+
 **(2) Run over an enumeration base monad.** `DelayedSamplingT (Enumerator)` would make the discrete
 choice exact and keep everything in one computation. There is a real obstacle worth knowing before
 trying: monad-bayes' `Enumerator` implements only `bernoulli` and `categorical`, with
