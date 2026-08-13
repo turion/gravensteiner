@@ -25,7 +25,9 @@ import Control.Monad.Trans.State.Strict
 import Data.Functor.Compose (Compose (..))
 import Data.IntMap.Strict (IntMap)
 import Data.IntMap.Strict qualified as IntMap
-import Data.List (nub)
+import Data.IntSet (IntSet)
+import Data.IntSet qualified as IntSet
+import Data.List (nub, (\\))
 import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Typeable (Typeable, cast)
 import Statistics.Function (square)
@@ -236,15 +238,38 @@ castNode (SomeNode node) = cast node
 
 data Graph = Graph
   { nodes :: IntMap SomeNode
+  , -- | Cache of each node's children, keyed by parent index. Reconciled on
+    -- every write to 'nodes' (see 'reconcileChildren' and 'rebuildChildren'),
+    -- never tracked ad hoc per call site — that is what correctly handles a
+    -- substitution silently dropping a parent edge (e.g. scaling by 0).
+    children :: IntMap IntSet
   , maxKey :: Int
   }
   deriving (Show, Eq)
 
-onNodes :: (IntMap SomeNode -> IntMap SomeNode) -> Graph -> Graph
-onNodes f Graph {nodes, maxKey} = Graph {nodes = f nodes, maxKey}
-
 empty :: Graph
-empty = Graph mempty 0
+empty = Graph mempty mempty 0
+
+someVariableIndex :: SomeVariable -> Int
+someVariableIndex SomeVariable {getSomeVariable} = getVariable getSomeVariable
+
+{- | Update the child index for node @i@ so it reflects @newParents@, given the
+  parents it had before this write (@[]@ for a newly initialized node).
+-}
+reconcileChildren :: Int -> [SomeVariable] -> [SomeVariable] -> IntMap IntSet -> IntMap IntSet
+reconcileChildren i oldParents newParents cs = foldr add (foldr remove cs removedIdx) addedIdx
+  where
+    oldIdx = nub $ fmap someVariableIndex oldParents
+    newIdx = nub $ fmap someVariableIndex newParents
+    removedIdx = oldIdx \\ newIdx
+    addedIdx = newIdx \\ oldIdx
+    remove p = IntMap.adjust (IntSet.delete i) p
+    add p = IntMap.insertWith IntSet.union p (IntSet.singleton i)
+
+-- | Recompute the child index for a whole node map from scratch.
+rebuildChildren :: IntMap SomeNode -> IntMap IntSet
+rebuildChildren ns =
+  IntMap.fromListWith IntSet.union [(parent, IntSet.singleton i) | (i, node) <- IntMap.toList ns, parent <- parentIndices node]
 
 checkEveryNode :: (forall a. Node a -> Maybe b) -> Graph -> Maybe (Int, b)
 checkEveryNode f = asum . fmap (\(n, SomeNode {getSomeNode}) -> (n,) <$> f getSomeNode) . IntMap.toAscList . nodes
@@ -312,13 +337,14 @@ isRealized _ = False
   realizes.
 -}
 marginalizedChildren :: Graph -> Maybe (Int, [Int])
-marginalizedChildren Graph {nodes} =
+marginalizedChildren Graph {nodes, children} =
   listToMaybe
-    [ (i, children)
+    [ (i, marginalizedChildIdxs)
     | (i, node) <- IntMap.toAscList nodes
     , not $ isRealized node
-    , let children = [child | (child, childNode) <- IntMap.toAscList nodes, isMarginalized childNode, i `elem` parentIndices childNode]
-    , length children > 1
+    , let childIdxs = maybe [] IntSet.toAscList $ IntMap.lookup i children
+    , let marginalizedChildIdxs = [child | child <- childIdxs, maybe False isMarginalized $ IntMap.lookup child nodes]
+    , length marginalizedChildIdxs > 1
     ]
 
 data ResolvedVariable
@@ -417,9 +443,12 @@ addTrace msg = DelayedSamplingT . withExceptT (\errortrace@ErrorTrace {trace} ->
 -- FIXME look into lenses
 onNode :: (Monad m, Eq a, Show a, Typeable a) => StateT (Node a) (Either Error) b -> Variable a -> DelayedSamplingT m b
 onNode action (Variable i) = do
-  graph <- DelayedSamplingT $ lift $ gets nodes
-  (b, graph') <- except $ getCompose $ IntMap.alterF (Compose . maybe (Left (IndexOutOfBounds i)) (maybe (Left (TypesInconsistent i)) (fmap (fmap (Just . SomeNode)) . runStateT action) . castNode)) i graph
-  DelayedSamplingT $ lift $ modify $ onNodes $ const graph'
+  Graph {nodes, children, maxKey} <- DelayedSamplingT $ lift get
+  let oldParents = maybe [] getParentsSome (IntMap.lookup i nodes)
+  (b, nodes') <- except $ getCompose $ IntMap.alterF (Compose . maybe (Left (IndexOutOfBounds i)) (maybe (Left (TypesInconsistent i)) (fmap (fmap (Just . SomeNode)) . runStateT action) . castNode)) i nodes
+  let newParents = maybe [] getParentsSome (IntMap.lookup i nodes')
+      children' = reconcileChildren i oldParents newParents children
+  DelayedSamplingT $ lift $ put Graph {nodes = nodes', children = children', maxKey}
   pure b
 
 lookupVar :: (Monad m, Typeable a, Eq a, Show a) => Variable a -> DelayedSamplingT m (Node a)
@@ -469,8 +498,9 @@ lookupTerminal var = addTrace "lookupTerminal" $ do
 
 lookupChildren :: (Monad m, Typeable a, Eq a, Show a) => Variable a -> DelayedSamplingT m [ResolvedVariable]
 lookupChildren var = do
-  nodes <- DelayedSamplingT $ lift $ gets nodes
-  pure $ fmap (uncurry unsafeResolvedVariable) $ filter ((SomeVariable var `elem`) . getParentsSome . snd) $ IntMap.toAscList nodes
+  Graph {nodes, children} <- DelayedSamplingT $ lift get
+  let childIdxs = maybe [] IntSet.toAscList $ IntMap.lookup (getVariable var) children
+  pure [unsafeResolvedVariable i node | i <- childIdxs, Just node <- [IntMap.lookup i nodes]]
 
 {- | The initial and the marginal distribution of a marginalized node.
 
@@ -586,12 +616,14 @@ evalDelayedSamplingT = fmap fst . runDelayedSamplingT
 
 initialize :: (Monad m, Typeable a, Show a, Eq a) => Distribution a -> DelayedSamplingT m (Variable a)
 initialize initialDistribution = DelayedSamplingT $ lift $ do
-  Graph nodes maxKey <- get
+  Graph {nodes, children, maxKey} <- get
   let marginalDistribution = if null $ getParents initialDistribution then Just initialDistribution else Nothing
       maxKey' = maxKey + 1
+      children' = reconcileChildren maxKey [] (getParents initialDistribution) children
   put $
     Graph
       { nodes = IntMap.insert maxKey (SomeNode Initialized {initialDistribution, marginalDistribution}) nodes
+      , children = children'
       , maxKey = maxKey'
       }
   pure $ Variable maxKey
@@ -666,7 +698,12 @@ deallocateRealized var = do
   node <- lookupVar var
   case node of
     Realized a -> do
-      DelayedSamplingT $ lift $ modify $ onNodes $ IntMap.delete (getVariable var) . IntMap.map (substSome var a)
+      DelayedSamplingT $ lift $ modify $ \Graph {nodes, maxKey} ->
+        let nodes' = IntMap.delete (getVariable var) $ IntMap.map (substSome var a) nodes
+         in -- Substitution can drop a parent edge (e.g. scaling by 0), so
+            -- rebuild the whole index rather than diffing; this pass is
+            -- already O(|graph|) via the map above.
+            Graph {nodes = nodes', children = rebuildChildren nodes', maxKey}
       pure True
     _ -> pure False
 
