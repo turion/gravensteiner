@@ -1,8 +1,9 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 
-{- | Some types are tagged with a higher kinded datatype phase that can be used to mark parts of the data as being "not observed" via 'Maybe'.
+{- | Some types are tagged with a higher kinded datatype phase that can be used to mark parts of the data as being "not observed" via 'Maybe' or 'Observed'.
 Sampling data on the other hand will always produce data, so can use 'Identity' as the phase.
 -}
 module Gravensteiner.Model where
@@ -26,7 +27,14 @@ import Data.Functor.WithIndex (FunctorWithIndex)
 import Data.Traversable.WithIndex (TraversableWithIndex (..))
 
 -- ghc
+import GHC.Generics (Generic)
 import GHC.Records (HasField)
+
+-- barbies
+import Data.Functor.Barbie
+
+-- delayed-sampling
+import Control.Monad.Bayes.DelayedSampling.Record (Observed (..))
 
 -- | Recorded in serialisation to allow for future migrations
 version :: Int
@@ -41,7 +49,8 @@ data Person = Person
 
 -- | A number assumed to be between 0 and 1
 newtype Interval = Interval {getInterval :: Double}
-  deriving (Show, Eq, Ord, Num, Fractional, Floating)
+  deriving stock (Show, Eq, Ord)
+  deriving newtype (Num, Fractional, Floating)
 
 data Colours = Colours
   { yellow :: Interval
@@ -50,19 +59,31 @@ data Colours = Colours
   }
   deriving (Show, Eq)
 
-data Fruit p = Fruit
+-- | Fruit appearance, factored out so 'Description' can state the same shape without dragging in 'Fruit'-only metadata (@observer@, @uuid@).
+data Appearance p = Appearance
   { colours :: p Colours
   , russet :: p Interval
-  , -- TODO Further properties to be added here, such as size, shape, etc.
+  -- TODO Further properties to be added here, such as size, shape, etc.
+  }
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB, ApplicativeB, ConstraintsB)
 
-    observer :: p UUID
+-- Note: no 'ApplicativeB' here -- 'bpure' would need a 'Monoid UUID' for the plain @uuid@
+-- field, which doesn't exist (and shouldn't: a UUID has no sensible "empty" value).
+data Fruit p = Fruit
+  { appearance :: Appearance p
+  , observer :: p UUID
   {- ^ The 'Person' (keyed into 'Database''s @people@) who observed the fruit and recorded its
   properties. Often this will be the same as the pomologist who made the judgement, but not always.
   -}
   , -- TODO: photographs of the fruit
     uuid :: UUID
   }
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB, ConstraintsB)
 
+-- Note: no 'ApplicativeB'/'ConstraintsB' -- the generic deriving doesn't reach through a
+-- list-of-barbies field (@fruits :: [Fruit p]@).
 data Collection p = Collection
   { fruits :: [Fruit p]
   , date :: p Day
@@ -71,11 +92,15 @@ data Collection p = Collection
   -- ^ Keyed into 'Observations''s @trees@
   , uuid :: UUID
   }
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB)
 
 data Tree p = Tree
   { planted :: p Year
   , uuid :: UUID
   }
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB, ConstraintsB)
 
 data Cultivar = Cultivar
   { name :: Text
@@ -109,6 +134,44 @@ data Judgement p = Judgement
   , date :: p Day
   , uuid :: UUID
   }
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB, ConstraintsB)
+
+{- | How confident a description is about the location of a stated value, and optionally
+its spread — e.g. a monograph saying a cultivar is "usually deep red, sometimes striped".
+-}
+data Elicited a = Elicited
+  { location :: a
+  , strength :: Double
+  , spread :: Maybe (Spread a)
+  }
+
+data Spread a = Spread
+  { scale :: a
+  , scaleStrength :: Double
+  }
+
+-- | Whether a 'Description' stated a value for a field at all.
+data Described a = DescribedAs (Elicited a) | NotDescribed
+
+-- | Where a 'Description' comes from, for provenance and citation purposes.
+data Source = Monograph | Website | PersonalCommunication
+
+{- | A published or otherwise recorded description of a cultivar's appearance, distinct from
+a 'Collection' (which observes a single tree's fruit) — a description is elicited testimony
+about the cultivar in general, not a measurement of a particular specimen.
+-}
+data Description p = Description
+  { cultivar :: UUID
+  , author :: UUID
+  , source :: Source
+  , stated :: Appearance Described
+  , published :: p Day
+  , cites :: [UUID]
+  , uuid :: UUID
+  }
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB)
 
 newtype UUIDMap a = UUIDMap {getUUIDMap :: Map UUID a}
   deriving newtype (Show, Eq, Functor, Foldable, FunctorWithIndex UUID, FoldableWithIndex UUID)
@@ -121,9 +184,10 @@ insert :: (HasField "uuid" a UUID) => a -> UUIDMap a -> UUIDMap a
 insert a (UUIDMap m) = UUIDMap $ Map.insert a.uuid a m
 
 data Observations = Observations
-  { collections :: UUIDMap (Collection Maybe)
-  , trees :: UUIDMap (Tree Maybe)
-  , judgements :: UUIDMap (Judgement Maybe)
+  { collections :: UUIDMap (Collection Observed)
+  , trees :: UUIDMap (Tree Observed)
+  , judgements :: UUIDMap (Judgement Observed)
+  , descriptions :: UUIDMap (Description Maybe)
   }
 
 data Database = Database

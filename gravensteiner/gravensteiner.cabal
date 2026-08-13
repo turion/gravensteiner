@@ -19,6 +19,7 @@ common warnings
     barbies,
     base >=4.18 && <4.22,
     containers,
+    delayed-sampling,
     indexed-traversable,
     log-domain,
     math-functions ^>=0.3,
