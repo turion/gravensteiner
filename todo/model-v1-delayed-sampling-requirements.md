@@ -4,7 +4,7 @@
 
 [The network design](model-v1-bayesian-network.md) is a specification; this is the list of
 capabilities it requires, so that the backlog can be worked in an order that converges on it.
-Most rows already have a backlog item and are cross-referenced rather than restated. Six are new,
+Most rows already have a backlog item and are cross-referenced rather than restated. Eight are new,
 and one of those is deeper than anything currently recorded.
 
 The headline: **the model is not blocked on distributions, it is blocked on graph structure.**
@@ -27,8 +27,10 @@ itself random, and whose joint is sparse rather than tree-shaped.
 | R9 | Persistence of a sparse joint over entity latents | train once, identify later | reshapes [marginals](marginals-cannot-be-saved-or-reloaded.md) |
 | R10 | Incremental extension of a fitted graph | hundreds of collections per year | **new** |
 | R11 | Bounded memory: fruit transient, entities permanent | 10⁵ fruit, 10³ entities | [streaming](streaming-training-with-bounded-memory.md) |
-| R12 | An observation model on missingness itself | literature that does not mention a feature | **new** |
-| R13 | A distribution-valued result, including an "other" outcome | reporting a calibrated probability | [reformulation](apple-model-reformulation-options.md), change 1 |
+| R12 | Observation status in the type: exact / coarse / not mentioned / not measured | knowing *why* a field is absent | **new** |
+| R13 | A distribution-valued result, including an "other" outcome | reporting a ranked candidate list | [reformulation](apple-model-reformulation-options.md), change 1 |
+| R14 | Interval-censored observations | the literature corpus is almost entirely coarse | **new** |
+| R15 | A moment-form serving cache extracted from the information-form fit | answering queries without refitting | **new** |
 
 ## R1 — stochastic edges, and why this is the hard one
 
@@ -61,9 +63,17 @@ Two sub-requirements fall out, and they are the practical content of R1:
 2. **Retraction.** A collapsed Gibbs sweep revisits `z_t` after having conditioned on it, so the
    effect of the previous value must be removable. Delayed sampling is built around monotone
    accumulation of evidence: `realize` and `observe` move nodes forward through I → M → R and
-   nothing moves back. Either the sweep re-derives the Gaussian block from scratch per tree
-   (correct, expensive) or there is a genuine downdate. This is the requirement most likely to be
-   discovered late, so it is recorded now.
+   nothing moves back, and `observe` has additionally already applied its `score` to the weight.
+   Either the sweep re-derives the Gaussian block from scratch per tree (correct, expensive) or
+   there is a genuine downdate. This is the requirement most likely to be discovered late, so it is
+   recorded now.
+
+   **R1 and R4 converge here, which is a useful coincidence.** In information form the evidence
+   from one observation is an *additive* contribution to the precision and the information vector,
+   `Λ += Aᵀ S⁻¹ A` and `η += Aᵀ S⁻¹ y`, so retracting it is subtraction of the same two terms —
+   exact, local, and O(block size). In moment form there is no comparable downdate. So the
+   representational change R4 needs for scale is the same one R1 needs for correctness, and neither
+   should be designed without the other.
 
 Note that R1 interacts with the confusion model: `sim(c, c')` is derived from the Gaussian
 posterior, so the discrete block's weights depend on the continuous block's current state. The two
@@ -102,11 +112,44 @@ form) representation with a fill-reducing ordering**, i.e. Gaussian belief propa
 not an optimisation to add later — the model sits at the extreme where dense supernodes fail,
 rather than near it.
 
-A caveat worth recording: information form makes conditioning cheap and marginalization
-expensive, which is the opposite trade-off from the covariance form the package currently uses in
-`conditionDist`. Since this model conditions constantly (every fruit) and marginalizes rarely (to
-report), information form is the right default, but it is a genuine representational change and
-not a drop-in.
+### Two representations, because training and serving want opposite things
+
+Information form makes conditioning cheap and marginalization expensive; moment (covariance) form
+is the reverse. The package's `conditionDist` is moment form today. The two phases of this system
+sit on opposite sides of that trade-off, so the resolution is not to pick one:
+
+- **Training / ingestion** conditions constantly (once per fruit, O(10⁵) times), retracts during
+  Gibbs sweeps (R1), and grows the latent vector as trees and observers appear (R10). All three are
+  additive-and-local in information form and all three are expensive in moment form.
+- **Serving** — enter a collection, get a ranked list of likely cultivars — is a *marginalization*.
+  For each candidate *c* it needs the predictive `p(x_new | z_t = c, all data)`, which means the
+  marginal posterior of `mu_c` plus the relevant shared effects, with a fresh `a_t` from the prior
+  for the unseen tree.
+
+The reconciliation is that serving marginalizes over a **small, fixed** subset and does so against
+a *static* fitted state, so it is computed once per refit rather than once per query:
+
+```
+  per candidate cultivar:  marginal mean and covariance of mu_c     d x d = 36 numbers
+  x K ~ 300 cultivars                                               ~ 11 k numbers
+  plus the shared blocks actually referenced by a query
+    (w_{y,g}, b_o, e_s, and the priors S_tree, S_within)            small
+                                                                    ------
+                                                                    << 1 MB
+```
+
+Note what is *not* needed: the cross-covariance between `mu_c` and `mu_c'`. Ranking evaluates each
+candidate's predictive independently and never conditions on one cultivar while predicting another,
+so the serving artifact is K separate *d*×*d* blocks, not one 1800×1800 joint. Within a candidate,
+several fruit from the same collection do share `a_t`, so the collection's joint predictive
+integrates one *d*-dimensional latent — a small local computation, and the reason a collection is a
+better query unit than a single fruit.
+
+So: **fit in information form, extract a moment-form serving cache once per refit, answer queries
+from the cache.** That also settles what R9 persists — the serving cache is the artifact worth
+shipping, the information-form state is the thing worth checkpointing, and they are not the same
+object. And the "other" outcome comes free, since its predictive is the prior predictive from
+`mu_0` with the full between-cultivar covariance added.
 
 ## R9 and R10 — the trained model is no longer a `Map`
 
@@ -126,23 +169,87 @@ extension has to grow the latent vector, not just condition on it. In informatio
 cheap (a new entity is a new diagonal block plus a few off-diagonal entries), which is a second
 argument for R4.
 
-## R12 — missingness is not always ignorable
+## R12 — observation status belongs in the type
 
-The phase parameter says "this field is absent" and says nothing about *why*. Three reasons are
-mixed together and they are not statistically equivalent:
+`Maybe` collapses several statistically distinct situations into one `Nothing`. They need to be
+distinguished at the point where the distinction is *known* — data entry — because it cannot be
+recovered later. The phase parameter is the right place, since it is already generic:
 
-- **Not measured.** A photo cannot show weight. Missing at random given the source class;
-  ignorable, which is what delayed sampling does naturally with a never-grafted variable.
-- **Not mentioned.** A monograph that omits russet is weak evidence of little russet, because
-  authors mention what is notable. Informative, and ignoring it throws away real signal while
-  treating it as zero introduces a false one.
-- **Absent.** A pomologist recording no russet is an observation of zero, which under the chosen
-  parameterisation is the observed presence indicator.
+```haskell
+-- | Why a field has no exact value, recorded where it is known.
+data Observed a
+  = Observed a
+    -- ^ Stated exactly. Absence of a feature is @Observed 0@, not a missing value:
+    --   "no red on this apple" is an observation, and an informative one.
+  | Coarse (Range a)
+    -- ^ Interval-censored. "medium-large", "greenish-yellow", "above medium".
+    --   Informative and *not* ignorable.
+  | NotMentioned
+    -- ^ A source that could have stated it did not. Weak evidence, because authors
+    --   mention what is notable.
+  | NotMeasured
+    -- ^ The source could not produce it at all: a photograph has no weight.
+    --   Ignorable given the source class.
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
-Only the third is currently expressible. The first is free. The second needs the source class
-(R-review, Tier 1) plus a Bernoulli likelihood on the mention indicator conditioned on the latent
-value — a small model, but it must be *decided* rather than defaulted, because ingesting the
-literature is the immediate next step and the choice is baked into the ingestion.
+data Range a = Range { atLeast :: Maybe a, atMost :: Maybe a }
+  deriving (Show, Eq, Functor, Foldable, Traversable)
+```
+
+`Range` with two `Maybe`s covers one-sided censoring ("above medium", "not russeted beyond a
+patch") as well as two-sided, and `Range Nothing Nothing` is deliberately representable-but-useless
+rather than a separate case.
+
+Used as the phase, `Fruit Observed` is a real-world record and `Fruit Identity` a simulated one, so
+the existing `barbies` dependency and `UUIDMap`'s indexed instances keep working unchanged.
+Deliberately **no `Applicative`/`Monad`**: `<*>` would have to pick a winner between `NotMeasured`
+and `NotMentioned`, and there is no defensible choice, so the ambiguity should be resolved
+per-field at the call site rather than hidden in an instance.
+
+What each case costs in the likelihood:
+
+| Case | Contribution | Conjugate |
+|---|---|---|
+| `Observed x` | the density at *x* | yes |
+| `Observed 0` on a zero-inflated feature | the presence indicator, a Bernoulli | yes (beta-Bernoulli) |
+| `NotMeasured` | none — an ungrafted variable, which is exactly what delayed sampling does | yes, free |
+| `NotMentioned` | a Bernoulli on the mention indicator, conditioned on the latent value | yes, but needs the source class |
+| `Coarse r` | `P(lo <= x <= hi)`, a difference of normal CDFs | **no** — see R14 |
+
+`NotMeasured` being free is worth stating: the ignorable case is the one delayed sampling already
+handles correctly by never grafting the variable, so the type is mostly making the *non*-ignorable
+cases visible.
+
+## R14 — interval-censored observations, which the seed corpus is made of
+
+`Coarse` is not a rare case. Pomological literature almost never gives numbers: "fruit
+medium-large, ground colour greenish-yellow, with a faint red flush on the sunny side" is three
+coarse observations and zero exact ones. Since the seed database is literature, **most of the first
+corpus will arrive as `Coarse`**, and a design that only handles `Observed` would either discard it
+or silently invent point values.
+
+A censored Gaussian observation is not conjugate: the likelihood is
+`Phi((hi - mu)/s) - Phi((lo - mu)/s)`, and the resulting posterior is not Gaussian. Three ways out,
+in increasing fidelity:
+
+1. **Midpoint with inflated variance.** Treat `Coarse (lo, hi)` as `Observed ((lo+hi)/2)` with the
+   observation variance raised by `(hi-lo)²/12`, the variance of a uniform on the interval. Exactly
+   conjugate, one line, and defensible when the interval is narrow relative to the between-cultivar
+   spread. Wrong at the boundaries and for one-sided ranges.
+2. **Moment-matched Gaussian.** Replace the censored likelihood by the Gaussian with the same first
+   two moments (the truncated-normal moments, which are closed form). Keeps the graph conjugate,
+   strictly better than (1), and is one local EP-style update rather than a new inference algorithm.
+   This is the recommended target.
+3. **Latent truncated normal.** Introduce the true value as a latent constrained to the interval and
+   sample it — exact, but it is the auxiliary-variable route that
+   [the conjugate-pairs item](conjugate-pairs-beyond-normal.md) recommends avoiding, needs a
+   truncated-normal sampler, and adds one latent per coarse field, i.e. tens of thousands.
+
+Start at (1) so ingestion is not blocked, plan for (2). Either way the **vocabulary must be fixed
+before ingestion**: "medium-large" has to map to a stated numeric range, that mapping is a
+documented part of the corpus rather than a constant in the reader, and it is itself uncertain —
+different authors' "medium" differ, which is one more reason the source-class bias `e_s` is not
+optional.
 
 ## What is already supported today
 
@@ -159,8 +266,10 @@ waiting for R1 through R4.
 R2 → R3 → R4 is the critical path and each is a prerequisite for the next. R5 → R6 → R1 is the
 discrete path, and R1's two sub-requirements (shared-context scoring, retraction) are the ones to
 prototype early because they are the least certain. R7, R8, R11 and R13 are independent and small.
-R9, R10 and R12 are decisions to record before they become expensive: R12 before literature
-ingestion, R9 and R10 before there is a fitted state worth keeping.
+R9, R10, R12 and R14 are decisions to record before they become expensive: **R12 and R14 before
+literature ingestion**, since the corpus cannot be re-read cheaply and the coarse-vocabulary mapping
+is part of the data rather than of the reader; R9, R10 and R15 before there is a fitted state worth
+keeping.
 
 ## Done when
 

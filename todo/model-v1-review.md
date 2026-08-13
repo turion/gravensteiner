@@ -152,11 +152,15 @@ genuinely independent observations. `Colours p` with `groundColour :: p Interval
 the shape; this is [records of variables](records-of-variables-and-partial-observation.md)
 applied one level down.
 
-**Absence of mention is not absence.** Related, and easy to get wrong when ingesting
-literature: a monograph that does not mention russet is weak evidence that the cultivar has
-little russet, not evidence that it has none, and it is not the same as a pomologist recording
-zero. The phase parameter can only say "missing", so the source class has to carry the
-difference — see [the requirements](model-v1-delayed-sampling-requirements.md).
+**Absence of mention is not absence, and neither is a coarse description.** `Maybe` as the phase
+collapses four distinct situations into one `Nothing`: stated exactly, stated *vaguely*
+("medium-large"), could have been stated and was not, and could not have been stated at all. They
+have different likelihood contributions and only the first is currently expressible. The fix is a
+purpose-built phase type, `Observed`, designed in R12 of
+[the requirements](model-v1-delayed-sampling-requirements.md) — where absence of a *feature* is
+`Observed 0` rather than a missing value, because "no red on this apple" is an observation. The
+coarse case is the urgent one: pomological literature is written in adjectives, so most of the seed
+corpus arrives that way (R14).
 
 **`Interval` repeats a known mistake.** It derives `Num`, `Fractional` and `Floating`, so
 `Interval 0.9 + Interval 0.9` is `Interval 1.8` and `exp` leaves the unit interval — the same

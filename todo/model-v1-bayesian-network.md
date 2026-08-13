@@ -61,6 +61,38 @@ This is why the parameterisation kills
 Categorical features (`overcolourPattern`, and later shape class) are Dirichlet-categorical per
 cultivar and sit outside the Gaussian block entirely.
 
+### Why logit-normal and not Beta for the coverage features
+
+Beta is the obvious candidate for a quantity on [0, 1] and it is the wrong choice here, for three
+reasons that are worth recording because the question will come up again:
+
+1. **Beta does not solve the zero problem.** Its density at 0 is 0 when α > 1 and diverges when
+   α < 1, finite only at α = 1 exactly. So an observed 0 is as badly behaved under Beta as under a
+   logit transform, and zero-inflation is needed either way. Beta is not the escape from
+   [the zeros problem](apple-model-zero-colours-are-fatal.md) that it looks like.
+2. **A hierarchy of Betas is not conjugate.** Beta has no closed-form conjugate prior for its own
+   parameters — this is the same defect as the Dirichlet hyperprior in the old `Main.hs` model, which
+   is why that needed an importance sampler. Since every level of this model is a prior over the
+   level below, that is disqualifying.
+3. **Beta has no additive structure.** The whole model is an additive decomposition — cultivar plus
+   tree plus year plus observer plus ripeness. Beta offers no way to add effects; beta *regression*
+   does, but only by putting a linear predictor behind a logit link, at which point the hierarchy is
+   Gaussian on the logit scale and one has arrived back at logit-normal by a longer route.
+
+Where Beta genuinely belongs: as the prior on a **probability**, not on an extent. The russet
+presence indicator is beta-Bernoulli per cultivar, and observer accuracy in the confusion model is a
+probability. Both are single numbers that do not carry the hierarchy, which is exactly the case
+Beta handles well.
+
+One property of the logit scale worth keeping in mind rather than fighting: constant variance in
+logit space is *heteroscedastic* in coverage space, tightest near 0 and 1. That matches how people
+actually judge coverage — 0% is easily distinguished from 5%, 50% is not distinguished from 55% — so
+the transform is doing useful work rather than merely removing a constraint. If observer precision
+should instead be expressed as a notional count, beta-binomial at the *observation* layer is the
+alternative, which is the surviving fragment of option A in
+[the reformulation options](apple-model-reformulation-options.md); it is available but not needed,
+and it would break the conjugate chain upwards.
+
 ## The Gaussian hierarchy
 
 ```
