@@ -27,10 +27,16 @@ long-lived parameter nodes — so it inherits the same problem at the same scale
 The apple case is in one respect *worse* and in another *better* than the Markov chain. Worse: the
 parameter nodes are long-lived and shared across all cultivars under a hierarchical prior, so the
 graph never fully drains and there is always a live node with many realized children. Better: the
-observations are i.i.d. given the parameters rather than a chain, so there is no growing
-dependency path — after each apple is absorbed, the graph should return to exactly the size it had
-before. That "returns to its previous size" property is a crisp, testable invariant, and it is the
-right acceptance criterion.
+observations are conditionally independent given the parameters rather than forming a chain, so
+there is no growing dependency *path*.
+
+The invariant to aim at is therefore **the graph grows with the number of entities, never with the
+number of observations** — not "the graph returns to the size it had before", which is only true of
+the flat one-prior-per-cultivar model. In [the target hierarchy](apple-model-target-hierarchy.md)
+each new tree, year and observer adds a permanent latent that later apples will need; only the
+apples themselves are transient. Both halves of that need testing, since the failure modes differ:
+observations leaking nodes is the bug above, whereas entity latents accumulating is correct and
+must not be "fixed".
 
 ## Done when
 

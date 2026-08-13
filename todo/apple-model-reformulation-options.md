@@ -13,6 +13,16 @@ conjugacy-by-hand rather than for fitting apples.
 Three things are unsettled, and they are independent: what a colour observation *is*, what carries
 the per-cultivar parameters, and what `identify` returns.
 
+> **Since this was written, the first of those has largely been answered, and it changes the
+> recommendation below.** `brown` denotes *russet*, a surface texture rather than a pigment, so the
+> four numbers were never a composition and the simplex premise is void — see
+> [russet is not a colour](russet-is-not-a-colour.md). The appearance model becomes three scalars in
+> [0, 1] plus a categorical pattern, which makes **option B the choice** and drops option A's
+> Dirichlet machinery off the critical path. The options are kept below because the reasoning about
+> zeros, covariates and affine latents is what justifies B, and because option A's *counts* idea
+> survives independently as the observer-precision knob. The second and third questions, and the
+> eight structural changes at the end, are untouched by this.
+
 ## What the model does today
 
 Per cultivar *c*, with `Colours` a point on the 3-simplex (four proportions summing to 1):
@@ -108,12 +118,12 @@ the one place where an exact answer is otherwise available.
 an affine function of anything. Logistic-normal absorbs covariates and latents affinely but is
 undefined at zero.** That is the whole choice, and it does not have a dominant side.
 
-Recommendation: **A now, B as the target.** A makes today's model correct and exact, and the
-conjugacies it needs (Dirichlet-multinomial, a discrete node) are ones the package wants anyway. B
-requires vector normals and supernodes, neither of which exists. The presence layer from B is
-worth having under either option, because "this cultivar is never brown" is a real claim about
-apples that neither likelihood expresses otherwise. A hybrid is legitimate and probably where this
-ends up: Dirichlet-multinomial for colours, linear-Gaussian for everything continuous.
+Recommendation, **superseded** — it was *A now, B as the target*, on the grounds that A makes the
+model exact immediately and B needs vector normals and supernodes that do not exist. With the
+simplex gone there is no composition left for A to model, so **B**, with each appearance scalar on a
+logit scale and a presence layer for the zero-inflated ones. A's counts survive in a smaller role:
+*N* as the observer-precision knob for a coverage judgement, i.e. beta-binomial rather than
+Dirichlet-multinomial.
 
 **A port is possible today, before any of this lands**, at reduced fidelity: option B with a
 *diagonal* Σ makes the three alr coordinates three independent scalar chains,
@@ -142,7 +152,9 @@ package against a real model even though the statistics are wrong.
    answer below a calibrated threshold, which is a decision rule rather than a model change and
    should be kept separate from (a)/(b).
 4. **A hierarchical prior across cultivars** — `Main.hs`'s "Actually I want to have a prior over
-   that as well?" With three training apples and three cultivars, each per-cultivar posterior is
+   that as well?", and the first level of
+   [the target hierarchy](apple-model-target-hierarchy.md), which goes on to add trees, years and
+   observers above and below it. With three training apples and three cultivars, each per-cultivar posterior is
    the prior plus a single point. Shrinkage towards a learned "generic apple" is not a refinement
    here, it is what makes the model usable at all, and it is what makes (3a) available.
 5. **Observer reliability is three different things**, and "Model for reliability of pomologists,
@@ -152,7 +164,10 @@ package against a real model even though the statistics are wrong.
    affine and delayable; (iii) *label reliability* — the recorded cultivar *name* in training may
    simply be wrong, which is a confusion matrix with Dirichlet rows, or a per-observer Beta
    "is this label right". (iii) is the expensive one: it turns every training label into a latent
-   and makes training itself a mixture.
+   and makes training itself a mixture — and it is the intended feature, since a pomologist judging
+   a whole collection as one cultivar is exactly where individual errors hide. Note that bias is
+   only *identifiable* if observers cross cultivars; see
+   [the target hierarchy](apple-model-target-hierarchy.md), consequence 6.
 6. **Ripeness is a latent, not a covariate.** It drives colour (green → yellow/red), and it is
    usually *unknown* at observation time, so it is a per-apple nuisance variable to be
    marginalized — which under B is analytic and under A is not. This is the sharpest single
@@ -171,8 +186,13 @@ package against a real model even though the statistics are wrong.
 Under A or B with conjugate priors throughout, the cultivar posterior is a *finite sum of
 closed-form predictives*: the model is fully analytic and delayed sampling would never sample
 anything. That is the Rao-Blackwellization limit named in
-[no SMC integration](no-smc-integration.md) — which makes the apple model a good *demonstration*
-for that item rather than a client of it, and means SMC is not on the critical path for the port.
+[no SMC integration](no-smc-integration.md) — which makes this version of the apple model a good
+*demonstration* for that item rather than a client of it.
+
+That holds only for the flat, correctly-labelled version. Add the per-apple label-error indicator
+that [the target hierarchy](apple-model-target-hierarchy.md) calls for and the likelihood becomes a
+mixture, analyticity ends, and SMC moves onto the critical path — see structural change 5(iii)
+below, which is the single feature that changes the algorithm rather than the model.
 
 It also sharpens what delayed sampling is actually for here. It is not variance reduction, since
 there would be no variance. It is that `updateDirichletColours` is a hand-derived conjugate update

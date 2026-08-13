@@ -16,8 +16,17 @@ two-parent supernode, not a bivariate distribution (see
 [no supernodes](no-supernodes-for-multiple-parents.md)). Nothing in the module produces a vector,
 so neither `Dirichlet` (option A of
 [the reformulation options](apple-model-reformulation-options.md)) nor a multivariate normal
-(option B) can be written down. This is the single largest feature gap between the package and the
-apple model.
+(option B) can be written down.
+
+**The two halves have diverged in priority.** Once [russet is recognised as a texture rather than a
+colour](russet-is-not-a-colour.md) the appearance model is three scalars in [0, 1] and no simplex
+remains, so `Dirichlet` loses its client — while the **multivariate normal** becomes unavoidable,
+both for the joint covariance of those scalars (ground colour and overcolour extent move together
+with ripeness) and for [the target hierarchy](apple-model-target-hierarchy.md), whose crossed design
+makes one large joint Gaussian the whole representation. Read the multivariate-normal parts of this
+item as load-bearing and the Dirichlet parts as speculative, and see
+[no supernodes](no-supernodes-for-multiple-parents.md), which is where the multivariate normal is
+actually scheduled.
 
 **The graph machinery is not the obstacle.** `initialize`, `graft`, `prune`, `marginalize`,
 `realize`, `sample`, `value` and `observe` are all polymorphic in the carrier type, constrained

@@ -28,11 +28,21 @@ it has a fatal defect at zero. Hence
 before any port begins, because the two serious candidates need *different* features from
 `delayed-sampling`.
 
-Conversely, the port is less blocked than the feature list suggests. Weight, size and shape ratios
-are scalar normal-normal chains that work **today**, a finite discrete latent can be enumerated
-outside the graph with no new features, and the graph, transformer and all seven public operations
-are already polymorphic in the carrier type — the scalar-only assumption lives in the
-`Distribution` GADT and its five interpreters, and nowhere else.
+Conversely, the port is less blocked than the feature list suggests. Five features — weight, size,
+shape ratios, ground colour and overcolour extent — are scalar normal-normal chains that work
+**today**, a finite discrete latent can be enumerated outside the graph with no new features, and the
+graph, transformer and all seven public operations are already polymorphic in the carrier type: the
+scalar-only assumption lives in the `Distribution` GADT and its five interpreters, and nowhere else.
+
+Two later corrections have already reshaped that group, and both are worth knowing before reading
+the rest, since several files were written before them. **`brown` means russet**, a surface texture
+rather than a pigment, so the appearance model was never a composition — which dissolves the simplex,
+removes `Dirichlet` from the critical path, and moves two appearance features into the
+works-today group ([russet is not a colour](russet-is-not-a-colour.md)). And the **target model is a
+deep, crossed hierarchy** — apple, tree, tree-year, cultivar, plus ripeness from dates and
+per-pomologist bias with individual label error — which escalates supernodes from "one blocker" to
+"the implementation", puts SMC back on the critical path, and makes the paper's non-tree future work
+the actual target ([the target hierarchy](apple-model-target-hierarchy.md)).
 
 ## Correctness
 
@@ -88,7 +98,9 @@ are already polymorphic in the carrier type — the scalar-only assumption lives
 
 | Item | Slated for |
 |---|---|
-| [The likelihood is not settled — three reformulations](apple-model-reformulation-options.md) | **decide before porting** |
+| [Russet is a texture, not a colour — the simplex premise goes](russet-is-not-a-colour.md) | answers most of the likelihood question |
+| [The target model is a deep, crossed hierarchy](apple-model-target-hierarchy.md) | not buildable yet; it aims the rest |
+| [The likelihood is not settled — three reformulations](apple-model-reformulation-options.md) | option B, per the russet finding |
 | [Exact zeros in the colour proportions are fatal](apple-model-zero-colours-are-fatal.md) | now — this is why the executable crashes |
-| [The planned features, and which are absorbable](apple-features-and-their-conjugate-pairs.md) | three of them work today |
+| [The planned features, and which are absorbable](apple-features-and-their-conjugate-pairs.md) | five of them work today |
 | [Cleanups that are not delayed-sampling features](apple-model-cleanups.md) | independent of everything else |

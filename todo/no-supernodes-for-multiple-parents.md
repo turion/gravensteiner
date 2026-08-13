@@ -25,7 +25,13 @@ verifies is a one-parameter model, not a Kalman filter. The paper's entire Rao-B
 story is about exactly the state-space models that need `pos + t · vel`.
 
 It is also the hard blocker for the apple model, where `p(colours | cultivar, θ_cultivar)`
-has two parents by construction.
+has two parents by construction — and in
+[the target hierarchy](apple-model-target-hierarchy.md) it is not one blocker in one place but the
+shape of every level: a tree-year depends on its tree *and* the year's weather, an observation on
+the tree-year *and* a ripeness *and* an observer's bias. Worse, that design is **crossed** rather
+than nested — one year effect parents every tree, one observer parents apples of every cultivar — so
+no local merge yields a forest at all, and the clique is essentially the whole latent vector. Item 1
+below is therefore not a stepping stone towards the apple model; it is the bulk of it.
 
 ## Why the merge is forced, not a convenience
 
@@ -66,3 +72,10 @@ Expect the junction-tree cost model along with the analogy: the supernode's cova
 dense and its dimension is the size of the merged clique, so a model that couples everything
 degrades to no delay at all. That is the correct behaviour, but it should be measurable
 rather than surprising.
+
+And expect the apple model to sit at that extreme rather than near it, so sparsity is not an
+optimisation to add later. A crossed hierarchy over O(10³) cultivars, O(10³) trees and O(10²)
+observers gives a joint whose dense factorisation is O(*d*³) in the total number of entity latents.
+The structure is sparse — an apple touches one tree, one year and one observer — so the useful
+target is a sparse precision representation with a fill-reducing ordering, i.e. Gaussian belief
+propagation, rather than a dense covariance that happens to be large.

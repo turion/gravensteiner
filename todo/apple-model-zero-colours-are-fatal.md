@@ -28,7 +28,13 @@ probability 1 − e⁻¹ ≈ 0.63. Even with the hyperprior fixed, `identify` on
 The underlying fact is structural, not numerical: **the Dirichlet's support is the *open* simplex.**
 A composition with a component of exactly 0 is not an unlikely observation to be handled with care,
 it is outside the support, and no amount of floating-point hygiene fixes that. Real apples really
-do have zero brown, so this is a modelling error, not a data-entry error.
+do have zero russet, so this is a modelling error, not a data-entry error.
+
+And the deeper reason the zeros are there at all is that `brown` is not a colour:
+[russet is a texture](russet-is-not-a-colour.md), it does not partition the surface with the
+pigments, and most cultivars have none of it. So the field that produces the fatal zeros is
+precisely the one that never belonged in the composition — which both explains the bug and points at
+the fix.
 
 ## Done when
 
@@ -38,9 +44,11 @@ differently:
 
 - **Counts / Dirichlet-multinomial (A):** nothing to do. *n*_green = 0 is an ordinary multinomial
   outcome with positive probability. This is a strong argument for A.
-- **Logistic-normal (B):** alr(0) = −∞ too, so B needs the structural-zero layer — a per-colour
-  presence indicator (Bernoulli, Beta prior) with the logistic-normal over the present parts. B
-  does not get this for free.
+- **Logistic-normal (B), the chosen option:** logit(0) = −∞ too, so B needs the structural-zero
+  layer — a presence indicator (Bernoulli, Beta prior) on the zero-inflated quantities, with a
+  logit-normal over the extent when present. B does not get this for free, but under the corrected
+  appearance scheme only russet extent is genuinely zero-inflated, and ground colour needs no layer
+  at all, being a position rather than a coverage.
 - **Status quo (C):** the observations must be regularised, e.g. *x* ← (1 − ε)·*x* + ε/4 with a
   stated ε, or `Interval`'s smart constructor tightened to the open interval so a 0 cannot be
   built. Regularisation is a fudge — it asserts every apple is slightly brown — but it is what the

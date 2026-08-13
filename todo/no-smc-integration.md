@@ -37,12 +37,16 @@ that a particle's `Error` must kill that particle rather than the whole populati
 Secondary: `observe` needs `MonadMeasure m` and reaches the weight by `lift . score`, so
 whatever order is chosen must keep `score` reachable.
 
-Worth knowing which way the dependency runs with the apple model: SMC is **not** on the critical
-path for it. Under either serious reformulation the model is fully conjugate, so its cultivar
-posterior is a finite sum of closed-form predictives and delayed sampling never samples anything —
-which makes the apple model a good *demonstration* of the Rao-Blackwellization limit below rather
-than a client of this item. See
-[the apple model's reformulation options](apple-model-reformulation-options.md).
+Which way the dependency runs with the apple model depends on how far that model goes. In the
+*small* version — one prior per cultivar, all observations correctly labelled — the model is fully
+conjugate, its cultivar posterior is a finite sum of closed-form predictives, and delayed sampling
+never samples anything; SMC would be a demonstration of the Rao-Blackwellization limit below rather
+than a requirement. In [the target hierarchy](apple-model-target-hierarchy.md) it is a requirement,
+because a per-apple "was this label right" indicator makes the likelihood a mixture over the true
+cultivar — not conjugate for the Gaussian means, and with one indicator per apple far too many to
+enumerate. Sampling the indicators while keeping the Gaussian hierarchy analytic *is* this item. So
+SMC is on the critical path, and the trigger is the label-error model rather than the appearance
+model.
 
 ## Done when
 
