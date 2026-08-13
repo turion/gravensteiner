@@ -117,6 +117,8 @@ early.
 |---|---|
 | [Delayed sampling is not transparent to monad-bayes models](not-transparent-to-monad-bayes-models.md) | needs a decision; determines whether the model is written once or twice |
 | [The paper's own future work](paper-future-work.md) | research-grade — but the non-tree case is where this model lives |
+| [Haskell Bayesian library landscape](haskell-library-landscape.md) | done — no Hackage package competes with this project's core infrastructure |
+| [Closer study of the morphometrics paper](morphometrics-apple-paper.md) | before finalising the feature list — may identify seed corpus and discriminating features |
 
 ## Decided — kept as the record
 
