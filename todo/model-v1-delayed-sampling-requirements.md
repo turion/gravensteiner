@@ -244,10 +244,11 @@ R2 → R3 → R4 is the critical path and each is a prerequisite for the next. R
 discrete path, and R1's two sub-requirements (shared-context scoring, retraction) are the ones to
 prototype early because they are the least certain. R7, R8, R11 and R13 are independent and small.
 R9, R10 and R12 are decisions to record before they become expensive. **R12 and the description
-elicitation belong before literature ingestion**, since the corpus cannot be re-read cheaply, the
-adjective vocabulary is part of the data rather than of the reader, and the citation-lineage problem
-(ten monographs restating one) has to be designed for rather than discovered. R9, R10 and R15 come
-before there is a fitted state worth keeping.
+elicitation belong before literature ingestion**, since the corpus cannot be re-read cheaply and the
+adjective vocabulary is part of the data rather than of the reader. The elicited strength cap belongs
+there too, but as a bound rather than a correction: capped small, it makes derivative sources harmless
+without resolving who copied whom, and it guarantees measured data eventually dominates. R9, R10 and
+R15 come before there is a fitted state worth keeping.
 
 ## Done when
 

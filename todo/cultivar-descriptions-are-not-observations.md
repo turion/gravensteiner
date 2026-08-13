@@ -122,14 +122,39 @@ ripeness entirely:
 
 ## Three hazards specific to literature
 
-**Books copy each other, so descriptions are not independent.** Pomological literature is heavily
-derivative — later monographs crib from earlier ones, sometimes verbatim, sometimes through several
-generations. Ten descriptions of a rare cultivar may be one description restated ten times. If
-pseudo-counts simply add, the model becomes confidently wrong in a way that is very hard to detect
-afterwards, and it will be worst exactly where data is thinnest and the prior matters most. Hence
-`cites`, and failing that a cap on total elicited strength per cultivar per lineage. **This is the
-single biggest risk in seeding from literature** and it should be designed for before ingestion, not
-discovered later.
+**Books copy each other, but copying is selective.** Pomological literature is derivative — later
+monographs repeat earlier ones, sometimes verbatim. That means ten descriptions of a rare cultivar
+may be closer to one description restated ten times than to ten independent assessments, so
+pseudo-counts should not simply add. But it is a mild problem rather than a severe one, because
+pomologists copy a source **when they judge it to be good**: repetition is partly endorsement, so a
+copied description carries more than nothing, just less than an independent one.
+
+That makes the remedy a bound rather than a correction. **Keep the total elicited strength per
+cultivar small** — a few equivalent fruit, not tens — and the question of who copied whom stops
+mattering, because no amount of restatement can accumulate into false confidence. This is much
+cheaper than resolving lineage, and it is robust to getting the lineage wrong. `cites` is still worth
+recording, but for provenance and audit ("which sources say this?") rather than as a statistical
+correction.
+
+The design goal that fixes the cap is: **measured data must eventually drown the prior.** With
+`strength` capped at `kappa_max`, the posterior mean of a feature is
+`(kappa * m_desc + n * xbar) / (kappa + n)`, so with `kappa_max` around 3–5 the literature and the
+field carry equal weight after a handful of measured fruit and are 10:1 in the field's favour after
+a few dozen. Stating the cap this way makes the choice legible instead of arbitrary, and gives a
+test: the same cultivar fitted from literature alone and then with *n* measured fruit should show the
+literature's influence decaying like `kappa/(kappa+n)`.
+
+Spread claims deserve a **tighter** cap than location claims, for two reasons: an adjective says much
+less about variance than about central tendency, and an underestimated variance makes every
+downstream ranking overconfident, whereas a slightly-off mean merely shifts it.
+
+One consequence survives the cap and is worth keeping in view. For cultivars nobody has sampled — most
+of them, at first — *n* stays 0 and the elicited prior **is** the model. That is intended and better
+than nothing, but it means the reported uncertainty for a literature-only cultivar has to reflect
+`kappa` honestly, or the ranked list will be confident about cultivars that have never been measured.
+A small `kappa` handles this too: it widens the predictive exactly where it should be wide, so the cap
+does double duty. Calibration on literature-only cultivars is therefore the thing to check, rather
+than lineage.
 
 **Books describe show fruit.** A monograph describes a well-grown, characteristic specimen, not the
 average of what a tree bears. That is a systematic offset in size and colour, and it is the same
@@ -158,8 +183,9 @@ reason those are not optional extras.
   the latter, and no `Coarse`-style case in `Observed`.
 - The elicitation of a description into `(location, strength, spread)` is specified per feature, with
   the adjective vocabulary recorded as data.
-- The lineage question has a decision: either `cites` is populated during ingestion, or the strength
-  cap is applied and documented. Not left to default.
+- `kappa_max` is chosen and documented, with the decay argument above as its justification, and a
+  test that the literature's influence on a fitted feature decays like `kappa/(kappa+n)`.
+- Calibration is checked separately on literature-only cultivars, where the prior is the whole model.
 - A description contributes through the same conjugate update as an observation, is attributable to
   its `Description` record, and is removable.
 - R14 is struck from [the requirements](model-v1-delayed-sampling-requirements.md).
