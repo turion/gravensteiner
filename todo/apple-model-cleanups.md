@@ -64,13 +64,20 @@ beta as = exp $ sum (logGamma <$> as) - logGamma (sum as)
 
 is computed in log space and then exponentiated, and both call sites immediately take the log again:
 `dirichletColoursLikelihood` has `Exp $ log $ ... beta ... ** pseudocount`, and `coloursLikelihood`
-has `Exp $ log $ product [...] / beta [...]`. Every one of those round trips can overflow — `beta`
-already does, for concentrations of a few hundred — and all of it is avoidable, since the natural
-form is `Exp (pseudocount * logBeta')` with
-`logBeta' as = sum (logGamma <$> as) - logGamma (sum as)` and, in `coloursLikelihood`,
-`Exp (sum [(α_k - 1) * log x_k] - logBeta' αs)`. `Numeric.SpecFunctions` is already imported. Both
-functions carry a `-- FIXME make more efficient` / `-- FIXME make more efficient with Exp & log`;
-the efficiency is secondary, the overflow is the actual problem.
+has `Exp $ log $ product [...] / beta [...]`. Every one of those round trips can leave the range of
+`Double`, and the failure is *underflow* rather than overflow: `ln B(α)` is large and negative for
+large concentrations, so `exp` returns 0 once it drops below about −745, and the subsequent division
+yields `Infinity`. In this model the trigger is the number of training observations, not the
+concentrations themselves — `updateDirichletColours` grows each *v*ₖ by −ln *x*ₖ, i.e. by roughly 1
+to 2 per apple, so `beta (getNonnegative <$> [yellowPrior, …])` inside
+`dirichletColoursLikelihood` reaches the underflow point after a few hundred apples and
+`** pseudocount` compounds it. All of it is avoidable, since the natural form is
+`Exp (pseudocount * logBeta')` with `logBeta' as = sum (logGamma <$> as) - logGamma (sum as)` and,
+in `coloursLikelihood`, `Exp (sum [(α_k - 1) * log x_k] - logBeta' αs)` —
+`Numeric.SpecFunctions` is already imported and `Log Double` is already the return type, so nothing
+ever needs to leave log space. Both functions carry a `-- FIXME make more efficient` /
+`-- FIXME make more efficient with Exp & log`; the efficiency is secondary, the range is the actual
+problem.
 
 ## `identify` does three separate wrong things
 
@@ -84,6 +91,11 @@ Recorded here for completeness; the fixes are in
   cultivars it will confidently name one of them for any apple in the world.
 - `identify Apple {colours = Nothing}` is `error "not yet supported"`; see
   [partial observation](records-of-variables-and-partial-observation.md).
+- It has **no defined behaviour on an empty `Model`**. With `getModel` empty it reduces to
+  `unweighted $ proper $ fromWeightedList $ return []`, i.e. a draw from an empty population, and
+  nothing in the code or the types rules that out — `main` happens to fold `initialTraining` first.
+  Either a documented non-empty precondition or a total return type (which structural change 1 gives
+  for free, since an empty distribution over cultivars is representable and a sampled `Name` is not).
 
 ## Dead and duplicated declarations
 
@@ -100,17 +112,38 @@ Recorded here for completeness; the fixes are in
   four-hardcoded-colours shape is what
   [vector-valued variables](vector-valued-variables-and-dirichlet.md) would generalise.
 
-## No test suite
+## No test suite, and no way to tell whether the model works
+
+Separate concerns that happen to share a cause. The *unit* gap first:
 
 `gravensteiner.cabal` has an `executable` and nothing else — no `test-suite`, so nothing about the
 model is checked, and `main` opens with an assertion (`if dirichletColoursNormalizable
 initialSortColours then return () else error "Initial sort colours bad"`) whose own comment says
-`-- FIXME this belongs to a test suite`. `-Wall` is on, which is worth keeping in mind for the dead
-declarations above.
+`-- FIXME this belongs to a test suite`.
+
+`-Wall` *is* on — it lives in a `common warnings` stanza that the executable imports — but it does
+not catch any of the dead declarations above, because `Main.hs` opens with `module Main where`, which
+exports everything and so silences `-Wunused-top-binds`. Changing it to `module Main (main) where`
+turns the whole dead-code list into compiler warnings, which is a better way to keep it from growing
+than this file is.
+
+The *evaluation* gap is the more serious one, and it is not a test-suite question. There is no
+measurement of whether the model identifies apples correctly: no held-out split, no accuracy figure,
+no calibration check on the probability it will eventually report. With three apples and three
+cultivars, one apple each, no modelling error is detectable — every candidate reformulation in
+[the options](apple-model-reformulation-options.md) fits this data perfectly, so the training set
+cannot discriminate between them. That matters for sequencing: the reformulation decision is being
+made on statistical reasoning alone, and it should be *re*-checked against an evaluation harness as
+soon as there is enough data to hold any out. Calibration deserves naming separately from accuracy,
+because the stated goal is to report a *probability* that the identification is right (the
+hallucination FIXME), and a model can rank cultivars well while being badly overconfident — which is
+the expected failure mode here, given that a per-cultivar posterior fitted to one apple has almost no
+spread.
 
 ## Done when
 
 The newtype invariants are enforced by construction rather than derived away, the debug output and
 its `MonadIO`/`HasCallStack` constraints are gone, the densities stay in log space, the dead
-declarations are resolved, and `gravensteiner` has a `test-suite` containing at least the
-normalizability check and a finite-weights check over `initialTraining`.
+declarations are resolved, `Main.hs` exports only `main`, and `gravensteiner` has a `test-suite`
+containing at least the normalizability check and a finite-weights check over `initialTraining` —
+plus, once there is data to spare, a held-out identification accuracy and a calibration check.

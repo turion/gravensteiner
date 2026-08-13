@@ -30,10 +30,16 @@ public:
 So `graft var >> (currentDistribution <$> lookupVar var)` is the extraction recipe and `initialize`
 is the loader. Three things stand between that and a usable feature:
 
-1. **The `graft` is not optional.** `currentDistribution` returns `fromMaybe initialDistribution
-   marginalDistribution`, and `marginalDistribution` is only populated by `marginalize`. Read a node
-   that has not been grafted and you get its *prior*, silently — the same shape of value, so
-   nothing signals the mistake. A `marginal :: Variable a -> DelayedSamplingT m (Distribution a)`
+1. **The `graft` is not optional, and which nodes it matters for is subtle.**
+   `currentDistribution` returns `fromMaybe initialDistribution marginalDistribution`, and
+   `marginalDistribution` is populated in two places: by `initialize`, but *only* when
+   `null $ getParents initialDistribution`, and thereafter by `marginalize`/`setMarginalized`. So the
+   behaviour splits. For a **root**, the stored marginal is already the posterior given everything
+   observed so far, because `observe` conditions the parent through `conditionDist` as it goes —
+   reading it without grafting is correct. For a node **with parents** that has never been grafted,
+   `currentDistribution` silently returns `initialDistribution`, i.e. the prior, still mentioning
+   `Var`s. Same shape of value, no signal, and the mistake is invisible in exactly the case where a
+   caller is most likely to make it. A `marginal :: Variable a -> DelayedSamplingT m (Distribution a)`
    that grafts first and is named for what it returns is the fix, and it is a handful of lines.
 2. **The result may not be self-contained.** A `Distribution` can reference variables (`Var`), and
    such a value is meaningless in another graph. Extraction must either require a

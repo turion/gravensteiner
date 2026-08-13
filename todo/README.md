@@ -31,7 +31,7 @@ before any port begins, because the two serious candidates need *different* feat
 Conversely, the port is less blocked than the feature list suggests. Five features — weight, size,
 shape ratios, ground colour and overcolour extent — are scalar normal-normal chains that work
 **today**, a finite discrete latent can be enumerated outside the graph with no new features, and the
-graph, transformer and all seven public operations are already polymorphic in the carrier type: the
+graph, transformer and every public operation are already polymorphic in the carrier type: the
 scalar-only assumption lives in the `Distribution` GADT and its five interpreters, and nowhere else.
 
 Two later corrections have already reshaped that group, and both are worth knowing before reading
