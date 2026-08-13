@@ -33,14 +33,6 @@ common warnings
 library
   import: warnings
   exposed-modules: Gravensteiner.Model
-  build-depends:
-    base >=4.18 && <4.22,
-    containers,
-    log-domain,
-    math-functions ^>=0.3,
-    monad-bayes ^>=1.3,
-    text,
-
   hs-source-dirs: src
   default-language: GHC2021
 
