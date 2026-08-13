@@ -630,7 +630,8 @@ graft var = addTrace "graft" do
       parentMaybe <- getParent var
       forM_ parentMaybe $ \SomeVariable {getSomeVariable = parentVar} -> graft parentVar
       marginalize var
-    Realized _ -> throw . AlreadyRealized =<< resolve var
+    -- A realized node has a known value and nothing left to graft.
+    Realized _ -> pure ()
 
 prune :: (Monad m, Typeable a, Eq a, Show a, MonadDistribution m) => Variable a -> DelayedSamplingT m ()
 prune var = addTrace "prune" do

@@ -102,6 +102,15 @@ test = describe "DelayedSampling" $ do
       void $ shouldBeRight result
       p `shouldBe` normalPdf 0 (sqrt 3) 1
 
+  describe "graft" $ do
+    it "can build a child of a variable that was already realized" $ do
+      (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
+        a <- normalDS (Const 0) (Const 1)
+        _ <- checked $ value a
+        c <- normalDS (Var a) (Const 1)
+        checked $ value c
+      void $ shouldBeRight result
+
   describe "ensureConsistency" $ do
     it "detects a node with two parents" $ do
       (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
