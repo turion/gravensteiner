@@ -31,9 +31,13 @@ common opts
 
 library
   import: opts
-  exposed-modules: Control.Monad.Bayes.DelayedSampling
+  exposed-modules:
+    Control.Monad.Bayes.DelayedSampling
+    Control.Monad.Bayes.DelayedSampling.Record
+
   hs-source-dirs: src
   build-depends:
+    barbies,
     base >=4.18 && <4.22,
     containers >=0.6 && <0.9,
     monad-bayes ^>=1.3,
@@ -44,10 +48,14 @@ test-suite delayed-sampling-test
   import: opts
   type: exitcode-stdio-1.0
   main-is: Spec.hs
-  other-modules: DelayedSampling
+  other-modules:
+    DelayedSampling
+    Record
+
   hs-source-dirs: test
   build-depends:
     HUnit,
+    barbies,
     base,
     containers,
     delayed-sampling,

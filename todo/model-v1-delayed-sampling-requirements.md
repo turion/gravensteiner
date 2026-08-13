@@ -171,6 +171,11 @@ argument for R4.
 
 ## R12 — observation status belongs in the type
 
+> **Implemented as a two-way `Observed a | NotObserved` for now** in
+> `Control.Monad.Bayes.DelayedSampling.Record` — the three-way split below is deferred until a source
+> class exists to condition `NotMentioned`'s mention likelihood on; see
+> [mention-vs-not-measured-deferred](mention-vs-not-measured-deferred.md).
+
 `Maybe` collapses several statistically distinct situations into one `Nothing`. They need to be
 distinguished at the point where the distinction is *known* — data entry — because it cannot be
 recovered later. The phase parameter is the right place, since it is already generic:

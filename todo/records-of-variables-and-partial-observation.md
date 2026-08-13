@@ -8,6 +8,11 @@
 > makes the colour fields all-or-nothing where a literature source typically gives ground colour and
 > omits blush — see [the review](model-v1-review.md). So the data side is settled in shape and needs
 > two fixes; what this item is now about is the **`Variable` side**: mapping a record of priors to a
+>
+> **`Observed`'s three-way split is collapsed to two for now**, `Observed a | NotObserved` — nothing
+> implements the mention likelihood that would make `NotMentioned` behave differently from
+> `NotMeasured`, so the implemented type does not carry the distinction R12 describes below. See
+> [mention-vs-not-measured-deferred](mention-vs-not-measured-deferred.md).
 > record of `Variable`s and observing a `Fruit Observed` field by field. `UUIDMap`'s indexed instances
 > are the right shape for the entity level.
 
@@ -71,10 +76,10 @@ which per feature belongs with the feature table.
 
 - Record-level `initialize`/`observe`/`value` exist, with `observe` accepting a record whose fields
   carry their observation status and skipping the absent ones.
-- The skipping is driven by `Observed` rather than `Maybe`, so `NotMeasured` (ignorable, never graft)
-  and `NotMentioned` (informative, contributes a mention likelihood) take different paths. R12 records
-  why they cannot share one; note that this rules out a plain `Traversable`-with-`Maybe` signature and
-  is the one design constraint the sugar has to respect.
+- The skipping is driven by `Observed` rather than `Maybe` (currently a two-way `Observed a |
+  NotObserved` — see the banner above); note that this still rules out a plain
+  `Traversable`-with-`Maybe` signature, since R12's eventual three-way split is a design constraint
+  the sugar has to keep accommodating even while it isn't implemented.
 - Identification on a fruit with no appearance fields at all returns the regional prior `phi_g` rather
   than failing — the degenerate case, and a useful test that the never-grafted path is correct.
 - A test that observing a record with some fields absent gives the same posterior as observing only

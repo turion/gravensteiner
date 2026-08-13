@@ -97,6 +97,7 @@ early.
 | [A trained model cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) | R9, R15 | before there is a fitted state worth keeping |
 | [Training must not grow the graph](streaming-training-with-bounded-memory.md) | R10, R11 | follows from the realized-node fix + child index |
 | [No record of variables, and no partial observation](records-of-variables-and-partial-observation.md) | R8 | cheapest item here; pure sugar over the existing API |
+| [`Observed` collapses `NotMentioned`/`NotMeasured` into `NotObserved`](mention-vs-not-measured-deferred.md) | R12 | low priority — needs a source class first |
 | [Nothing measures whether the model works](no-evaluation-harness.md) | — | with the seed corpus, not after it |
 
 ## Library correctness and hygiene

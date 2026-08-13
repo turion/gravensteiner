@@ -1,7 +1,10 @@
 module Main where
 
 import DelayedSampling qualified
+import Record qualified
 import Test.Hspec (hspec)
 
 main :: IO ()
-main = hspec DelayedSampling.test
+main = hspec $ do
+  DelayedSampling.test
+  Record.test
