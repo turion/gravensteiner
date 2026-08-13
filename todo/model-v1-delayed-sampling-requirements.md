@@ -255,3 +255,7 @@ R15 come before there is a fitted state worth keeping.
 Each row has an owner item in this backlog, R1's two sub-requirements have a prototype answer
 (even a slow one), and the scalar end-to-end harness described above exists so that every later
 requirement is validated against a working pipeline rather than in isolation.
+
+"Validated" means measured, not merely running: the harness is only useful with the accuracy and
+calibration figures from [no evaluation harness](no-evaluation-harness.md) attached, since every
+requirement here is justified by an argument about accuracy that nothing has yet checked.

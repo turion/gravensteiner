@@ -30,8 +30,11 @@ looks, because a distribution that is missing entirely cannot even be *transcrib
 graph as an immediately-sampled root — whereas `Beta` at least occupies the right shape for
 someone to fill in later.
 
-Beta and gamma are confirmed requirements, not speculative ones: the apple model already samples
-Gamma(1,1) by hand in `sampleDirichletColours`, and per-observer reliability wants a Beta.
+Beta and gamma are confirmed requirements, not speculative ones — they are **R7**. Beta carries the
+russet presence indicator and observer accuracy in the confusion model; gamma carries the unknown
+variance components, which is what "inherent variability within a cultivar" asks for once a
+per-cultivar scale on `S_within` is wanted. Both are single numbers that do not carry the hierarchy,
+which is exactly the case they handle well.
 
 ## The pairs worth having
 
@@ -40,19 +43,19 @@ criterion, so near-identical files per pair would only repeat this table.
 
 | Pair | Unlocks | Extra machinery beyond the tiers above |
 |---|---|---|
-| beta-Bernoulli / beta-binomial | the existing `Beta` becoming real; per-observer reliability in the apple model | a discrete child, hence exact enumeration rather than sampling |
-| gamma-Poisson, gamma-exponential | count and waiting-time data, with the gamma as a conjugate prior on a rate | a `Gamma` constructor; a discrete child for the Poisson case |
-| normal-gamma / normal-inverse-gamma | unknown mean *and* variance for a normal — the standard next step for the existing normal machinery | a `Gamma` constructor, plus a variance that is itself a variable, which the current `Normal` shape forbids |
-| Dirichlet-categorical / Dirichlet-multinomial | the apple model's colour simplex and cultivar identity | [vector-valued variables](vector-valued-variables-and-dirichlet.md), and [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) |
+| beta-Bernoulli / beta-binomial | the existing `Beta` becoming real; russet presence, observer accuracy | a discrete child, hence exact enumeration rather than sampling |
+| normal-inverse-gamma | unknown variance components — a per-cultivar scale on `S_within`, and the *spread* half of an elicited description | a `Gamma` constructor, plus a variance that is itself a variable, which the current `Normal` shape forbids |
+| Dirichlet-categorical | `phi_g` (cultivar frequencies per region), `overcolourPattern`, shape class | [vector-valued variables](vector-valued-variables-and-dirichlet.md), and [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) |
+| gamma-Poisson, gamma-exponential | count and waiting-time data — **no client in this model** | a `Gamma` constructor; a discrete child for the Poisson case |
 
 Two cautions about how this interacts with the rest of the backlog.
 
-**Gamma has two unrelated jobs, and only one of them delays.** As a conjugate prior on a rate or
-a precision it is a genuine delayed-sampling win. As a hyperprior on a Dirichlet's *concentration
-parameters* — which is what the apple model reaches for — it is not conjugate to anything and has
-no closed-form normalizer, so no amount of delayed sampling rescues it; that use has to be
-sampled. Implementing `Gamma` therefore does not by itself unblock the apple model, and the two
-uses should not be conflated when scoping the work.
+**Gamma has two unrelated jobs, and only one of them delays.** As a conjugate prior on a variance or
+a precision it is a genuine delayed-sampling win, and that is the use this model has. As a hyperprior
+on a Dirichlet's *concentration parameters* it is not conjugate to anything and has no closed-form
+normalizer — which is exactly what forced the old `Main.hs` to run a ten-sample importance sampler
+inside its likelihood. That use is gone from the model and should not come back; the distinction is
+recorded because the two look identical when scoping "add `Gamma`".
 
 **Discrete latents want enumeration, not sampling.** A categorical or Bernoulli latent is usually
 better marginalized *exactly* — the posterior over cultivars is the answer the apple model is

@@ -1,14 +1,15 @@
 # No way to build a record of variables, or to observe one partially
 
-> **Now has a concrete client, and a concrete shape.** The v1 schema in `Gravensteiner.Model`
-> answers the `Main.hs` FIXME below directly: `Fruit`, `Collection`, `Tree` and `Judgement` all
-> take a higher-kinded phase parameter, so `Fruit Maybe` is a partial observation and
-> `Fruit Identity` a complete one. That settles the *data* side; what this item is now about is the
-> **`Variable` side** — mapping a record of priors to a record of `Variable`s and observing a
-> `Fruit Maybe` field by field. `UUIDMap`'s indexed instances are the right shape for the entity
-> level. One gap the schema still has: `Fruit.colours` is `p Colours`, so the colour fields are
-> all-or-nothing, where a literature source typically gives ground colour and omits blush — see
-> [the review](model-v1-review.md).
+> **Now has a concrete client, and a concrete shape — this is R8.** The v1 schema in
+> `Gravensteiner.Model` answers the `Main.hs` FIXME below directly: `Fruit`, `Collection`, `Tree` and
+> `Judgement` all take a higher-kinded phase parameter, so the phase *is* the partial-observation
+> mechanism. Two refinements since: the phase should be `Observed` rather than `Maybe`, so that "not
+> mentioned" and "not measurable" are distinguishable (R12), and `Fruit.colours` is `p Colours`, which
+> makes the colour fields all-or-nothing where a literature source typically gives ground colour and
+> omits blush — see [the review](model-v1-review.md). So the data side is settled in shape and needs
+> two fixes; what this item is now about is the **`Variable` side**: mapping a record of priors to a
+> record of `Variable`s and observing a `Fruit Observed` field by field. `UUIDMap`'s indexed instances
+> are the right shape for the entity level.
 
 ## Why it matters
 
@@ -43,9 +44,13 @@ A `Traversable`/`Representable`-based layer over the existing single-variable AP
 
 ```haskell
 initializeRec :: (Traversable f, ...) => f (Distribution a) -> DelayedSamplingT m (f (Variable a))
-observeRec    :: (Traversable f, ...) => f (Variable a) -> f (Maybe a) -> DelayedSamplingT m ()
+observeRec    :: (Traversable f, ...) => f (Variable a) -> f (Observed a) -> DelayedSamplingT m ()
 valueRec      :: (Traversable f, ...) => f (Variable a) -> DelayedSamplingT m (f a)
 ```
+
+(`Observed` rather than `Maybe` per R12 — the point of the extra cases is that they take different
+paths, so a signature in `Maybe` would throw away the distinction at exactly the boundary that needs
+it.)
 
 This is pure sugar over `initialize`/`observe`/`value` and needs no changes to the graph, so it
 could land immediately and independently of everything else in this backlog — which makes it the
@@ -64,11 +69,14 @@ which per feature belongs with the feature table.
 
 ## Done when
 
-- Record-level `initialize`/`observe`/`value` exist, with `observe` accepting `Maybe` fields and
-  skipping the missing ones.
-- `identify` on `Apple {colours = Nothing}` returns the prior over cultivars weighted by
-  `frequency`, rather than calling `error` — which requires structural change 2 in
-  [the reformulation options](apple-model-reformulation-options.md).
-- A test that observing a record with some fields missing gives the same posterior as observing
-  only the present fields individually. That is the property the sugar has to preserve, and it is
-  also a useful check on the never-grafted path, which nothing currently tests.
+- Record-level `initialize`/`observe`/`value` exist, with `observe` accepting a record whose fields
+  carry their observation status and skipping the absent ones.
+- The skipping is driven by `Observed` rather than `Maybe`, so `NotMeasured` (ignorable, never graft)
+  and `NotMentioned` (informative, contributes a mention likelihood) take different paths. R12 records
+  why they cannot share one; note that this rules out a plain `Traversable`-with-`Maybe` signature and
+  is the one design constraint the sugar has to respect.
+- Identification on a fruit with no appearance fields at all returns the regional prior `phi_g` rather
+  than failing — the degenerate case, and a useful test that the never-grafted path is correct.
+- A test that observing a record with some fields absent gives the same posterior as observing only
+  the present fields individually. That is the property the sugar has to preserve, and it is also a
+  check on the never-grafted path, which nothing currently tests.

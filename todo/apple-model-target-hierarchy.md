@@ -121,7 +121,9 @@ thinnest, and it is once again crossed rather than tree-shaped.
 - [No supernodes](no-supernodes-for-multiple-parents.md) — escalates from "blocks the apple model"
   to "is the implementation"; needs a growing-dimension multivariate normal with sparsity, not a
   pair.
-- [No SMC integration](no-smc-integration.md) — back on the critical path, per (4).
+- [No SMC integration](no-smc-integration.md) — a latent label ends conjugacy, so *some* iteration
+  over the discrete part is required; per the correction to (4), SMC is one way to run it and a
+  collapsed Gibbs sweep over trees is the more natural fit.
 - [The paper's future work](paper-future-work.md) — the non-tree case is the target, not an
   afterthought.
 - [Training must not grow the graph](streaming-training-with-bounded-memory.md) — rev 5's invariant
@@ -135,7 +137,7 @@ thinnest, and it is once again crossed rather than tree-shaped.
   every entity at every level carries the same appearance record.
 - [Marginals cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) — under a
   crossed design the "trained model" is a joint Gaussian over all entities, not a per-cultivar
-  summary, so persistence is a covariance matrix rather than a `Map Name`.
+  summary, so persistence is a **sparse precision** matrix rather than a `Map Name` (R9).
 
 ## Done when
 

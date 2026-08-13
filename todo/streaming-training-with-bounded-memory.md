@@ -31,12 +31,16 @@ observations are conditionally independent given the parameters rather than form
 there is no growing dependency *path*.
 
 The invariant to aim at is therefore **the graph grows with the number of entities, never with the
-number of observations** — not "the graph returns to the size it had before", which is only true of
-the flat one-prior-per-cultivar model. In [the target hierarchy](apple-model-target-hierarchy.md)
-each new tree, year and observer adds a permanent latent that later apples will need; only the
-apples themselves are transient. Both halves of that need testing, since the failure modes differ:
-observations leaking nodes is the bug above, whereas entity latents accumulating is correct and
-must not be "fixed".
+number of observations** — not "the graph returns to the size it had before", which is only true of a
+flat one-prior-per-cultivar model. This is **R11**, and it has a second half in **R10**: each new tree
+and observer adds a *permanent* latent that later fruit will need, so a fitted state must be
+*extensible*, not merely reusable. [The network design](model-v1-bayesian-network.md) puts numbers on
+the split — fruit and collections grow without bound (10⁴–10⁵), while cultivars, regions and source
+classes do not and trees and observers grow slowly (10³) — and that split is the reason bounded-memory
+inference is possible at all.
+
+Both halves need testing, since the failure modes differ and look alike: observations leaking nodes is
+the bug above, whereas entity latents accumulating is correct and must not be "fixed".
 
 ## Done when
 

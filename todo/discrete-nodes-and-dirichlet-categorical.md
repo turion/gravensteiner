@@ -15,18 +15,18 @@ Two distinct discrete needs, and they are not the same size:
 the predictive is (α_c + *n*_c) / Σ(α + *n*) — a single division. Needed by every version of the
 model.
 
-**A discrete child of a colour node.** Under
-[option A](apple-model-reformulation-options.md) the observation itself is multinomial counts, so
-Dirichlet-multinomial conjugacy is the *likelihood*, not a side dish. Under option B the
-structural-zero layer needs a Bernoulli per colour with a Beta prior — which is also the pair that
-would finally make the existing `Beta` constructor useful rather than decorative
+**Bernoulli and categorical observation layers.** Three of them, in the chosen parameterisation: the
+russet presence indicator (beta-Bernoulli, and the indicator is *observed*, so it costs no latent),
+`overcolourPattern` and later shape class (Dirichlet-categorical per cultivar), and observer accuracy
+in the structured confusion model. The first is also the pair that would finally make the existing
+`Beta` constructor useful rather than decorative
 ([only `Normal` is usable](conjugate-pairs-beyond-normal.md)).
 
 ## What it actually costs
 
 Less than the scalar-only framing suggests. As noted in
 [vector-valued variables](vector-valued-variables-and-dirichlet.md), the graph, the transformer and
-all seven public operations are polymorphic in the carrier; `pdf` returns `Log Double`, so a pmf
+all eight public operations are polymorphic in the carrier; `pdf` returns `Log Double`, so a pmf
 needs no new type. Adding `Categorical :: Value (Vector Double) -> Distribution Int` requires:
 
 - a `pdf` clause — indexing a weight vector, trivial;
@@ -39,6 +39,11 @@ needs no new type. Adding `Categorical :: Value (Vector Double) -> Distribution 
 So the *prerequisite* is vectors, not discreteness: a categorical's parameter is a weight vector,
 and a Dirichlet parent is vector-valued. The two items should be scheduled together.
 
+The one discrete node that does **not** fit this shape is `z_t`, the tree's true cultivar. Its
+difficulty is not that it is discrete but that it *selects which node is a parent* of the fruit
+observations, which is R1 and a different kind of requirement altogether. Adding `Categorical` is
+necessary for `z_t` and nowhere near sufficient.
+
 One carrier question worth settling early: should the categorical be `Distribution Int` with the
 caller maintaining an index-to-`Name` mapping, or `Distribution Name` with the weights carried
 alongside? The latter is friendlier at the `identify` boundary and costs nothing — `Name` already
@@ -49,10 +54,11 @@ in the vectors item would settle both at once.
 
 ## Done when
 
-- `Categorical` (and, for option A, `Multinomial`) in the GADT with clauses in all five
-  interpreters.
-- Dirichlet-categorical and Dirichlet-multinomial `marginalizeDistribution`/`conditionDist`
-  clauses, with a statistical test that observed counts move the posterior weights the right way.
+- `Categorical` in the GADT with clauses in all five interpreters. (`Multinomial` has no client —
+  the counts formulation was option A of
+  [the reformulation options](apple-model-reformulation-options.md) and is not the chosen one.)
+- Dirichlet-categorical `marginalizeDistribution`/`conditionDist` clauses, with a statistical test
+  that observed counts move the posterior weights the right way.
 - A test that a categorical node can be `observe`d, since `observe` needs `pdf` and a pmf at an
   impossible outcome is 0, i.e. `score 0` — which kills the particle. Whether that is the desired
   behaviour, or whether an impossible observation should be an `Error`, is a decision to record.

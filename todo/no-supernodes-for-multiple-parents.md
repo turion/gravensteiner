@@ -24,14 +24,13 @@ The Kalman test pins the position to a constant and estimates only the velocity,
 verifies is a one-parameter model, not a Kalman filter. The paper's entire Rao-Blackwellization
 story is about exactly the state-space models that need `pos + t · vel`.
 
-It is also the hard blocker for the apple model, where `p(colours | cultivar, θ_cultivar)`
-has two parents by construction — and in
-[the target hierarchy](apple-model-target-hierarchy.md) it is not one blocker in one place but the
-shape of every level: a tree-year depends on its tree *and* the year's weather, an observation on
-the tree-year *and* a ripeness *and* an observer's bias. Worse, that design is **crossed** rather
-than nested — one year effect parents every tree, one observer parents apples of every cultivar — so
-no local merge yields a forest at all, and the clique is essentially the whole latent vector. Item 1
-below is therefore not a stepping stone towards the apple model; it is the bulk of it.
+It is also the hard blocker for the apple model, and not one blocker in one place but the shape of
+every level: in [the network design](model-v1-bayesian-network.md) a fruit's mean is a sum of **six**
+latent vectors plus two regression terms — cultivar, tree, year × region, observer, source class and
+collection protocol. Worse, that design is **crossed** rather than nested — one year effect parents
+every tree in a region, one observer parents fruit of every cultivar — so no local merge yields a
+forest at all, and the clique is essentially the whole latent vector. Item 1 below is therefore not a
+stepping stone towards the apple model; it is the bulk of it.
 
 ## Why the merge is forced, not a convenience
 
@@ -73,19 +72,18 @@ dense and its dimension is the size of the merged clique, so a model that couple
 degrades to no delay at all. That is the correct behaviour, but it should be measurable
 rather than surprising.
 
-And expect the apple model to sit at that extreme rather than near it, so sparsity is not an
-optimisation to add later. A crossed hierarchy over O(10³) cultivars, O(10³) trees and O(10²)
-observers gives a joint whose dense factorisation is O(*d*³) in the total number of entity latents.
-The structure is sparse — an apple touches one tree, one year and one observer — so the useful
-target is a sparse precision representation with a fill-reducing ordering, i.e. Gaussian belief
-propagation, rather than a dense covariance that happens to be large.
-
-That last paragraph is no longer a caution but a **requirement with a number attached**.
-[The network design](model-v1-bayesian-network.md) totals the entity latent vector at **O(10⁴)** for
+And the apple model sits at that extreme rather than near it, so sparsity is not an optimisation to
+add later. This is no longer a caution but a **requirement with a number attached**:
+[the network design](model-v1-bayesian-network.md) totals the entity latent vector at **O(10⁴)** for
 a regional model (10³ trees, 10² cultivars, 10² year×region cells, 10² observers, appearance
 *d* ≈ 6), which puts a dense solve at ~10¹² flops and ~10⁸ doubles of covariance — not viable, and
-worsening with every tree added. It is tracked as R4 in
-[the requirements](model-v1-delayed-sampling-requirements.md), together with the representational
-consequence: information form makes conditioning cheap and marginalization expensive, the opposite
-of the covariance form `conditionDist` uses today, and this model conditions constantly and
-marginalizes only to report.
+worsening with every tree added. The structure is genuinely sparse, since a fruit touches one tree,
+one year × region, one observer, one source and one collection, so the useful target is a sparse
+precision representation with a fill-reducing ordering, i.e. Gaussian belief propagation, rather than
+a dense covariance that happens to be large.
+
+It is tracked as **R4** in [the requirements](model-v1-delayed-sampling-requirements.md), together
+with the representational consequence: information form makes conditioning cheap and marginalization
+expensive, the opposite of the covariance form `conditionDist` uses today, and this model conditions
+constantly during training and marginalizes only to serve — which is why the resolution is to fit in
+information form and extract a small moment-form cache for serving (R15) rather than to pick one.

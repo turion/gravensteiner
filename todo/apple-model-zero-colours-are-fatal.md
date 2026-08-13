@@ -46,30 +46,21 @@ pigments, and most cultivars have none of it. So the field that produces the fat
 precisely the one that never belonged in the composition — which both explains the bug and points at
 the fix.
 
-## Done when
+## What survives, and what does not
 
-The fix depends on the choice made in
-[the reformulation options](apple-model-reformulation-options.md), and each option answers it
-differently:
+**Done — by deletion of the premise.** The composition is gone, so there is no boundary of support to
+land on. Only russet extent is zero-inflated, its presence indicator is observed, and ground colour
+needs no presence layer at all, being a position rather than a coverage. The per-option fixes that
+this section used to list (regularising the observations, or a Dirichlet-multinomial that tolerates
+zeros) are all moot; see [the reformulation options](apple-model-reformulation-options.md).
 
-- **Counts / Dirichlet-multinomial (A):** nothing to do. *n*_green = 0 is an ordinary multinomial
-  outcome with positive probability. This is a strong argument for A.
-- **Logistic-normal (B), the chosen option:** logit(0) = −∞ too, so B needs the structural-zero
-  layer — a presence indicator (Bernoulli, Beta prior) on the zero-inflated quantities, with a
-  logit-normal over the extent when present. B does not get this for free, but under the corrected
-  appearance scheme only russet extent is genuinely zero-inflated, and ground colour needs no layer
-  at all, being a position rather than a coverage.
-- **Status quo (C):** the observations must be regularised, e.g. *x* ← (1 − ε)·*x* + ε/4 with a
-  stated ε, or `Interval`'s smart constructor tightened to the open interval so a 0 cannot be
-  built. Regularisation is a fudge — it asserts every apple is slightly brown — but it is what the
-  current model needs in order to run at all.
+Two things are worth carrying forward rather than closing:
 
-Independently of the choice:
-
-- A test that folding `initialTraining` through `updateModel` leaves every `DirichletColoursPrior`
-  component finite, and that every weight reaching `proper` is finite and non-negative. There is
-  no test suite for `gravensteiner` at all right now.
-- `dirichletColoursNormalizable` belongs in that test suite rather than in `main` — its own FIXME
-  says so. Note that `main` checks only `initialSortColours`: the condition that matters is that
-  Σₖ exp(−*v*ₖ/η) < 1 still holds *after every update*, and since an update raises both *v*ₖ and
-  η the condition is not monotone, so checking the initial value alone proves nothing.
+- **The general lesson.** A value on the boundary of a distribution's support is a *modelling* error,
+  not a numerical one, and no amount of floating-point hygiene fixes it. The question to ask of any
+  new feature is what its structural zeros are and whether the chosen family admits them — which is
+  why the appearance vector states its transform per coordinate.
+- **The class of test this needs.** "Every weight reaching a resampling step is finite and
+  non-negative" is a property worth asserting over the whole seed corpus, not just over three
+  hand-written apples, and there is still no `test-suite` to put it in — see
+  [no evaluation harness](no-evaluation-harness.md).

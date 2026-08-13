@@ -1,218 +1,99 @@
-# The apple model's likelihood is not settled — three reformulations
+# The likelihood question, and the decision it reached
 
-## Why it matters
+> **Decided; kept as the decision record.** This file was three open questions — what a colour
+> observation *is*, what carries the per-cultivar parameters, and what `identify` returns. All three
+> are now answered, so the file has been cut down to the answers and the reasoning that survives
+> them. What was removed: the mechanics of options A and C (Dirichlet-multinomial counts, and
+> repairing the `Main.hs` importance sampler), and a "port at reduced fidelity today" sketch built
+> on an alr transform that the chosen parameterisation does not use — the still-valid version of
+> that sketch is *What is already supported today* in
+> [the requirements](model-v1-delayed-sampling-requirements.md).
 
-`gravensteiner/app/Main.hs` performs its conjugate update *by hand*, in pure Haskell:
-`updateDirichletColours` is the update, `updateModel`/`updateAppleSortPrior` fold it over the
-training set, and no inference monad appears anywhere except `identify`. Porting to delayed
-sampling is therefore not "wrap the existing code" — it is "restate the model as a graph and let
-`observe` do what `updateDirichletColours` does now". That rewrite is the moment to change the
-model, and several parts of it should change, because the current likelihood is chosen for
-conjugacy-by-hand rather than for fitting apples.
+## The question, and the trade-off it turned on
 
-Three things are unsettled, and they are independent: what a colour observation *is*, what carries
-the per-cultivar parameters, and what `identify` returns.
+`gravensteiner/app/Main.hs` did its conjugate update **by hand**: `updateDirichletColours` was the
+update, `updateModel` folded it over the training set, and no inference monad appeared outside
+`identify`. The middle level of that model was the [conjugate prior of the
+Dirichlet](https://en.wikipedia.org/wiki/Dirichlet_distribution#Conjugate_prior_of_the_Dirichlet_distribution),
+which has **no closed-form normalizer** — the entire reason `sampleDirichletColours` and its
+ten-sample importance sampler existed. Porting was therefore always going to be a rewrite, and the
+rewrite was the moment to change the model.
 
-> **Since this was written, the first of those has largely been answered, and it changes the
-> recommendation below.** `brown` denotes *russet*, a surface texture rather than a pigment, so the
-> four numbers were never a composition and the simplex premise is void — see
-> [russet is not a colour](russet-is-not-a-colour.md). The appearance model becomes three scalars in
-> [0, 1] plus a categorical pattern, which makes **option B the choice** and drops option A's
-> Dirichlet machinery off the critical path. The options are kept below because the reasoning about
-> zeros, covariates and affine latents is what justifies B, and because option A's *counts* idea
-> survives independently as the observer-precision knob. The second and third questions, and the
-> eight structural changes at the end, are untouched by this.
+The choice was between two families, and stated once it is the whole question:
 
-## What the model does today
+> **Dirichlet-multinomial is robust to zeros and needs no hyperprior, but its parameters cannot be
+> an affine function of anything. Logistic-normal absorbs covariates and latents affinely but is
+> undefined at zero.**
 
-Per cultivar *c*, with `Colours` a point on the 3-simplex (four proportions summing to 1):
+## The decision: option B, on a transformed scale, with no composition left
 
-```
-  v_c, η_c                     -- DirichletColoursPrior: {yellow,red,green,brown}Prior, pseudocount
-  α_c ~ p(α | v_c, η_c)        -- sampleDirichletColours: 10 importance samples, Gamma(1,1) proposals
-  x   ~ Dirichlet(α_c)         -- coloursLikelihood, evaluated at the observed proportions
-```
+**Option B — normal on an unconstrained scale — is chosen**, and two later findings made the choice
+easy rather than close. [Russet is a texture, not a colour](russet-is-not-a-colour.md), so the four
+numbers were never a composition and there is no simplex to model; and every planned covariate
+(ripening duration, tree, year, observer bias) enters **affinely**, which is exactly what B supports
+and A cannot. With the composition gone, the alr transform goes too: there is no log-ratio anywhere
+in the result.
 
-The middle level is the [conjugate prior of the Dirichlet
-distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution#Conjugate_prior_of_the_Dirichlet_distribution),
-*p*(α) ∝ *B*(α)^−η · exp(−Σₖ *v*ₖ αₖ). `dirichletColoursLikelihood` is that density,
-`updateDirichletColours` is its update *v*ₖ ← *v*ₖ − ln *x*ₖ, η ← η + 1, and
-`dirichletColoursNormalizable` is its normalizability condition Σₖ exp(−*v*ₖ/η) < 1. The
-derivation is right; the problem is that this family has **no closed-form normalizer**, which is
-the entire reason `sampleDirichletColours` and its 10-sample importance sampler exist. Delayed
-sampling cannot rescue it — see the gamma caution in
-[only `Normal` is usable](conjugate-pairs-beyond-normal.md).
+The concrete parameterisation is settled — ground-colour position on a green→yellow axis, overcolour
+extent as a fraction of non-russeted skin, an overcolour pattern categorical, and russet extent, the
+only genuinely zero-inflated coordinate, whose presence indicator is *observed* and therefore costs
+no latent variable. See [the review](model-v1-review.md) for the elicitation constraint that keeps it
+conjugate (asking for the non-russeted fraction avoids a bilinear `blush × (1 − russet)`) and
+[the network design](model-v1-bayesian-network.md) for the full appearance vector and why
+logit-normal beats Beta here.
 
-`frequency` is a counter that `identify` never reads (its own FIXME says it should be Dirichlet
-weights), and `identify` returns a *sampled* `Name` rather than a distribution.
+One fragment of option A survives in a smaller role: **counts as a precision knob.** A notional *N*
+patches, of which *n* are red, expresses "this observer resolves coverage coarsely" as weak evidence
+about a real proportion — beta-binomial at the observation layer rather than Dirichlet-multinomial
+at the parameter layer. Available, not needed, and it would break the conjugate chain upwards.
 
-## Option A — counts, and Dirichlet-multinomial
+## The eight structural changes, and where each one went
 
-Treat the observation as **counts, not proportions**: *N* notional surface patches, of which
-*n*_red are red. "60 % red" at *N* = 20 is *n*_red = 12. Then
+These were listed as independent of the A/B/C choice, and they were: every one is now either
+absorbed into the v1 design or explicitly overturned.
 
-```
-  θ_c ~ Dirichlet(α₀)          -- α₀ fixed, or itself hierarchical
-  n   ~ Multinomial(N, θ_c)
-```
+| # | Change | Now |
+|---|---|---|
+| 1 | `identify` returns a distribution, not a sample | **R13** in [the requirements](model-v1-delayed-sampling-requirements.md) |
+| 2 | `frequency` becomes Dirichlet weights over cultivars | `phi_g ~ Dirichlet(alpha)` in [the network](model-v1-bayesian-network.md) |
+| 3 | An "unknown cultivar" option | Tier 2 of [the review](model-v1-review.md); its predictive is the prior predictive from `mu_0` |
+| 4 | A hierarchical prior across cultivars | the whole Gaussian hierarchy, plus a pedigree GMRF |
+| 5 | Observer reliability is three things | precision → `S_within`; bias → `b_o`; label reliability → the structured confusion model |
+| 6 | ~~Ripeness is a latent, not a covariate~~ | **overturned** — see below |
+| 7 | Frequencies are context-dependent | `phi_g` is per region by construction |
+| 8 | ~~A colour judgement is coarse~~ | **overturned** — see below |
 
-The exotic hyperprior **disappears**. There is nothing left to learn about a concentration vector,
-because what is being learned is θ_c itself, and Dirichlet-multinomial is conjugate: the
-predictive for a new apple is a ratio of Γ's, so `identify` needs no Monte Carlo at all. Zeros
-stop being fatal — *n*_green = 0 is an ordinary outcome rather than a point outside the support
-([exact zeros are fatal](apple-model-zero-colours-are-fatal.md)). Overdispersion across apples of
-one cultivar comes for free, parameterised by Σα₀.
+**Change 6 is overturned, and its conclusion survives its premise.** It argued that ripeness is a
+per-apple latent nuisance variable, marginalized analytically under B and not under A — "the sharpest
+single argument for B". The premise is wrong: once harvest and examination dates are recorded, the
+durations *are* the covariates and there is no reason to introduce a latent ripeness at all
+([Correction 1](model-v1-bayesian-network.md)). What survives is the argument's shape — B absorbs
+covariates affinely and A does not — which is still the reason B won, just with an observed
+coefficient instead of a latent one.
 
-*N* looks like an embarrassment but is really the **reliability knob**: a careless pomologist, or
-a bad photograph, is a small *N* — weak evidence about a real proportion. That is one concrete,
-cheap answer to the observer-reliability question below.
+**Change 8 is overturned outright.** It read "60 % red" as a censored interval observation needing a
+CDF the package does not have. Observations are **not** vague: a fruit either gave a value or it did
+not, and a field too uncertain to record is absent rather than softened into a range. Vagueness
+belongs to *cultivar descriptions*, which describe a distribution rather than a fruit and enter
+through their own conjugate elicitation — see
+[descriptions are not observations](cultivar-descriptions-are-not-observations.md). This is why R14
+was struck from the requirements rather than scheduled.
 
-Costs: *N* has to be chosen or modelled; and multinomial counts cannot absorb a continuous
-covariate affinely (see the trade-off). Needs a `Dirichlet` node and
-[vector-valued variables](vector-valued-variables-and-dirichlet.md), plus a discrete child
-([no discrete nodes](discrete-nodes-and-dirichlet-categorical.md)).
+## What this says about delayed sampling
 
-## Option B — logistic-normal on the additive log-ratio
+Worth keeping, because it is the sharpest statement of what the machinery is *for* here. Under a
+correctly-labelled, fully conjugate model the cultivar posterior is a finite sum of closed-form
+predictives: the model is analytic and delayed sampling would never sample anything. So delayed
+sampling is not buying variance reduction. It is buying the thing `updateDirichletColours`
+demonstrated the absence of — a hand-derived conjugate update has to be re-derived by hand every time
+the model changes, and collapses entirely the moment one non-conjugate part is added, whereas delayed
+sampling degrades to sampling exactly that part and keeps the rest exact.
 
-Map the composition into ℝ³ with the additive log-ratio transform,
-*y* = (ln *x*_y/*x*_b, ln *x*_r/*x*_b, ln *x*_g/*x*_b), and put
-
-```
-  μ_c ~ N(μ₀, Σ₀)              -- hierarchical across cultivars
-  y   ~ N(μ_c, Σ)
-```
-
-This is the formulation that fits *this package*: normal-normal is the only conjugacy implemented,
-the mean is an affine expression, and Σ may be full — so "red trades off against green, because
-that axis is ripeness, while russeting varies independently" is expressible. A Dirichlet cannot
-say that; its correlation structure is fixed once Σα is fixed.
-
-Decisively, **B is the only option in which covariates and per-apple latents enter affinely**:
-
-```
-  y = μ_c + ripeness · d_c + Σ_j β_j z_j + noise
-```
-
-is exactly the paper's affine-transformation machinery, so an *unobserved* ripeness is
-marginalized analytically instead of sampled. Since nearly every planned feature is a continuous
-covariate ([apple features and their conjugate pairs](apple-features-and-their-conjugate-pairs.md)),
-this is the long-run shape of the model.
-
-Costs: alr(0) = −∞, so a **structural-zero layer is mandatory** — a presence indicator per colour
-(Bernoulli with a Beta prior, i.e. beta-Bernoulli conjugacy) and a logistic-normal over the
-present parts only. Needs vector-valued normals, hence
-[supernodes](no-supernodes-for-multiple-parents.md).
-
-## Option C — keep the hyperprior and sample it properly
-
-Status quo, repaired: make `quality` configurable rather than a hard-coded 10, remove the
-`print`/`traceShowWith` calls, and check the importance weights (the `Exp (sum α)` factor is the
-reciprocal Gamma(1,1) density, which is right, but the target is unnormalized so the estimate is
-usable only after `proper`). Recommended only as a stopgap. It keeps a level of the hierarchy that
-has no closed form, that the data does not need, and that forces Monte Carlo into `identify` —
-the one place where an exact answer is otherwise available.
-
-## The trade-off, stated once
-
-**Dirichlet-multinomial is robust to zeros and needs no hyperprior, but its parameters cannot be
-an affine function of anything. Logistic-normal absorbs covariates and latents affinely but is
-undefined at zero.** That is the whole choice, and it does not have a dominant side.
-
-Recommendation, **superseded** — it was *A now, B as the target*, on the grounds that A makes the
-model exact immediately and B needs vector normals and supernodes that do not exist. With the
-simplex gone there is no composition left for A to model, so **B**, with each appearance scalar on a
-logit scale and a presence layer for the zero-inflated ones. A's counts survive in a smaller role:
-*N* as the observer-precision knob for a coverage judgement, i.e. beta-binomial rather than
-Dirichlet-multinomial.
-
-**Decided.** Option B is chosen, and the parameterisation is settled concretely: ground-colour
-position on a green→yellow axis, overcolour extent as a fraction of non-russeted skin, an
-overcolour pattern categorical, and russet extent — the last being the only genuinely zero-inflated
-coordinate, and its presence indicator is *observed*, so the presence layer costs no latent
-variable. There is no alr transform and no composition anywhere in the result. See
-[the review](model-v1-review.md) for the elicitation constraint that makes this work (asking for
-non-russeted fraction avoids a bilinear `blush × (1 − russet)`) and
-[the network design](model-v1-bayesian-network.md) for the full appearance vector.
-
-**A port is possible today, before any of this lands**, at reduced fidelity: option B with a
-*diagonal* Σ makes the three alr coordinates three independent scalar chains,
-`μᵢ ~ N(mᵢ, s²)` and `yᵢ ~ N(Var μᵢ, σ²)`, which `normalDS`/`observe` already support —
-`conditionDist` handles `Normal (Var parentVar) (Const variance)` directly. Colours with a zero
-must be dropped or regularised first. That is worth doing as an end-to-end smoke test of the
-package against a real model even though the statistics are wrong.
-
-## Structural changes, independent of A/B/C
-
-1. **`identify` must return a distribution, not a sample.** Its type is
-   `Apple -> Model -> m Name`, and it draws from `proper . fromWeightedList`, throwing away the
-   very thing the caller wants ("how sure are you?"). It should return
-   `Map Name (Log Double)`, normalized, or a `Categorical Name`.
-2. **`frequency` becomes Dirichlet weights over cultivars**, as its FIXME says: prior
-   pseudocounts α₀, observed counts *n*_c, predictive (α₀ + *n*_c)/Σ(α₀ + *n*). `identify`
-   currently ignores it entirely, so a cultivar seen once competes on equal terms with one seen a
-   thousand times. Note that `initialAppleSortPrior` sets `frequency = 0`, which as a Dirichlet
-   weight means "impossible", not "unseen"; 1 (Laplace) or a fitted concentration is meant.
-3. **An "unknown cultivar" option** — the `identify` FIXME about hallucination. Three mechanisms,
-   in increasing ambition: (a) an explicit "other" component whose predictive *is* the
-   hierarchical base measure's predictive, which is nearly free once (4) exists; (b) a
-   Chinese-restaurant / Dirichlet-process prior on cultivar identity, so a genuinely new cultivar
-   can be created — a good fit, since real cultivars number in the thousands and the training set
-   will always be a small sample of them; (c) abstention: report the posterior and refuse to
-   answer below a calibrated threshold, which is a decision rule rather than a model change and
-   should be kept separate from (a)/(b).
-4. **A hierarchical prior across cultivars** — `Main.hs`'s "Actually I want to have a prior over
-   that as well?", and the first level of
-   [the target hierarchy](apple-model-target-hierarchy.md), which goes on to add trees, years and
-   observers above and below it. With three training apples and three cultivars, each per-cultivar posterior is
-   the prior plus a single point. Shrinkage towards a learned "generic apple" is not a refinement
-   here, it is what makes the model usable at all, and it is what makes (3a) available.
-5. **Observer reliability is three different things**, and "Model for reliability of pomologists,
-   photos & books" conflates them: (i) *precision* — how finely this observer resolves colour,
-   which is Option A's *N* or Option B's noise variance; (ii) *bias* — a systematic tilt, e.g. an
-   observer who calls everything red, which is an additive per-observer term in B and hence
-   affine and delayable; (iii) *label reliability* — the recorded cultivar *name* in training may
-   simply be wrong, which is a confusion matrix with Dirichlet rows, or a per-observer Beta
-   "is this label right". (iii) is the expensive one: it turns every training label into a latent
-   and makes training itself a mixture — and it is the intended feature, since a pomologist judging
-   a whole collection as one cultivar is exactly where individual errors hide. Note that bias is
-   only *identifiable* if observers cross cultivars; see
-   [the target hierarchy](apple-model-target-hierarchy.md), consequence 6.
-6. **Ripeness is a latent, not a covariate.** It drives colour (green → yellow/red), and it is
-   usually *unknown* at observation time, so it is a per-apple nuisance variable to be
-   marginalized — which under B is analytic and under A is not. This is the sharpest single
-   argument for B.
-7. **Frequencies are context-dependent.** "Which cultivars are plausible" differs between a
-   German supermarket and a heritage orchard; `frequency` should ultimately be conditioned on
-   location and season rather than global.
-8. **A colour judgement is coarse.** "60 % red" is really "somewhere around 55–65 %" — a
-   *censored* or interval observation. `observe` cannot express that: it takes a point value and
-   calls `pdf`, so an interval needs a CDF the package does not have. Recording it as a limitation
-   rather than a plan; the honest cheap approximation is to inflate the observation noise, which
-   Option B has a slot for and Option A folds into *N*.
-
-## The consequence for delayed sampling
-
-Under A or B with conjugate priors throughout, the cultivar posterior is a *finite sum of
-closed-form predictives*: the model is fully analytic and delayed sampling would never sample
-anything. That is the Rao-Blackwellization limit named in
-[no SMC integration](no-smc-integration.md) — which makes this version of the apple model a good
-*demonstration* for that item rather than a client of it.
-
-That holds only for the flat, correctly-labelled version. Add the per-apple label-error indicator
-that [the target hierarchy](apple-model-target-hierarchy.md) calls for and the likelihood becomes a
-mixture, analyticity ends, and SMC moves onto the critical path — see structural change 5(iii)
-below, which is the single feature that changes the algorithm rather than the model.
-
-It also sharpens what delayed sampling is actually for here. It is not variance reduction, since
-there would be no variance. It is that `updateDirichletColours` is a hand-derived conjugate update
-which has to be re-derived by hand every time the model changes — and the moment one
-non-conjugate part is added (a censored observation, label uncertainty, a non-Gaussian weather
-effect) the hand-derived version collapses, whereas delayed sampling degrades to sampling exactly
-that part and keeps the rest exact.
+The v1 model does add exactly one such part: the latent label `z_t`. That is what makes the model a
+mixture, ends analyticity, and lets delayed sampling earn its keep rather than merely automate a
+closed form.
 
 ## Done when
 
-This is a decision, not code: A, B or C recorded here with a reason, and a position on each of the
-eight structural changes. Nothing should be ported until that is written down, because A and B do
-not need the same features from `delayed-sampling` — A needs a `Dirichlet` node and a discrete
-child, B needs vector normals and supernodes, and building both is roughly twice the work.
+**Done.** The decision is B with the parameterisation above, and each of the eight structural
+changes has a recorded destination in the table.

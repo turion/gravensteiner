@@ -1,9 +1,16 @@
-# `Distribution` and `Value` are scalar-only, so a `Dirichlet` node is inexpressible
+# `Distribution` and `Value` are scalar-only, so there is no vector-valued node
+
+> **The multivariate-normal half is R3 and load-bearing; the Dirichlet half has no client.** Read
+> this file with that split in mind — it was written when the appearance model was a simplex and the
+> Dirichlet looked like the point. The appearance **vector** is what needs a vector carrier now:
+> *d* ≈ 6 coordinates at every level of the hierarchy, per
+> [the network design](model-v1-bayesian-network.md). A `Dirichlet` node would only be wanted for
+> `phi_g`, the cultivar frequencies, which is a small block outside the Gaussian hierarchy and could
+> equally be maintained outside the graph.
 
 ## Why it matters
 
-The colour simplex is irreducibly four-dimensional, and every constructor of `Distribution`
-produces a `Distribution Double`:
+Every constructor of `Distribution` produces a `Distribution Double`:
 
 ```haskell
   Normal  :: Value Double -> Value Double -> Distribution Double
@@ -13,20 +20,15 @@ produces a `Distribution Double`:
 
 `Normal2` takes a *pair-valued parameter* but still yields a scalar — it is the beginning of a
 two-parent supernode, not a bivariate distribution (see
-[no supernodes](no-supernodes-for-multiple-parents.md)). Nothing in the module produces a vector,
-so neither `Dirichlet` (option A of
-[the reformulation options](apple-model-reformulation-options.md)) nor a multivariate normal
-(option B) can be written down.
+[no supernodes](no-supernodes-for-multiple-parents.md)). Nothing in the module produces a vector, so
+neither a multivariate normal nor a `Dirichlet` can be written down at all.
 
-**The two halves have diverged in priority.** Once [russet is recognised as a texture rather than a
-colour](russet-is-not-a-colour.md) the appearance model is three scalars in [0, 1] and no simplex
-remains, so `Dirichlet` loses its client — while the **multivariate normal** becomes unavoidable,
-both for the joint covariance of those scalars (ground colour and overcolour extent move together
-with ripeness) and for [the target hierarchy](apple-model-target-hierarchy.md), whose crossed design
-makes one large joint Gaussian the whole representation. Read the multivariate-normal parts of this
-item as load-bearing and the Dirichlet parts as speculative, and see
-[no supernodes](no-supernodes-for-multiple-parents.md), which is where the multivariate normal is
-actually scheduled.
+**Why the multivariate normal is unavoidable.** Two independent reasons, and neither is about the
+simplex. The appearance coordinates are genuinely correlated — ground colour and overcolour both move
+with ripening, so a diagonal approximation throws away real information — and the crossed hierarchy
+makes one large joint Gaussian the whole representation rather than a refinement of it. The scheduling
+lives in [no supernodes](no-supernodes-for-multiple-parents.md), which is the same requirement seen
+from the graph side; this file is the carrier-and-`Value` side of it.
 
 **The graph machinery is not the obstacle.** `initialize`, `graft`, `prune`, `marginalize`,
 `realize`, `sample`, `value` and `observe` are all polymorphic in the carrier type, constrained
@@ -72,9 +74,11 @@ side: that item should be done with vectors in mind, or it will have to be done 
 **Covariance representation.** A multivariate normal needs a covariance *matrix* in a slot where
 `Normal` has a `Value Double` variance. The existing normal-normal `conditionDist` computes with
 `1 / variance`; the vector version needs a precision matrix and a solve, so `statistics`/`hmatrix`
-enters the dependency set, or a hand-rolled Cholesky for small fixed dimensions (4 colours, so
-small is realistic). Deciding this also settles whether the variance slot may be a variable at all
-— see [marginal vs conditional](no-type-level-marginal-conditional.md).
+enters the dependency set, or a hand-rolled Cholesky at the per-node dimension, which stays small —
+*d* ≈ 6 per entity. Note that this decision is *not* the same as R4's: R4 is about the sparse joint
+over O(10⁴) entity latents, whereas this is about one node's own *d*×*d* block, and a dense solve is
+entirely appropriate at that size. Deciding it also settles whether the variance slot may be a
+variable at all — see [marginal vs conditional](no-type-level-marginal-conditional.md).
 
 ## Done when
 

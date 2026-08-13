@@ -80,8 +80,9 @@ extent *of the non-russeted skin*", and the whole appearance model remains linea
   `groundColour`, `overcolourExtent`, `overcolourPattern`, `russetExtent`, and `brown` is gone.
 - The observation protocol above is written down next to the record, since the field definitions
   are what keep the model conjugate.
-- `initialTraining` is re-encoded in the new scheme — which requires deciding what its existing
-  numbers meant. Boskoop's `brown = 0.3` is russet coverage; Jonathan's `red = 0.9, yellow = 0.1`
-  is a near-total blush over a yellow ground, i.e. `overcolourExtent ≈ 0.9`, `groundColour ≈ 1`,
-  `russetExtent = 0` — note that this is *not* a mechanical transformation of the old numbers, so
-  the training data has to be re-elicited rather than converted.
+- The seed corpus is elicited **in** the new scheme rather than converted into it. The old
+  `initialTraining` shows why conversion is not available: Boskoop's `brown = 0.3` was russet
+  coverage, while Jonathan's `red = 0.9, yellow = 0.1` was a near-total blush over a yellow ground,
+  i.e. `overcolourExtent ≈ 0.9`, `groundColour ≈ 1`, `russetExtent = 0`. Those are two different
+  readings of the same four fields, so there is no mechanical transformation — which is a reason to
+  fix the elicitation wording before ingestion rather than after.

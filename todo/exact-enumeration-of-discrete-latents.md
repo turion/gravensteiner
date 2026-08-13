@@ -7,9 +7,9 @@ implemented has exactly one way to get a value out of a node: `value` = `graft` 
 `sample` ends in `sampleMarginal`, which draws. Drawing a cultivar is throwing away the answer:
 that is precisely what `identify` does today, and why it returns `Name` rather than a distribution.
 
-The set is small (thousands of cultivars at the very most, three in `initialTraining`) and the
-summand is available in closed form under either reformulation, so the posterior should be computed
-by summation. This is the paper's spike-and-slab / stochastic-branching case taken one step
+The set is small — a **regional set of a few hundred** cultivars plus an "other" outcome — and the
+summand is available in closed form given the Gaussian block, so the posterior should be computed by
+summation. This is the paper's spike-and-slab / stochastic-branching case taken one step
 further: the paper's point is that delayed sampling *degrades gracefully* by forcing a sample when
 the program demands a value, whereas here the right answer is not to force it at all.
 
@@ -17,21 +17,19 @@ the program demands a value, whereas here the right answer is not to force it at
 
 **(1) Enumerate outside the graph.** Run one `DelayedSamplingT` computation per cultivar, take each
 run's evidence from `runWeightedT`, and combine with the prior weights by hand:
-*p*(*c* | apple) ∝ π_c · *Z*_c. This needs **no new features at all**, and it matches the shape
-`identify` already has — it `traverse`s the `Map Name AppleSortPrior` and builds a weighted list.
-It is the right first port, and it should be written down as such so that nobody waits for (2) or
-(3). Cost: the graph is rebuilt per cultivar, so shared structure (the hierarchical prior, any
-per-apple latent) is recomputed *k* times, and there is no way to condition the shared parent on
-the mixture.
+*p*(*c* | tree) ∝ π_c · *Z*_c. This needs **no new features at all**, which is what makes it the right
+first port. Cost: the graph is rebuilt per candidate, so shared structure is recomputed *k* times, and
+there is no way to condition the shared parent on the mixture.
 
-**This route is now the plan, and its cost is the binding constraint rather than a footnote.**
+**This route is now the plan (R6), and its cost is the binding constraint rather than a footnote.**
 [The network design](model-v1-bayesian-network.md) puts one categorical latent per *tree* over a
 regional set of a few hundred cultivars, and enumerating it is exactly this route — so it is on the
-critical path, not merely a first step. But *k* is now a few hundred rather than three, and the
-shared structure being recomputed is the entire crossed Gaussian block, so rebuilding it *k* times
-per tree is the dominant cost of the whole algorithm. The requirement that follows is to graft the
-shared context **once** and score *k* alternatives against it; it is recorded as R1's first
-sub-requirement in [the requirements](model-v1-delayed-sampling-requirements.md).
+critical path, not merely a first step. But *k* is a few hundred, and the shared structure being
+recomputed is the entire crossed Gaussian block, so rebuilding it *k* times per tree would be the
+dominant cost of the whole algorithm. The requirement that follows is to graft the shared context
+**once** and score *k* alternatives against it; it is R1's first sub-requirement in
+[the requirements](model-v1-delayed-sampling-requirements.md), and it is the difference between an
+algorithm that runs and one that does not.
 
 **(2) Run over an enumeration base monad.** `DelayedSamplingT (Enumerator)` would make the discrete
 choice exact and keep everything in one computation. There is a real obstacle worth knowing before
@@ -63,5 +61,4 @@ has *k^m* unless components are collapsed, which is why this is not simply bette
   computed one.
 - A recorded decision on whether (2) or (3) is worth pursuing, with (3)'s combinatorial cost
   stated.
-- `identify` returning normalized weights per `Name` rather than a draw — see
-  [the reformulation options](apple-model-reformulation-options.md), structural change 1.
+- Identification returns normalized weights over cultivars including "other", not a draw — R13.
