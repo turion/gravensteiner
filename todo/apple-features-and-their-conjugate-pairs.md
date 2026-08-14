@@ -63,9 +63,8 @@ of independent per-feature models and one joint model.
 **Weather and year break the i.i.d. assumption, which changes the graph's shape.** Weather is a
 property of a region-season, not of an apple, so every apple from that region-season shares one
 parent. That turns independent leaves into a node with many marginalized children — precisely the
-workload Invariant 2 and `prune` govern
-([`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md)) and
-which no current test exercises ([missing paper examples](missing-paper-examples-as-tests.md)). It is
+workload Invariant 2 governs, and which no current test exercises ([missing paper
+examples](missing-paper-examples-as-tests.md)). It is
 also the first place where "train, then discard the data" stops being obviously valid, since a later
 apple from the same season is informative about an earlier one. And because these effects are
 **crossed**, no local grouping restores a forest — see

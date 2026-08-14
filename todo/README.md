@@ -67,8 +67,6 @@ Everything unblocked from this session is done. In priority order, what's next:
 4. [Descriptions are not observations](cultivar-descriptions-are-not-observations.md)'s remaining
    conjugate-update wiring — needed before literature ingestion, i.e. before the seed corpus can
    actually be used.
-5. [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) —
-   cheap now that the child index exists; a correctness/diagnosis fix, not a feature.
 
 ## The specification
 
@@ -122,7 +120,6 @@ early.
 
 | Item | Slated for |
 |---|---|
-| [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) | the child index it needed is done; the scan itself is not |
 | [`observe` takes a `Variable`, not a `Value`](observe-takes-a-variable-not-a-value.md) | single-variable case is cheap now |
 | [`pdf`'s catch-all hides unimplemented distributions](pdf-catch-all-hides-unimplemented.md) | later |
 | [The paper's examples are only partly covered by tests](missing-paper-examples-as-tests.md) | alongside each fix |
