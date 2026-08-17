@@ -19,6 +19,9 @@
           # Match the ambient toolchain; monad-bayes 1.3.0.5 is unbroken here.
           basePackages = pkgs.haskell.packages.ghc912;
           devShell.tools = hp: { inherit (hp) fourmolu hlint; };
+          # yq-go is a native (non-Haskell) tool, so it goes through mkShellArgs rather
+          # than devShell.tools, which only takes packages from the Haskell package set.
+          devShell.mkShellArgs.nativeBuildInputs = [ pkgs.yq-go ];
           settings = {
             # sandwich's own test suite fails on ghc912, which would block
             # fsnotify -> ghcid in the devShell. nixpkgs' idiom for this is
