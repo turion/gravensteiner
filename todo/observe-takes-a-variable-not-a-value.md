@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "Separately, a recorded decision on the opacity question, since it changes the shape of every"
+pkg: [delayed-sampling]
+---
 # `observe` takes a `Variable`, not a `Value`
 
 ## Why it matters

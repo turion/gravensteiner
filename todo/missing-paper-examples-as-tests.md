@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: M
+size_evidence: "no cue in source file"
+pkg: [delayed-sampling]
+---
 # The paper's examples are only partly covered by tests
 
 ## Why it matters

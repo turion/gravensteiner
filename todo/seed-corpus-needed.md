@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [1]
+size: L
+size_evidence: "A decision on where the seed data comes from (monographs, pomological websites, the morphometrics"
+pkg: [gravensteiner]
+---
 # No seed corpus exists yet
 
 ## Why it matters

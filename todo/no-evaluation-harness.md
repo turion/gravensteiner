@@ -1,3 +1,11 @@
+---
+status: open
+milestone: [3]
+size: L
+size_evidence: "Three distinct things, and they need separate treatment"
+pkg: [gravensteiner]
+needs: [seed-corpus-needed]
+---
 # Nothing measures whether the model works
 
 > **Blocked:** on [a seed corpus](seed-corpus-needed.md), which does not exist yet in the

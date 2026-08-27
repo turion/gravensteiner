@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "no cue in source file"
+pkg: [delayed-sampling]
+---
 # `Observed` collapses `NotMentioned` and `NotMeasured` into one `NotObserved`
 
 Low priority — revisit once a source class exists to condition the mention likelihood on.

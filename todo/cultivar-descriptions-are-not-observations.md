@@ -1,3 +1,11 @@
+---
+status: open
+milestone: [1]
+size: L
+size_evidence: "no cue in source file"
+pkg: [gravensteiner]
+needs: [conjugate-pairs-beyond-normal]
+---
 # Cultivar descriptions are not fruit observations
 
 > **Progress:** the type-level shapes — `Observed`, `Described`, `Elicited`, `Spread`,

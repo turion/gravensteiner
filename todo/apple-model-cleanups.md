@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [3]
+size: M
+size_evidence: "no cue in source file"
+pkg: [gravensteiner]
+---
 # Findings from `Main.hs` that outlive it
 
 > **Cut down to what transfers.** `gravensteiner/app/Main.hs` is a precursor superseded by

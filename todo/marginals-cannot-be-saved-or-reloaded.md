@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "A decision on the persistence format, recorded."
+pkg: [delayed-sampling, gravensteiner]
+---
 # A trained model cannot be extracted from the graph or loaded back into one
 
 > **The target shape is not a `Map`.** This file is written around extracting one marginal per

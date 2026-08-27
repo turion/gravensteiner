@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: M
+size_evidence: "no cue in source file"
+pkg: [delayed-sampling]
+---
 # Training over many apples must not grow the graph
 
 > **Update:** the two prerequisites this item leaned on are both done — `Graph` now carries a
