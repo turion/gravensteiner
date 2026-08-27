@@ -8,6 +8,8 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 ---
 # Nest the phase inside `Colours`
 
+## Why it matters
+
 **Nest the phase inside `Colours`.** `Fruit.colours` is `p Colours`, so the colour fields are
 missing all together or present all together. A book that says "greenish-yellow" without
 mentioning blush is the common case, and under the parameterisation above the fields are

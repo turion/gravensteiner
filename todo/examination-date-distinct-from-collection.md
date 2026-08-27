@@ -8,6 +8,8 @@ provenance: "model-v1-review.md, Tier 2 (\"large gains, cheap\"), the finding \"
 ---
 # An examination date distinct from the collection date
 
+## Why it matters
+
 **An examination date distinct from the collection date.** `Collection` has `date` and
 `Judgement` has `date`, but `Fruit` has none, so there is no way to express that a fruit was
 photographed or described three weeks after it was picked. Storage duration is one of the two

@@ -41,7 +41,12 @@ The backlog is prose-heavy on purpose: it records *why* each decision was made, 
 decisions rest on statistical reasoning that nothing has measured yet. Conventions worth following,
 since breaking them costs more than it saves:
 
-- **One file per item**, opening with `## Why it matters` and closing with `## Done when`.
+- **One file per item**, opening with `## Why it matters` and closing with `## Done when`, optionally
+  followed by provenance sections recording where moved prose came from. Three items predate this
+  rule and close on something else instead: `apple-model-zero-colours-are-fatal.md` (`## What
+  survives, and what does not`), `haskell-library-landscape.md` (`## Summary`), and
+  `value-affine-normal-form.md`, which has no `## Done when` section at all and closes on its own
+  `## From the v1 requirements document (R2)` heading.
 - **Cite functions, types and fields by name, never by line number** — reformatting invalidates line
   numbers and these files outlive the code they describe.
 - **Every item carries YAML frontmatter.** `todo/SCHEMA.md` is the field-by-field contract — read it

@@ -8,6 +8,8 @@ provenance: "model-v1-review.md, Tier 2 (\"large gains, cheap\"), the finding \"
 ---
 # There must be an "other" outcome
 
+## Why it matters
+
 **There must be an "other" outcome.** A large share of old orchard and roadside trees are chance
 seedlings that belong to no named cultivar at all, and a regional set of a few hundred cannot
 contain them by construction. Without an explicit "unnamed seedling / not in the candidate set"

@@ -8,6 +8,8 @@ provenance: "model-v1-review.md, Tier 2 (\"large gains, cheap\"), the finding \"
 ---
 # `certainty` should be calibrated, not believed
 
+## Why it matters
+
 **`certainty` should be calibrated, not believed.** *(implemented: `certainty :: p Interval`, with
 a haddock stating it is self-reported and not derived from the data)* A self-reported betting
 probability is a genuinely rich datum and it is unusual to have it, but people are not calibrated:

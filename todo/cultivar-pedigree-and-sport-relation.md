@@ -8,6 +8,8 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 ---
 # `Cultivar` needs pedigree and a sport relation
 
+## Why it matters
+
 **`Cultivar` needs pedigree and a sport relation.** `alternativeNames` handles synonymy as
 strings, but two structural relations are missing. **Pedigree** (`parents :: [UUID]`) enables
 the kinship prior that [the target hierarchy](apple-model-target-hierarchy.md) identifies as

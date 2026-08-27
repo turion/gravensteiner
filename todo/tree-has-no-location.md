@@ -8,6 +8,8 @@ provenance: "model-v1-review.md, Tier 2 (\"large gains, cheap\"), the finding \"
 ---
 # `Tree` has no location
 
+## Why it matters
+
 **`Tree` has no location.** Location matters before it matters for its own sake, because it is
 what indexes the year effect: weather is regional, so a single global year effect is a fiction
 as soon as collection is not confined to one area. And hemisphere is what makes a bare `Day`

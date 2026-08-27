@@ -8,6 +8,8 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 ---
 # The chosen appearance parameterisation
 
+## Why it matters
+
 **The chosen appearance parameterisation.** `Colours` currently has `yellow`, `red` and `green`
 with `russet` separate — already the improvement that [russet is not a colour](russet-is-not-a-colour.md)
 argued for. The remaining step is to stop treating the three as a composition:

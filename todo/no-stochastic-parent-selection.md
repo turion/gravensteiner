@@ -9,6 +9,8 @@ provenance: "model-v1-delayed-sampling-requirements.md, R1 (table row and the fu
 ---
 # A node's parent cannot be selected by a discrete latent
 
+## Why it matters
+
 Every other requirement is about the *contents* of a node or the *number* of its parents. This one
 is about **which node is the parent**, and that is a different kind of thing.
 

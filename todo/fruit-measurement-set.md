@@ -8,6 +8,8 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 ---
 # A minimal measurement set for `Fruit`'s `-- TODO Further properties`
 
+## Why it matters
+
 **A minimal measurement set for `Fruit`'s `-- TODO Further properties`.** Weight, maximum
 diameter, and the height/diameter ratio. All three are log-normal, all three are supported by
 `delayed-sampling` today with no backlog items in the way, all three are cheap in the field (a
