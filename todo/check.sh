@@ -151,6 +151,21 @@ def closed_by_errors:
   then ["status: closed but no closed_by"]
   else [] end;
 
+def presence_errors:
+  [
+    (if ($fm | has("status") | not) then "status: required field is missing" else empty end),
+    (if ($fm | has("pkg") | not) then "pkg: required field is missing" else empty end),
+    (if ($fm.status? // null) == "open" then
+       (if ($fm | has("milestone") | not) then "milestone: required on open items but missing" else empty end)
+     else empty end),
+    (if ($fm.status? // null) == "open" then
+       (if ($fm | has("size") | not) then "size: required on open items but missing" else empty end)
+     else empty end),
+    (if ($fm.status? // null) == "open" then
+       (if ($fm | has("size_evidence") | not) then "size_evidence: required on open items but missing" else empty end)
+     else empty end)
+  ];
+
 def size_evidence_errors:
   if ($fm | has("size_evidence")) and ($fm.size_evidence | type) == "string" then
     ($fm.size_evidence) as $ev |
@@ -160,7 +175,7 @@ def size_evidence_errors:
     end
   else [] end;
 
-(unknown_errors + type_errors + dangling_errors + milestone_note_errors + closed_by_errors + size_evidence_errors)
+(unknown_errors + type_errors + dangling_errors + milestone_note_errors + closed_by_errors + presence_errors + size_evidence_errors)
 | .[]
 JQ
 
@@ -286,7 +301,12 @@ for f in "$dir"/*.md; do
   fi
 done
 
-echo "todo/check.sh: $no_frontmatter file(s) under $dir have no frontmatter yet."
+if [ "$no_frontmatter" -gt 0 ]; then
+  error_count=$((error_count + no_frontmatter))
+  echo "todo/check.sh: $no_frontmatter file(s) under $dir have no frontmatter yet; add a frontmatter block per todo/SCHEMA.md." >&2
+else
+  echo "todo/check.sh: $no_frontmatter file(s) under $dir have no frontmatter yet."
+fi
 
 # Index generation/drift-checking only applies to a directory with a README.md to regenerate or
 # compare against — i.e. the real todo/, not a scratch fixture directory used to test malformed

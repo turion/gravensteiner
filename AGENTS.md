@@ -91,15 +91,15 @@ since breaking them costs more than it saves:
   already lives in the frontmatter; `todo/SCHEMA.md` carries the field-to-GitHub-field mapping so the
   port script needs none of its own. If the plan directory that built this schema is still around,
   its `research/abandoned-github-port.md` and `decisions.md` have the full argument.
-- Run `nix develop -c todo/check.sh` after any edit to `todo/` — `nix develop` because `yq`, which it
-  needs to parse frontmatter, is only on `PATH` inside the shell. It validates every item's
-  frontmatter against `todo/SCHEMA.md` and fails if `todo/README.md`'s generated index has drifted
-  (the message names `--write-index` to fix it). Two gaps: it never checks markdown links in prose
-  bodies, only `needs`/`parent` slugs, and it checks a field's type only once the field is there, so
-  a missing field never errors — a missing `status` or `milestone` silently vanishes from every
-  section of the generated index, while a missing `pkg` or `size` just leaves that row's cell blank
-  or `?`. Until presence is checked, also run the old link-and-orphan one-liner by hand; its
-  `ORPHAN: SCHEMA.md` is expected, not a real orphan:
+- Run `nix develop -c todo/check.sh` after any edit to `todo/` — `nix develop` because `yq`,
+  which it needs to parse frontmatter, is only on `PATH` inside the shell. It validates every item's
+  frontmatter against `todo/SCHEMA.md`: a file with no frontmatter block, an unknown or wrongly-typed
+  field, and a missing required field (`status`/`pkg` always; `milestone`/`size`/`size_evidence`
+  on open items; `closed_by` on a closed item; `milestone_note` on a multi-milestone one) all
+  fail it now. It also fails if `todo/README.md`'s generated index has drifted (`--write-index`
+  fixes it). It still never checks markdown links in prose bodies, only `needs`/`parent` slugs,
+  nor `provenance`'s presence — nothing in the frontmatter marks which items need one. Also run
+  the old link-and-orphan one-liner by hand; its `ORPHAN: SCHEMA.md` is expected, not a real orphan:
 
       cd todo && rg -o --no-filename '\]\(([a-z0-9./-]+\.md)\)' -r '$1' *.md | sort -u \
         | while read f; do [ -f "$f" ] || echo "MISSING: $f"; done
