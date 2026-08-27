@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: M
+size_evidence: "no cue in source file"
+pkg: [delayed-sampling]
+---
 # `Value` has no affine normal form
 
 ## Why it matters

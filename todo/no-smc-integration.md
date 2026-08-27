@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: 'So the deliverable is not "call `smc`" — it is deciding how a resampling step transports the'
+pkg: [delayed-sampling]
+---
 # No SMC integration — the paper's whole payoff is unrealised
 
 ## Why it matters

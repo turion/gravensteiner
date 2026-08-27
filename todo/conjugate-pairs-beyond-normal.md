@@ -1,3 +1,12 @@
+---
+status: open
+milestone: [1, 6]
+milestone_note: "The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only."
+size: L
+size_evidence: "For each pair: a `Distribution` constructor; clauses in `pdf`, `sampleMarginal`,"
+pkg: [delayed-sampling]
+needs: [vector-valued-variables-and-dirichlet, discrete-nodes-and-dirichlet-categorical]
+---
 # Only `Normal` is usable, and only the normal-normal conjugate pair delays
 
 ## Why it matters

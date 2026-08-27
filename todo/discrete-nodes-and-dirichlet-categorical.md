@@ -1,3 +1,11 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "One carrier question worth settling early:"
+pkg: [delayed-sampling]
+needs: [vector-valued-variables-and-dirichlet]
+---
 # Nothing discrete exists, so the cultivar identity cannot be a node
 
 ## Why it matters

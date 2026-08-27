@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "A recorded decision on whether (2) or (3) is worth pursuing, with (3)'s combinatorial cost"
+pkg: [delayed-sampling]
+---
 # A finite discrete latent should be enumerated, not sampled
 
 ## Why it matters

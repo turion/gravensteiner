@@ -1,3 +1,11 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "stepping stone towards the apple model; it is the bulk of it."
+pkg: [delayed-sampling]
+needs: [vector-valued-variables-and-dirichlet]
+---
 # No supernodes, so a node cannot have two parents — and the Kalman example is degraded
 
 ## Why it matters

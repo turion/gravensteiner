@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: M
+size_evidence: "no cue in source file"
+pkg: [delayed-sampling]
+---
 # Drop `Num`/`Fractional` for hand-rolled affine combinators
 
 ## Why it matters

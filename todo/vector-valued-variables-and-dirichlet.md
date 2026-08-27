@@ -1,3 +1,11 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "## Design questions to settle first"
+pkg: [delayed-sampling]
+needs: [value-affine-normal-form]
+---
 # `Distribution` and `Value` are scalar-only, so there is no vector-valued node
 
 > **The multivariate-normal half is R3 and load-bearing; the Dirichlet half has no client.** Read
