@@ -10,7 +10,8 @@ pkg: [gravensteiner]
 > **Cut down to what transfers.** `gravensteiner/app/Main.hs` is a precursor superseded by
 > `Gravensteiner.Model` plus [the network design](model-v1-bayesian-network.md), so it is being
 > deleted rather than fixed. What was removed from this file with it: the `identify` faults (now
-> R13 and [the missing "other" outcome](identify-needs-other-outcome.md)), the
+> [the reformulation options](apple-model-reformulation-options.md) and
+> [the missing "other" outcome](identify-needs-other-outcome.md)), the
 > `MonadIO`-forcing debug output, the dead and duplicated declarations, and the `Dirichlet`
 > hyperprior. What remains below is the two findings
 > that apply unchanged to code that is not being deleted. The third — no test suite and no way to

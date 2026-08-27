@@ -6,6 +6,7 @@ size: L
 size_evidence: "For each pair: a `Distribution` constructor; clauses in `pdf`, `sampleMarginal`,"
 pkg: [delayed-sampling]
 needs: [vector-valued-variables-and-dirichlet, discrete-nodes-and-dirichlet-categorical]
+parent: model-v1-bayesian-network
 ---
 # Only `Normal` is usable, and only the normal-normal conjugate pair delays
 
@@ -39,7 +40,7 @@ looks, because a distribution that is missing entirely cannot even be *transcrib
 graph as an immediately-sampled root — whereas `Beta` at least occupies the right shape for
 someone to fill in later.
 
-Beta and gamma are confirmed requirements, not speculative ones — they are **R7**. Beta carries the
+Beta and gamma are confirmed requirements, not speculative ones. Beta carries the
 russet presence indicator and observer accuracy in the confusion model; gamma carries the unknown
 variance components, which is what "inherent variability within a cultivar" asks for once a
 per-cultivar scale on `S_within` is wanted. Both are single numbers that do not carry the hierarchy,
@@ -89,3 +90,9 @@ should go, so that the set of usable distributions is visible from the type rath
 at runtime. Better still, the three tiers should be visible too — see
 [`pdf`'s catch-all hides unimplemented distributions](pdf-catch-all-hides-unimplemented.md), which
 is the same defect from the error-reporting side.
+
+## From the v1 requirements document (R7)
+
+| # | Requirement | Needed for | Status |
+|---|---|---|---|
+| R7 | `Beta` with a real `pdf`, and `Gamma` | russet presence, observer accuracy, unknown variances | [conjugate pairs](conjugate-pairs-beyond-normal.md) |

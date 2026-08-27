@@ -9,9 +9,8 @@ closed_by: "f02577d todo: straighten the backlog into one coherent, sorted plan"
 > where every planned feature is mapped to a representation and a conjugate pair, so it stays. What
 > changed since it was written: ripeness is an **observed covariate**, not a latent (so the bilinear
 > row is gone); the label latent is **per tree**, not per apple (so the enumeration argument reverses);
-> and the `Needs` column now names the numbered requirement in
-> [the requirements](model-v1-delayed-sampling-requirements.md) rather than a backlog file, since that
-> is the spine everything else hangs off.
+> and the `Needs` column now links each row straight to the backlog item that owns it, since the
+> numbered requirements document it used to cite has been dissolved into those items.
 
 ## Why it matters
 
@@ -28,25 +27,25 @@ discrete outcome. Choosing representations that stay inside those two keeps the 
 |---|---|---|---|---|
 | ground colour (green ↔ yellow) | normal on logit | normal-normal | **already** | nothing |
 | overcolour (blush) extent | normal on logit of non-russeted fraction | normal-normal | **already** | nothing |
-| overcolour pattern (blush/striped/flecked) | categorical | Dirichlet-categorical | yes | R5 |
-| russet extent | zero-inflated: Bernoulli × logit-normal | beta-Bernoulli + normal-normal | yes | R7; the indicator is *observed*, so no latent |
-| joint covariance of the appearance vector | multivariate normal | normal-normal | yes | R3 |
+| overcolour pattern (blush/striped/flecked) | categorical | Dirichlet-categorical | yes | [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) |
+| russet extent | zero-inflated: Bernoulli × logit-normal | beta-Bernoulli + normal-normal | yes | [conjugate pairs](conjugate-pairs-beyond-normal.md); the indicator is *observed*, so no latent |
+| joint covariance of the appearance vector | multivariate normal | normal-normal | yes | [vectors](vector-valued-variables-and-dirichlet.md) |
 | weight | normal on ln weight | normal-normal | **already** | nothing |
 | size (diameter, height) | normal on ln of each | normal-normal | **already** | nothing, if treated independently |
-| weight ↔ size relation | ln *w* ≈ 3 ln *d* + ln ρ + noise | normal-normal, affine | yes | R2 |
+| weight ↔ size relation | ln *w* ≈ 3 ln *d* + ln ρ + noise | normal-normal, affine | yes | [affine form](value-affine-normal-form.md) |
 | shape ratios (height/diameter, asymmetry) | normal on ln ratio | normal-normal | **already** | nothing |
-| shape class (flat / round / conical) | categorical | Dirichlet-categorical | yes | R5 |
-| other markers (lenticels, bloom/waxiness) | Bernoulli per marker | beta-Bernoulli | yes | R5, R7 |
-| ripening on the tree | **observed** duration × latent per-cultivar direction | normal-normal regression | yes | R2; needs harvest date |
-| storage after harvest | **observed** duration × latent per-cultivar direction | normal-normal regression | yes | R2; needs examination date |
-| time of year | (sin, cos) as observed covariates | normal-normal regression | yes | R2 |
-| tree | per-tree effect, one shared `S_tree` across cultivars | normal-normal | yes | R2, R4; several fruit per tree to identify |
-| year × region | effect shared across all trees in a region | normal-normal | yes | R2, R4; **crossed**, so not a forest |
-| location | region indexes both the year effect and `phi_g` | Dirichlet-categorical | yes | R5 |
-| weather | continuous covariates (degree-days, sunshine) | Bayesian linear regression | yes | R2 |
-| observer precision | a noise variance | normal-inverse-gamma | partly | R7 (`Gamma`), and a variance slot that may be a variable |
-| observer bias | additive per-observer term | normal-normal | yes | R2, R4 |
-| observer label reliability | structured confusion, two parameters per observer | beta-Bernoulli + categorical | yes | R1, R5, R6 |
+| shape class (flat / round / conical) | categorical | Dirichlet-categorical | yes | [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) |
+| other markers (lenticels, bloom/waxiness) | Bernoulli per marker | beta-Bernoulli | yes | [discrete nodes](discrete-nodes-and-dirichlet-categorical.md), [conjugate pairs](conjugate-pairs-beyond-normal.md) |
+| ripening on the tree | **observed** duration × latent per-cultivar direction | normal-normal regression | yes | [affine form](value-affine-normal-form.md); needs harvest date |
+| storage after harvest | **observed** duration × latent per-cultivar direction | normal-normal regression | yes | [affine form](value-affine-normal-form.md); needs examination date |
+| time of year | (sin, cos) as observed covariates | normal-normal regression | yes | [affine form](value-affine-normal-form.md) |
+| tree | per-tree effect, one shared `S_tree` across cultivars | normal-normal | yes | [affine form](value-affine-normal-form.md), [supernodes](no-supernodes-for-multiple-parents.md); several fruit per tree to identify |
+| year × region | effect shared across all trees in a region | normal-normal | yes | [affine form](value-affine-normal-form.md), [supernodes](no-supernodes-for-multiple-parents.md); **crossed**, so not a forest |
+| location | region indexes both the year effect and `phi_g` | Dirichlet-categorical | yes | [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) |
+| weather | continuous covariates (degree-days, sunshine) | Bayesian linear regression | yes | [affine form](value-affine-normal-form.md) |
+| observer precision | a noise variance | normal-inverse-gamma | partly | [conjugate pairs](conjugate-pairs-beyond-normal.md) (`Gamma`), and a variance slot that may be a variable |
+| observer bias | additive per-observer term | normal-normal | yes | [affine form](value-affine-normal-form.md), [supernodes](no-supernodes-for-multiple-parents.md) |
+| observer label reliability | structured confusion, two parameters per observer | beta-Bernoulli + categorical | yes | [stochastic parent](no-stochastic-parent-selection.md), [discrete nodes](discrete-nodes-and-dirichlet-categorical.md), [enumeration](exact-enumeration-of-discrete-latents.md) |
 
 ## What the table says
 
@@ -54,7 +53,8 @@ discrete outcome. Choosing representations that stay inside those two keeps the 
 extent are scalar normals on a log or logit scale with normal priors on their means —
 `normalDS (Var mu) (Const variance)` with `conditionDist`'s existing `Normal (Var _) (Const _)`
 clause. Adding them needs *nothing* from the backlog, which is what makes the scalar end-to-end
-harness in [the requirements](model-v1-delayed-sampling-requirements.md) possible before R1–R4 land.
+harness in [the network design](model-v1-bayesian-network.md) possible before the multi-parent
+critical path — [stochastic parent](no-stochastic-parent-selection.md), [affine form](value-affine-normal-form.md), [vectors](vector-valued-variables-and-dirichlet.md) and [supernodes](no-supernodes-for-multiple-parents.md) — lands.
 
 **Log and logit scales are doing the work.** Every constrained quantity here — positive weights,
 coverages in [0, 1] — becomes unconstrained and roughly Gaussian under the same transform. That is a
@@ -62,7 +62,8 @@ design decision worth stating once rather than rediscovering per feature, and it
 [the network design](model-v1-bayesian-network.md).
 
 **Multi-parent support is the recurring blocker.** Most rows need it, always for the same reason: a
-quantity depends on two or more parents. That is R2 → R3 → R4, and it is the difference between a bag
+quantity depends on two or more parents. That is [affine form](value-affine-normal-form.md) → [vectors](vector-valued-variables-and-dirichlet.md) → [supernodes](no-supernodes-for-multiple-parents.md), and it is the difference
+between a bag
 of independent per-feature models and one joint model.
 
 **Weather and year break the i.i.d. assumption, which changes the graph's shape.** Weather is a
@@ -77,7 +78,7 @@ apple from the same season is informative about an earlier one. And because thes
 
 **Every feature is optional in practice.** A book gives colour and season; a photo gives colour and
 shape but no weight; a pomologist in an orchard gives everything. Partial observation is the normal
-case, not an edge case, which is why the phase parameter and R12's `Observed` matter — with a dozen
+case, not an edge case, which is why the phase parameter and [mention vs not measured](mention-vs-not-measured-deferred.md)'s `Observed` matter — with a dozen
 features there are far more observation patterns than can be written out by hand.
 
 **Two rows still resist, and both are avoidable.** Observer *precision* as an unknown variance needs

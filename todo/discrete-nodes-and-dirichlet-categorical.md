@@ -5,6 +5,7 @@ size: L
 size_evidence: "One carrier question worth settling early:"
 pkg: [delayed-sampling]
 needs: [vector-valued-variables-and-dirichlet]
+parent: model-v1-bayesian-network
 ---
 # Nothing discrete exists, so the cultivar identity cannot be a node
 
@@ -49,7 +50,8 @@ and a Dirichlet parent is vector-valued. The two items should be scheduled toget
 
 The one discrete node that does **not** fit this shape is `z_t`, the tree's true cultivar. Its
 difficulty is not that it is discrete but that it *selects which node is a parent* of the fruit
-observations, which is R1 and a different kind of requirement altogether. Adding `Categorical` is
+observations — see [a node's parent cannot be selected by a discrete latent](no-stochastic-parent-selection.md),
+a different kind of requirement altogether. Adding `Categorical` is
 necessary for `z_t` and nowhere near sufficient.
 
 One carrier question worth settling early: should the categorical be `Distribution Int` with the
@@ -72,3 +74,9 @@ in the vectors item would settle both at once.
   behaviour, or whether an impossible observation should be an `Error`, is a decision to record.
 - Note that sampling the categorical is usually the *wrong* thing to do with it; see
   [exact enumeration of discrete latents](exact-enumeration-of-discrete-latents.md).
+
+## From the v1 requirements document (R5)
+
+| # | Requirement | Needed for | Status |
+|---|---|---|---|
+| R5 | Discrete nodes and Dirichlet-categorical | `z_t`, `phi_g`, `overcolourPattern` | [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) |

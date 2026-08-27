@@ -4,6 +4,7 @@ milestone: [6]
 size: M
 size_evidence: "no cue in source file"
 pkg: [delayed-sampling]
+parent: model-v1-bayesian-network
 ---
 # `Value` has no affine normal form
 
@@ -37,3 +38,13 @@ multi-parent support and for the apple model's derived observations.
 substitution is silently skipped. That situation cannot arise in a well-formed graph —
 `onNode` reports it as `TypesInconsistent` — but the silence is a latent trap; it becomes
 cheap to report once `Graph` tracks the type of each node.
+
+## From the v1 requirements document (R2)
+
+This is the mechanical part. The fruit mean is a sum of six latent vectors plus two
+observed-coefficient regression terms, so `Value` must express `sum_j (c_j *^ Var v_j) + const`
+with `c_j` known scalars and `v_j` vector-valued. [The affine normal form](value-affine-normal-form.md)
+proposes exactly this normal form for the scalar case; the generalisation is that the coefficients
+become scalars against vector variables, and later matrices. Nothing about it is conceptually hard
+and it should be done first, because [the multivariate-normal vector node](vector-valued-variables-and-dirichlet.md)
+and [the sparse precision representation](no-supernodes-for-multiple-parents.md) both consume it.

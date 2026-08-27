@@ -15,7 +15,7 @@ pkg: [delayed-sampling, gravensteiner]
 > one cultivar's data inform another's. Persistence is a **sparse precision matrix over all entity
 > latents** plus the Dirichlet, calibration and Beta parameters. The `marginal` operation and the
 > round-trip test below are still the right first step and still needed; they are just not the whole
-> feature. See R9 in [the requirements](model-v1-delayed-sampling-requirements.md).
+> feature. See the full case below, drawn from the deleted requirements document.
 
 ## Why it matters
 
@@ -82,3 +82,21 @@ is the loader. Three things stand between that and a usable feature:
   existing statistical acceptance tests, since it compares two exact computations rather than a
   sample against a tolerance.
 - A decision on the persistence format, recorded.
+
+## From the v1 requirements document (R9)
+
+[Marginals cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) is written
+around extracting a per-entity marginal and reloading it with `initialize`. Under a crossed design
+that is **lossy in a way that matters**: the posterior over cultivar means is correlated — because
+they share `mu_0`, a pedigree GMRF, and every observer and year effect — and storing per-cultivar
+marginals discards precisely the correlations that let one cultivar's data inform another's. So
+persistence is a sparse precision matrix over the entity latents plus the Dirichlet, calibration
+and Beta parameters, and the round-trip test in that file becomes: reload, observe more, and check
+the result equals a single-session fit. That equality is a sharp test of the whole conjugate
+apparatus and nothing currently tests it.
+
+## From the v1 requirements document (R15)
+
+| # | Requirement | Needed for | Status |
+|---|---|---|---|
+| R15 | A moment-form serving cache extracted from the information-form fit | answering queries without refitting | **new** |

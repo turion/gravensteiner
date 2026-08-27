@@ -4,6 +4,7 @@ milestone: [6]
 size: L
 size_evidence: "A recorded decision on whether (2) or (3) is worth pursuing, with (3)'s combinatorial cost"
 pkg: [delayed-sampling]
+parent: model-v1-bayesian-network
 ---
 # A finite discrete latent should be enumerated, not sampled
 
@@ -28,15 +29,15 @@ run's evidence from `runWeightedT`, and combine with the prior weights by hand:
 first port. Cost: the graph is rebuilt per candidate, so shared structure is recomputed *k* times, and
 there is no way to condition the shared parent on the mixture.
 
-**This route is now the plan (R6), and its cost is the binding constraint rather than a footnote.**
+**This route is now the plan, and its cost is the binding constraint rather than a footnote.**
 [The network design](model-v1-bayesian-network.md) puts one categorical latent per *tree* over a
 regional set of a few hundred cultivars, and enumerating it is exactly this route — so it is on the
 critical path, not merely a first step. But *k* is a few hundred, and the shared structure being
 recomputed is the entire crossed Gaussian block, so rebuilding it *k* times per tree would be the
 dominant cost of the whole algorithm. The requirement that follows is to graft the shared context
-**once** and score *k* alternatives against it; it is R1's first sub-requirement in
-[the requirements](model-v1-delayed-sampling-requirements.md), and it is the difference between an
-algorithm that runs and one that does not.
+**once** and score *k* alternatives against it; it is the first sub-requirement of
+[a node's parent cannot be selected by a discrete latent](no-stochastic-parent-selection.md), and it
+is the difference between an algorithm that runs and one that does not.
 
 **(2) Run over an enumeration base monad.** `DelayedSamplingT (Enumerator)` would make the discrete
 choice exact and keep everything in one computation. There is a real obstacle worth knowing before
@@ -68,4 +69,11 @@ has *k^m* unless components are collapsed, which is why this is not simply bette
   computed one.
 - A recorded decision on whether (2) or (3) is worth pursuing, with (3)'s combinatorial cost
   stated.
-- Identification returns normalized weights over cultivars including "other", not a draw — R13.
+- Identification returns normalized weights over cultivars including "other", not a draw — see
+  [reformulation options](apple-model-reformulation-options.md), change 1.
+
+## From the v1 requirements document (R6)
+
+| # | Requirement | Needed for | Status |
+|---|---|---|---|
+| R6 | Exact enumeration of a discrete latent with the Gaussian part marginalized | the per-tree K-way posterior | [enumeration](exact-enumeration-of-discrete-latents.md) |

@@ -138,11 +138,12 @@ thinnest, and it is once again crossed rather than tree-shaped.
 - [Vector-valued variables](vector-valued-variables-and-dirichlet.md) — the multivariate normal is
   the needed half; combined with [russet is not a colour](russet-is-not-a-colour.md), the Dirichlet
   half has no remaining client.
-- Records of variables (R8, done — see `Control.Monad.Bayes.DelayedSampling.Record`) — rises in
+- [Records of variables](records-of-variables-and-partial-observation.md) (done — see
+  `Control.Monad.Bayes.DelayedSampling.Record`) — rises in
   value, since every entity at every level carries the same appearance record.
 - [Marginals cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) — under a
   crossed design the "trained model" is a joint Gaussian over all entities, not a per-cultivar
-  summary, so persistence is a **sparse precision** matrix rather than a `Map Name` (R9).
+  summary, so persistence is a **sparse precision** matrix rather than a `Map Name`.
 
 ## Done when
 
@@ -151,4 +152,4 @@ thinnest, and it is once again crossed rather than tree-shaped.
 effects are crossed with which — against the v1 schema rather than a sketch. The answer to the
 question this file left open is that supernodes **do** need to be sparse: the entity latent vector
 is O(10⁴), so a dense factorisation is not viable. The requirements that follow from it are
-tracked in [the requirements](model-v1-delayed-sampling-requirements.md).
+tracked under [the network design](model-v1-bayesian-network.md).

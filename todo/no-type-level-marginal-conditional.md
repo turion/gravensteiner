@@ -4,6 +4,7 @@ milestone: [6]
 size: M
 size_evidence: "no cue in source file"
 pkg: [delayed-sampling]
+parent: model-v1-bayesian-network
 ---
 # Marginal and conditional distributions are not distinguished in the type
 

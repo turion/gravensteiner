@@ -4,6 +4,7 @@ milestone: [6]
 size: L
 size_evidence: 'So the deliverable is not "call `smc`" — it is deciding how a resampling step transports the'
 pkg: [delayed-sampling]
+parent: model-v1-bayesian-network
 ---
 # No SMC integration — the paper's whole payoff is unrealised
 
@@ -65,8 +66,9 @@ is exactly this item, and SMC is one way to run it rather than the only one.** I
 it is the paper's own payoff, it is what a streaming deployment wants, and the variance benchmark
 below is the only real evidence the integration works — but the apple model can reach a working
 posterior through a collapsed sweep first. See [the network design](model-v1-bayesian-network.md)
-for the algorithm and [the requirements](model-v1-delayed-sampling-requirements.md) for what a
-collapsed sweep needs that this package does not yet have (chiefly: scoring K alternatives against
+for the algorithm and
+[a node's parent cannot be selected by a discrete latent](no-stochastic-parent-selection.md) for what
+a collapsed sweep needs that this package does not yet have (chiefly: scoring K alternatives against
 one marginalized context, and undoing a conditioning step).
 
 ## Done when

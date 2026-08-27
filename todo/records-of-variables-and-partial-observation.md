@@ -6,18 +6,19 @@ closed_by: "7dc5d7f todo: clean up completed items and align priorities"
 ---
 # No way to build a record of variables, or to observe one partially
 
-> **Now has a concrete client, and a concrete shape — this is R8.** The v1 schema in
+> **Now has a concrete client, and a concrete shape.** The v1 schema in
 > `Gravensteiner.Model` answers the `Main.hs` FIXME below directly: `Fruit`, `Collection`, `Tree` and
 > `Judgement` all take a higher-kinded phase parameter, so the phase *is* the partial-observation
 > mechanism. Two refinements since: the phase should be `Observed` rather than `Maybe`, so that "not
-> mentioned" and "not measurable" are distinguishable (R12), and `Fruit.colours` is `p Colours`, which
+> mentioned" and "not measurable" are distinguishable (see
+> [mention-vs-not-measured-deferred](mention-vs-not-measured-deferred.md)), and `Fruit.colours` is `p Colours`, which
 > makes the colour fields all-or-nothing where a literature source typically gives ground colour and
 > omits blush — see [nest the phase inside `Colours`](nest-phase-inside-colours.md). So the data side is settled in shape and needs
 > two fixes; what this item is now about is the **`Variable` side**: mapping a record of priors to a
 >
 > **`Observed`'s three-way split is collapsed to two for now**, `Observed a | NotObserved` — nothing
 > implements the mention likelihood that would make `NotMentioned` behave differently from
-> `NotMeasured`, so the implemented type does not carry the distinction R12 describes below. See
+> `NotMeasured`, so the implemented type does not carry the distinction described below. See
 > [mention-vs-not-measured-deferred](mention-vs-not-measured-deferred.md).
 > record of `Variable`s and observing a `Fruit Observed` field by field. `UUIDMap`'s indexed instances
 > are the right shape for the entity level.
@@ -59,9 +60,10 @@ observeRec    :: (Traversable f, ...) => f (Variable a) -> f (Observed a) -> Del
 valueRec      :: (Traversable f, ...) => f (Variable a) -> DelayedSamplingT m (f a)
 ```
 
-(`Observed` rather than `Maybe` per R12 — the point of the extra cases is that they take different
-paths, so a signature in `Maybe` would throw away the distinction at exactly the boundary that needs
-it.)
+(`Observed` rather than `Maybe` per
+[mention-vs-not-measured-deferred](mention-vs-not-measured-deferred.md) — the point of the extra
+cases is that they take different paths, so a signature in `Maybe` would throw away the distinction
+at exactly the boundary that needs it.)
 
 This is pure sugar over `initialize`/`observe`/`value` and needs no changes to the graph, so it
 could land immediately and independently of everything else in this backlog — which makes it the
@@ -84,8 +86,9 @@ which per feature belongs with the feature table.
   carry their observation status and skipping the absent ones.
 - The skipping is driven by `Observed` rather than `Maybe` (currently a two-way `Observed a |
   NotObserved` — see the banner above); note that this still rules out a plain
-  `Traversable`-with-`Maybe` signature, since R12's eventual three-way split is a design constraint
-  the sugar has to keep accommodating even while it isn't implemented.
+  `Traversable`-with-`Maybe` signature, since
+  [mention-vs-not-measured-deferred](mention-vs-not-measured-deferred.md)'s eventual three-way split
+  is a design constraint the sugar has to keep accommodating even while it isn't implemented.
 - Identification on a fruit with no appearance fields at all returns the regional prior `phi_g` rather
   than failing — the degenerate case, and a useful test that the never-grafted path is correct.
 - A test that observing a record with some fields absent gives the same posterior as observing only

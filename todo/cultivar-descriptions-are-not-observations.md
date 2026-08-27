@@ -11,7 +11,7 @@ needs: [conjugate-pairs-beyond-normal]
 > **Progress:** the type-level shapes — `Observed`, `Described`, `Elicited`, `Spread`,
 > `Description` and `Observations.descriptions` — have landed in `Gravensteiner.Model`. Still
 > outstanding: the conjugate-update wiring that lets a `Description` actually contribute to a
-> posterior (needs [R7](model-v1-delayed-sampling-requirements.md)'s `Gamma`/inverse-gamma, not
+> posterior (needs [conjugate pairs](conjugate-pairs-beyond-normal.md)'s `Gamma`/inverse-gamma, not
 > yet implemented), the `kappa_max` calibration choice, and the decay/calibration tests described
 > below. Only the shapes exist so far, not the behaviour.
 
@@ -26,7 +26,7 @@ The corpus will be built from two kinds of datum and they are not the same kind 
   monograph or from a pomologist speaking generally. These are **statements about a distribution**,
   not about any fruit. Nobody weighed anything.
 
-An earlier version of [the requirements](model-v1-delayed-sampling-requirements.md) got this wrong
+An earlier version of the (now-deleted) requirements document got this wrong
 by treating "medium-large" as an *interval-censored observation of one fruit*. It is not a censored
 observation, because it is not an observation: no single fruit is being described. That framing also
 made the likelihood non-conjugate (a difference of normal CDFs) and so invented a requirement that
@@ -88,13 +88,14 @@ update. `location` and `strength` are the *m* and *κ* of the conjugate prior on
 and needs nothing new:
 
 - Location only → an ordinary normal-normal contribution to `mu_c`. Already supported.
-- With spread → inverse-gamma on the variance, which is R7's `Gamma` and nothing more.
+- With spread → inverse-gamma on the variance, which is
+  [conjugate pairs](conjugate-pairs-beyond-normal.md)'s `Gamma` and nothing more.
 - Several descriptions of one cultivar → pseudo-counts accumulate, exactly as datasets do. *N*
   monographs combine the way *N* apples would.
 
-**This removes a requirement rather than adding one.** The interval-censoring item (R14) can be
-dropped: observations are never vague, and descriptions are vague in a way the conjugate family
-already expresses.
+**This removes a requirement rather than adding one.** The deleted requirements document's
+interval-censoring row can be dropped: observations are never vague, and descriptions are vague in a
+way the conjugate family already expresses.
 
 ### Pseudo-observations, not a hand-set prior
 
@@ -104,7 +105,9 @@ Gaussians, so "reified cultivar prior" is an accurate name for what this is. But
 for three practical reasons: descriptions arrive continuously as the corpus grows; a description can
 turn out to be wrong, or to be a duplicate, and has to be removable; and "which sources drove this
 conclusion" must be answerable, which needs the contribution to stay attributable to a record. The
-removability requirement is the same downdate that R1 needs for Gibbs retraction.
+removability requirement is the same downdate that
+[a node's parent cannot be selected by a discrete latent](no-stochastic-parent-selection.md) needs
+for Gibbs retraction.
 
 ## The schema addition
 
@@ -203,7 +206,8 @@ reason those are not optional extras.
 - Calibration is checked separately on literature-only cultivars, where the prior is the whole model.
 - A description contributes through the same conjugate update as an observation, is attributable to
   its `Description` record, and is removable.
-- R14 is struck from [the requirements](model-v1-delayed-sampling-requirements.md).
+- The deleted requirements document's interval-censoring row is struck, its reasoning folded into
+  this file.
 
 ## From the v1 model review (Tier 3)
 

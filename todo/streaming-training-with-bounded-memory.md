@@ -43,7 +43,7 @@ there is no growing dependency *path*.
 
 The invariant to aim at is therefore **the graph grows with the number of entities, never with the
 number of observations** — not "the graph returns to the size it had before", which is only true of a
-flat one-prior-per-cultivar model. This is **R11**, and it has a second half in **R10**: each new tree
+flat one-prior-per-cultivar model. Both halves matter: each new tree
 and observer adds a *permanent* latent that later fruit will need, so a fitted state must be
 *extensible*, not merely reusable. [The network design](model-v1-bayesian-network.md) puts numbers on
 the split — fruit and collections grow without bound (10⁴–10⁵), while cultivars, regions and source
@@ -65,3 +65,19 @@ the bug above, whereas entity latents accumulating is correct and must not be "f
   genuinely long-running training process leaks index space even if nodes are freed. At `Int` width
   this is theoretical, but it is the kind of thing that decides whether "streaming" means "a long
   batch" or "a process that runs for months".
+
+## From the v1 requirements document (R10)
+
+This is the practical form of the same point. Hundreds of collections a year means the system must
+extend a fitted state rather than refit, and — because trees and observers are new entities —
+extension has to grow the latent vector, not just condition on it. In information form that is
+cheap (a new entity is a new diagonal block plus a few off-diagonal entries), which is a second
+argument for
+[no supernodes for multiple parents](no-supernodes-for-multiple-parents.md)'s sparse-precision
+representation.
+
+## From the v1 requirements document (R11)
+
+| # | Requirement | Needed for | Status |
+|---|---|---|---|
+| R11 | Bounded memory: fruit transient, entities permanent | 10⁵ fruit, 10³ entities | [streaming](streaming-training-with-bounded-memory.md) |

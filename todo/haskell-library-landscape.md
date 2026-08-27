@@ -27,8 +27,8 @@ novel relative to it.
 The only Haskell port of Murray et al. "Delayed Sampling and Automatic Rao-Blackwellization of
 Probabilistic Programs" (AISTATS 2018, [arXiv:1708.07787](https://arxiv.org/abs/1708.07787)). The
 original authors implemented the approach in **Anglican** and a new PPL called **Birch**. Nothing
-equivalent appears on Hackage. The full R1–R15 requirements backlog is what it needs to run the
-apple model.
+equivalent appears on Hackage. The full requirements backlog for
+[observation model v1](model-v1-bayesian-network.md) is what it needs to run the apple model.
 
 ### `hakaru` — research EDSL, unmaintained
 

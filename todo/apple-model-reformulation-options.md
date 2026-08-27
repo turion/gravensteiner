@@ -11,8 +11,8 @@ closed_by: "f02577d todo: straighten the backlog into one coherent, sorted plan"
 > them. What was removed: the mechanics of options A and C (Dirichlet-multinomial counts, and
 > repairing the `Main.hs` importance sampler), and a "port at reduced fidelity today" sketch built
 > on an alr transform that the chosen parameterisation does not use — the still-valid version of
-> that sketch is *What is already supported today* in
-> [the requirements](model-v1-delayed-sampling-requirements.md).
+> that sketch was *What is already supported today* in the deleted requirements document: a scalar
+> version of the model is implementable now with `conditionDist`'s existing clauses.
 
 ## The question, and the trade-off it turned on
 
@@ -59,7 +59,7 @@ absorbed into the v1 design or explicitly overturned.
 
 | # | Change | Now |
 |---|---|---|
-| 1 | `identify` returns a distribution, not a sample | **R13** in [the requirements](model-v1-delayed-sampling-requirements.md) |
+| 1 | `identify` returns a distribution, not a sample | folded into this file, below |
 | 2 | `frequency` becomes Dirichlet weights over cultivars | `phi_g ~ Dirichlet(alpha)` in [the network](model-v1-bayesian-network.md) |
 | 3 | An "unknown cultivar" option | [There must be an "other" outcome](identify-needs-other-outcome.md); its predictive is the prior predictive from `mu_0` |
 | 4 | A hierarchical prior across cultivars | the whole Gaussian hierarchy, plus a pedigree GMRF |
@@ -81,8 +81,8 @@ CDF the package does not have. Observations are **not** vague: a fruit either ga
 not, and a field too uncertain to record is absent rather than softened into a range. Vagueness
 belongs to *cultivar descriptions*, which describe a distribution rather than a fruit and enter
 through their own conjugate elicitation — see
-[descriptions are not observations](cultivar-descriptions-are-not-observations.md). This is why R14
-was struck from the requirements rather than scheduled.
+[descriptions are not observations](cultivar-descriptions-are-not-observations.md). This is why the
+interval-censoring row was struck from the deleted requirements document rather than scheduled.
 
 ## What this says about delayed sampling
 
@@ -102,3 +102,9 @@ closed form.
 
 **Done.** The decision is B with the parameterisation above, and each of the eight structural
 changes has a recorded destination in the table.
+
+## From the v1 requirements document (R13)
+
+| # | Requirement | Needed for | Status |
+|---|---|---|---|
+| R13 | A distribution-valued result, including an "other" outcome | reporting a ranked candidate list | [reformulation](apple-model-reformulation-options.md), change 1 |

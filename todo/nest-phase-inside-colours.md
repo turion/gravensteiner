@@ -2,7 +2,7 @@
 status: open
 milestone: [2]
 size: S
-size_evidence: "this is the record-of-variables sugar (R8, done"
+size_evidence: "[record-of-variables sugar](records-of-variables-and-partial-observation.md) (done — see"
 pkg: [gravensteiner]
 provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the finding 'Nest the phase inside `Colours`.'"
 ---
@@ -12,7 +12,8 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 missing all together or present all together. A book that says "greenish-yellow" without
 mentioning blush is the common case, and under the parameterisation above the fields are
 genuinely independent observations. `Colours p` with `groundColour :: p Interval` and so on is
-the shape; this is the record-of-variables sugar (R8, done — see
+the shape; this is the
+[record-of-variables sugar](records-of-variables-and-partial-observation.md) (done — see
 `Control.Monad.Bayes.DelayedSampling.Record`) applied one level down.
 
 ## Done when

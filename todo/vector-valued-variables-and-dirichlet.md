@@ -5,10 +5,11 @@ size: L
 size_evidence: "## Design questions to settle first"
 pkg: [delayed-sampling]
 needs: [value-affine-normal-form]
+parent: model-v1-bayesian-network
 ---
 # `Distribution` and `Value` are scalar-only, so there is no vector-valued node
 
-> **The multivariate-normal half is R3 and load-bearing; the Dirichlet half has no client.** Read
+> **The multivariate-normal half is load-bearing; the Dirichlet half has no client.** Read
 > this file with that split in mind — it was written when the appearance model was a simplex and the
 > Dirichlet looked like the point. The appearance **vector** is what needs a vector carrier now:
 > *d* ≈ 6 coordinates at every level of the hierarchy, per
@@ -76,7 +77,8 @@ side: that item should be done with vectors in mind, or it will have to be done 
 - **A shape functor**: `Dirichlet :: f (Value Double) -> Distribution (f Double)` for a
   `Representable`/`Traversable` `f`. Then `Colours` itself is the carrier — `Distribution Colours`
   — the field names survive into the graph, `Show` output stays readable, and this composes
-  directly with the record-of-variables sugar (R8, done — see
+  directly with the
+  [record-of-variables sugar](records-of-variables-and-partial-observation.md) (done — see
   `Control.Monad.Bayes.DelayedSampling.Record`), which wants a record-of-`Variable` layer anyway.
   Most attractive, least conventional.
 
@@ -84,8 +86,9 @@ side: that item should be done with vectors in mind, or it will have to be done 
 `Normal` has a `Value Double` variance. The existing normal-normal `conditionDist` computes with
 `1 / variance`; the vector version needs a precision matrix and a solve, so `statistics`/`hmatrix`
 enters the dependency set, or a hand-rolled Cholesky at the per-node dimension, which stays small —
-*d* ≈ 6 per entity. Note that this decision is *not* the same as R4's: R4 is about the sparse joint
-over O(10⁴) entity latents, whereas this is about one node's own *d*×*d* block, and a dense solve is
+*d* ≈ 6 per entity. Note that this decision is *not* the same as
+[no supernodes for multiple parents](no-supernodes-for-multiple-parents.md)'s: that one is about the
+sparse joint over O(10⁴) entity latents, whereas this is about one node's own *d*×*d* block, and a dense solve is
 entirely appropriate at that size. Deciding it also settles whether the variance slot may be a
 variable at all — see [marginal vs conditional](no-type-level-marginal-conditional.md).
 
@@ -100,3 +103,9 @@ variable at all — see [marginal vs conditional](no-type-level-marginal-conditi
   Dirichlet or multivariate normal, asserting the posterior recovers the truth within a stated
   tolerance. For a Dirichlet, the natural test is that a Dirichlet-multinomial posterior recovers
   known proportions from counts.
+
+## From the v1 requirements document (R3)
+
+| # | Requirement | Needed for | Status |
+|---|---|---|---|
+| R3 | Multivariate normal node, vector carrier, affine maps | the appearance vector at every level | [vectors](vector-valued-variables-and-dirichlet.md), [supernodes](no-supernodes-for-multiple-parents.md) |

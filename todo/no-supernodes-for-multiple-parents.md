@@ -5,6 +5,7 @@ size: L
 size_evidence: "stepping stone towards the apple model; it is the bulk of it."
 pkg: [delayed-sampling]
 needs: [vector-valued-variables-and-dirichlet]
+parent: model-v1-bayesian-network
 ---
 # No supernodes, so a node cannot have two parents — and the Kalman example is degraded
 
@@ -90,8 +91,78 @@ one year × region, one observer, one source and one collection, so the useful t
 precision representation with a fill-reducing ordering, i.e. Gaussian belief propagation, rather than
 a dense covariance that happens to be large.
 
-It is tracked as **R4** in [the requirements](model-v1-delayed-sampling-requirements.md), together
-with the representational consequence: information form makes conditioning cheap and marginalization
-expensive, the opposite of the covariance form `conditionDist` uses today, and this model conditions
-constantly during training and marginalizes only to serve — which is why the resolution is to fit in
-information form and extract a small moment-form cache for serving (R15) rather than to pick one.
+This is a requirement with the representational consequence spelled out below: information form
+makes conditioning cheap and marginalization expensive, the opposite of the covariance form
+`conditionDist` uses today, and this model conditions constantly during training and marginalizes
+only to serve — which is why the resolution is to fit in information form and extract a small
+moment-form cache for serving (see
+[marginals cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md)) rather than to
+pick one.
+
+## From the v1 requirements document (R4)
+
+This is the part that decides whether the model runs at all. Because the design is crossed at three
+levels independently, no local merge yields a forest and the supernode degenerates to a single
+joint over essentially all entity latents:
+
+```
+  trees        10^3  x d=6   =  6 000
+  cultivars    10^2  x d     =    600
+  year x region 10^2 x d     =    600
+  observers    10^2  x d     =    600     (bias)  + 2 per observer (calibration)
+  sources        ~5  x d     =     30
+  global        few  x d
+                             --------
+                              ~ 10^4
+```
+
+Dense Cholesky at *d* = 10⁴ is ~10¹² flops per solve and O(10⁸) doubles of covariance — not
+viable, and it gets worse as trees accumulate. But the precision matrix is extremely sparse: a
+fruit couples one tree, one year×region, one observer, one source and one collection, so each
+fruit contributes a constant-size block. So the requirement is a **sparse precision (information
+form) representation with a fill-reducing ordering**, i.e. Gaussian belief propagation, and it is
+not an optimisation to add later — the model sits at the extreme where dense supernodes fail,
+rather than near it.
+
+### Two representations, because training and serving want opposite things
+
+Information form makes conditioning cheap and marginalization expensive; moment (covariance) form
+is the reverse. The package's `conditionDist` is moment form today. The two phases of this system
+sit on opposite sides of that trade-off, so the resolution is not to pick one:
+
+- **Training / ingestion** conditions constantly (once per fruit, O(10⁵) times), retracts during
+  Gibbs sweeps (see
+  [a node's parent cannot be selected by a discrete latent](no-stochastic-parent-selection.md)), and
+  grows the latent vector as trees and observers appear (see
+  [streaming training with bounded memory](streaming-training-with-bounded-memory.md)). All three are
+  additive-and-local in information form and all three are expensive in moment form.
+- **Serving** — enter a collection, get a ranked list of likely cultivars — is a *marginalization*.
+  For each candidate *c* it needs the predictive `p(x_new | z_t = c, all data)`, which means the
+  marginal posterior of `mu_c` plus the relevant shared effects, with a fresh `a_t` from the prior
+  for the unseen tree.
+
+The reconciliation is that serving marginalizes over a **small, fixed** subset and does so against
+a *static* fitted state, so it is computed once per refit rather than once per query:
+
+```
+  per candidate cultivar:  marginal mean and covariance of mu_c     d x d = 36 numbers
+  x K ~ 300 cultivars                                               ~ 11 k numbers
+  plus the shared blocks actually referenced by a query
+    (w_{y,g}, b_o, e_s, and the priors S_tree, S_within)            small
+                                                                    ------
+                                                                    << 1 MB
+```
+
+Note what is *not* needed: the cross-covariance between `mu_c` and `mu_c'`. Ranking evaluates each
+candidate's predictive independently and never conditions on one cultivar while predicting another,
+so the serving artifact is K separate *d*×*d* blocks, not one 1800×1800 joint. Within a candidate,
+several fruit from the same collection do share `a_t`, so the collection's joint predictive
+integrates one *d*-dimensional latent — a small local computation, and the reason a collection is a
+better query unit than a single fruit.
+
+So: **fit in information form, extract a moment-form serving cache once per refit, answer queries
+from the cache.** That also settles what
+[marginals cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) persists — the serving cache is the artifact worth
+shipping, the information-form state is the thing worth checkpointing, and they are not the same
+object. And the "other" outcome comes free, since its predictive is the prior predictive from
+`mu_0` with the full between-cultivar covariance added.

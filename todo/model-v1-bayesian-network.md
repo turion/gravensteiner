@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "The junction-tree clique is essentially the whole entity latent vector."
+pkg: [delayed-sampling, gravensteiner]
+---
 # The Bayesian network for observation model v1
 
 ## Why it matters
@@ -293,7 +300,7 @@ and degrading cleanly to fewer rather than assuming the full hierarchy:
 ## Done when
 
 This document is the specification the port is written against. It is done as a document; what
-remains is that each numbered requirement it implies is tracked in
-[the requirements](model-v1-delayed-sampling-requirements.md), and that the identifiability list
+remains is that each requirement it implies is tracked as a backlog item, several of them filed
+under this one (see `parent` in their frontmatter), and that the identifiability list
 above is reflected in how collection is organised — several fruit per tree, several judges per
 tree, judges crossing cultivars.
