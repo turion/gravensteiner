@@ -173,7 +173,7 @@ than lineage.
 
 **Books describe show fruit.** A monograph describes a well-grown, characteristic specimen, not the
 average of what a tree bears. That is a systematic offset in size and colour, and it is the same
-phenomenon as the collection selection protocol in [the review](model-v1-review.md) — so it belongs
+phenomenon as [the collection selection protocol](fruit-selection-protocol-missing.md) — so it belongs
 in the source-class bias `e_s` rather than being absorbed into `mu_c`.
 
 **A described spread is the *total* observable spread.** A book describing what one typically sees is
@@ -204,3 +204,11 @@ reason those are not optional extras.
 - A description contributes through the same conjugate update as an observation, is attributable to
   its `Description` record, and is removable.
 - R14 is struck from [the requirements](model-v1-delayed-sampling-requirements.md).
+
+## From the v1 model review (Tier 3)
+
+**And a cultivar description is not an observation at all.** The literature does not describe fruit,
+it describes cultivars, so a monograph's "medium-large" is a claim about a *distribution* and
+belongs in a separate type with its own conjugate elicitation — see
+[descriptions are not observations](cultivar-descriptions-are-not-observations.md). Keeping the two
+apart is what lets `Observed` stay simple, since observations are never vague.

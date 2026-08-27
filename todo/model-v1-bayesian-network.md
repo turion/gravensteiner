@@ -11,7 +11,7 @@ got wrong.
 
 Scope decisions taken: the candidate set is **regional, a few hundred cultivars**, so K-way
 enumeration per tree is feasible and no shortlisting is needed. Appearance uses **ground colour
-plus overcolour** rather than a simplex, per [the review](model-v1-review.md).
+plus overcolour** rather than a simplex, per [the chosen appearance parameterisation](appearance-parameterisation.md).
 
 ## Index sets
 

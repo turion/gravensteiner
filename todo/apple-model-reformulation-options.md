@@ -42,10 +42,10 @@ in the result.
 The concrete parameterisation is settled — ground-colour position on a green→yellow axis, overcolour
 extent as a fraction of non-russeted skin, an overcolour pattern categorical, and russet extent, the
 only genuinely zero-inflated coordinate, whose presence indicator is *observed* and therefore costs
-no latent variable. See [the review](model-v1-review.md) for the elicitation constraint that keeps it
-conjugate (asking for the non-russeted fraction avoids a bilinear `blush × (1 − russet)`) and
-[the network design](model-v1-bayesian-network.md) for the full appearance vector and why
-logit-normal beats Beta here.
+no latent variable. See [the chosen appearance parameterisation](appearance-parameterisation.md) for
+the elicitation constraint that keeps it conjugate (asking for the non-russeted fraction avoids a
+bilinear `blush × (1 − russet)`) and [the network design](model-v1-bayesian-network.md) for the
+full appearance vector and why logit-normal beats Beta here.
 
 One fragment of option A survives in a smaller role: **counts as a precision knob.** A notional *N*
 patches, of which *n* are red, expresses "this observer resolves coverage coarsely" as weak evidence
@@ -61,7 +61,7 @@ absorbed into the v1 design or explicitly overturned.
 |---|---|---|
 | 1 | `identify` returns a distribution, not a sample | **R13** in [the requirements](model-v1-delayed-sampling-requirements.md) |
 | 2 | `frequency` becomes Dirichlet weights over cultivars | `phi_g ~ Dirichlet(alpha)` in [the network](model-v1-bayesian-network.md) |
-| 3 | An "unknown cultivar" option | Tier 2 of [the review](model-v1-review.md); its predictive is the prior predictive from `mu_0` |
+| 3 | An "unknown cultivar" option | [There must be an "other" outcome](identify-needs-other-outcome.md); its predictive is the prior predictive from `mu_0` |
 | 4 | A hierarchical prior across cultivars | the whole Gaussian hierarchy, plus a pedigree GMRF |
 | 5 | Observer reliability is three things | precision → `S_within`; bias → `b_o`; label reliability → the structured confusion model |
 | 6 | ~~Ripeness is a latent, not a covariate~~ | **overturned** — see below |

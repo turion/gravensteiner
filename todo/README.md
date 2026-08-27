@@ -47,7 +47,7 @@ exist yet in the workspace.
 
 | | Item | Why it is in this session |
 |---|---|---|
-| 1 | [The v1 schema review](model-v1-review.md), **Tier 1 only** — *(done)* | The label is missing from `Judgement`, so nothing can be trained or predicted. Tree and `Person` are embedded by value, which silently collapses two levels of the hierarchy. A documented tree (nursery invoice, gene-bank accession) is the only supervision the data will ever contain, and is recorded as an ordinary `Judgement` (trust in it learned from data, not read off a self-reported `certainty`), not a separate provenance field. All cheap now, some unrecoverable once field collection starts. |
+| 1 | The v1 schema review, **Tier 1 only** — *(done)* | The label is missing from `Judgement`, so nothing can be trained or predicted. Tree and `Person` are embedded by value, which silently collapses two levels of the hierarchy. A documented tree (nursery invoice, gene-bank accession) is the only supervision the data will ever contain, and is recorded as an ordinary `Judgement` (trust in it learned from data, not read off a self-reported `certainty`), not a separate provenance field. All cheap now, some unrecoverable once field collection starts. |
 | 2 | [Descriptions are not observations](cultivar-descriptions-are-not-observations.md) + R12's `Observed` — *(type-level shapes done; conjugate-update wiring still open)* | Both must exist **before** literature ingestion: the corpus cannot be re-read cheaply, and the adjective vocabulary is part of the data rather than of the reader. |
 | 3 | References to a realized node — *(done, item removed — see `graft`'s `Realized _ -> pure ()` case and the regression test in `delayed-sampling/test/DelayedSampling.hs`)* | A verified one-line fix for a reachable failing program. Folding observations against long-lived parameter nodes is exactly the pattern that provokes it. |
 | 4 | `Graph` has no child index — *(done, item removed — see `children :: IntMap IntSet` on `Graph`)* | Every operation was O(\|graph\|) without it, and a performance workaround (`deallocateRealized` by hand) was part of the expected API usage. Prerequisite for R11. |
@@ -75,7 +75,7 @@ apple-model groups.
 
 | Item | Slated for |
 |---|---|
-| [The v1 schema review, and the additions that matter most](model-v1-review.md) | now — some additions are unrecoverable after field collection starts |
+| The v1 schema review, and the additions that matter most | now — some additions are unrecoverable after field collection starts |
 | [Cultivar descriptions are not fruit observations](cultivar-descriptions-are-not-observations.md) | before literature ingestion |
 | [The Bayesian network for observation model v1](model-v1-bayesian-network.md) | the specification the port is written against |
 | [What `delayed-sampling` must gain to run it](model-v1-delayed-sampling-requirements.md) | R1–R15; aims everything else |

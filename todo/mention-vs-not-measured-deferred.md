@@ -41,3 +41,12 @@ type today.
   mention-indicator Bernoulli.
 - Call sites that ingest data under today's two-way `Observed` are revisited to capture the
   distinction where the source is known, rather than losing it permanently.
+
+## From the v1 model review (Tier 3)
+
+**Absence of mention is not absence.** `Maybe` as the phase collapses three distinct situations into
+one `Nothing`: measured, could have been recorded and was not, and could not be recorded at all (a
+photograph has no weight). They have different likelihood contributions and only the first is
+currently expressible. The fix is a purpose-built phase type `Observed`, designed in R12 of
+[the requirements](model-v1-delayed-sampling-requirements.md) — where absence of a *feature* is
+`Observed 0` rather than a missing value, because "no red on this apple" is an observation.

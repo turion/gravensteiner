@@ -10,8 +10,9 @@ pkg: [gravensteiner]
 > **Cut down to what transfers.** `gravensteiner/app/Main.hs` is a precursor superseded by
 > `Gravensteiner.Model` plus [the network design](model-v1-bayesian-network.md), so it is being
 > deleted rather than fixed. What was removed from this file with it: the `identify` faults (now
-> R13 and Tier 2 of [the review](model-v1-review.md)), the `MonadIO`-forcing debug output, the dead
-> and duplicated declarations, and the `Dirichlet` hyperprior. What remains below is the two findings
+> R13 and [the missing "other" outcome](identify-needs-other-outcome.md)), the
+> `MonadIO`-forcing debug output, the dead and duplicated declarations, and the `Dirichlet`
+> hyperprior. What remains below is the two findings
 > that apply unchanged to code that is not being deleted. The third — no test suite and no way to
 > tell whether the model works — has moved to
 > [no evaluation harness](no-evaluation-harness.md), because it is a live gap about the *new* model
@@ -44,8 +45,8 @@ by construction. As written, the intermediate value was a *negative* `Nonnegativ
 was violated mid-expression and restored by accident. Two combinators removed both the doubt and the
 FIXME.
 
-Re-flagged in Tier 3 of [the review](model-v1-review.md) so the finding is visible from the v1 side
-too.
+Re-flagged in Tier 3 of the v1 model review (appended below) so the finding is visible from the v1
+side too.
 
 ## Numerics: leave log space only at the end
 
@@ -69,3 +70,13 @@ is a one-line change wherever this shape recurs.
 `Interval` (and any sibling refinement type in `Gravensteiner.Model`) enforces its invariant by
 construction rather than deriving it away, and every density in the new model is computed in
 `Log Double` throughout.
+
+## From the v1 model review (Tier 3)
+
+**`Interval` repeats a known mistake.** It derives `Num`, `Fractional` and `Floating`, so
+`Interval 0.9 + Interval 0.9` is `Interval 1.8` and `exp` leaves the unit interval — the same
+defect documented in [the cleanups](apple-model-cleanups.md) for the old `Main.hs` types, now
+carried into the new schema. It is recorded here so the finding outlives that file's deletion.
+There is also no smart constructor in `Model` at all yet, so nothing is checked; the fix is the
+same as before, which is to expose the operations that preserve the invariant instead of
+deriving the ones that do not.

@@ -12,7 +12,7 @@ closed_by: "7dc5d7f todo: clean up completed items and align priorities"
 > mechanism. Two refinements since: the phase should be `Observed` rather than `Maybe`, so that "not
 > mentioned" and "not measurable" are distinguishable (R12), and `Fruit.colours` is `p Colours`, which
 > makes the colour fields all-or-nothing where a literature source typically gives ground colour and
-> omits blush — see [the review](model-v1-review.md). So the data side is settled in shape and needs
+> omits blush — see [nest the phase inside `Colours`](nest-phase-inside-colours.md). So the data side is settled in shape and needs
 > two fixes; what this item is now about is the **`Variable` side**: mapping a record of priors to a
 >
 > **`Observed`'s three-way split is collapsed to two for now**, `Observed a | NotObserved` — nothing

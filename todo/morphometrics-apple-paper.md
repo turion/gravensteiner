@@ -39,4 +39,4 @@ A closer reading could establish:
 
 A short note is appended to this file summarising the above five points, and any features or
 dataset from the paper that transfer into the v1 schema are recorded in
-[`model-v1-review.md`](model-v1-review.md) or [`apple-features-and-their-conjugate-pairs.md`](apple-features-and-their-conjugate-pairs.md).
+[`fruit-measurement-set.md`](fruit-measurement-set.md) or [`apple-features-and-their-conjugate-pairs.md`](apple-features-and-their-conjugate-pairs.md).

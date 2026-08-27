@@ -69,9 +69,9 @@ naming because they are unusually cheap:
 - **Reference trees are ground truth.** A documented tree — nursery invoice, gene-bank accession,
   variety collection — has `z_t` observed via an ordinary `Judgement` (trust in it learned from
   data rather than read off a self-reported `certainty` — see
-  [the schema review](model-v1-review.md)'s Tier 2 item), so held-out reference trees give a real
+  [certainty needs calibration](certainty-needs-calibration.md)), so held-out reference trees give a real
   accuracy figure without a pomologist adjudicating anything. This is one more reason the ability
-  to record such a tree, from Tier 1 of [the review](model-v1-review.md), is the highest-value
+  to record such a tree, from Tier 1 of the schema review, is the highest-value
   single addition.
 - **Disagreements between pomologists on the same tree** are what identify `kappa_o` and
   `lambda_o`, and they are also a free consistency check: a model whose confusion structure is right

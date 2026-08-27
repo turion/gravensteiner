@@ -9,7 +9,7 @@ pkg: [gravensteiner]
 
 ## Why it matters
 
-Tier 1 of [the schema review](model-v1-review.md) originally suggested a `Provenance` field on
+Tier 1 of the schema review originally suggested a `Provenance` field on
 `Tree` distinguishing documented / attributed / unknown cultivar identity, as if a nursery invoice
 or a gene-bank accession were a different kind of fact than a pomologist's opinion. It is not: a
 nursery mislabels stock, and even a gene test carries a small but non-negligible risk of
@@ -17,7 +17,7 @@ laboratory error (e.g. mixing up two samples). Every source of cultivar identity
 that is exactly what `Judgement` already models. So `Provenance` was removed rather than added; a
 documented tree is a `Judgement`, not a distinct type. It is *not* a `Judgement` with `certainty`
 set near 1 either — `certainty` is the judge's own self-reported subjective probability (see
-[the schema review](model-v1-review.md)'s Tier 2 item), and a nursery ledger or gene-bank record
+[certainty needs calibration](certainty-needs-calibration.md)), and a nursery ledger or gene-bank record
 typically states none at all (`certainty :: p Interval`). How much to trust a documented tree has
 to be learned from data instead, the same way pomologist accuracy is learned rather than assumed.
 See `Gravensteiner.Model`'s `Judgement` for the corrected documentation.
