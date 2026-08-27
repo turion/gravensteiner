@@ -1,3 +1,8 @@
+---
+status: closed
+pkg: [gravensteiner]
+closed_by: "c774c60 todo: observation model v1 review, network design, and requirements"
+---
 # Russet is a texture, not a colour — and the simplex premise goes with it
 
 > **Adopted.** The v1 schema in `Gravensteiner.Model` already separates russet from `Colours` and

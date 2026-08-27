@@ -1,3 +1,8 @@
+---
+status: closed
+pkg: [delayed-sampling]
+closed_by: "0677251 Related work research"
+---
 # Haskell Bayesian statistics library landscape
 
 ## Why it matters

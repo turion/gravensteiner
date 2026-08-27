@@ -1,3 +1,11 @@
+---
+status: open
+milestone: [1]
+size: S
+size_evidence: "A short note is appended to this file summarising the above five points, and any features or"
+pkg: [gravensteiner]
+kind: decision
+---
 # Closer study of the morphometrics paper
 
 ## Why it matters

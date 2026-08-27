@@ -1,3 +1,11 @@
+---
+status: open
+milestone: [6]
+size: L
+size_evidence: "is invasive because the *types* of all intermediate quantities change."
+pkg: [delayed-sampling]
+kind: decision
+---
 # Delayed sampling is not transparent — models must be rewritten to use it
 
 ## Why it matters

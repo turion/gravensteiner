@@ -1,3 +1,10 @@
+---
+status: open
+milestone: [5]
+size: L
+size_evidence: "likely a sum type or a second table, not a new field on"
+pkg: [gravensteiner]
+---
 # `Judgement` cannot yet represent a non-person judge
 
 ## Why it matters

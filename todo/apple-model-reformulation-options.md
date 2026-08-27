@@ -1,3 +1,8 @@
+---
+status: closed
+pkg: [gravensteiner]
+closed_by: "f02577d todo: straighten the backlog into one coherent, sorted plan"
+---
 # The likelihood question, and the decision it reached
 
 > **Decided; kept as the decision record.** This file was three open questions — what a colour

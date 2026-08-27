@@ -1,3 +1,8 @@
+---
+status: closed
+pkg: [gravensteiner]
+closed_by: "c774c60 todo: observation model v1 review, network design, and requirements"
+---
 # Exact zeros in the colour proportions make every density NaN or infinite
 
 > **Resolved by design; kept as the diagnosis.** The v1 schema drops the composition entirely

@@ -1,3 +1,8 @@
+---
+status: closed
+pkg: [gravensteiner]
+closed_by: "c774c60 todo: observation model v1 review, network design, and requirements"
+---
 # The target model is a deep, crossed hierarchy — and that reorders this backlog
 
 > **Partly superseded.** The v1 schema in `Gravensteiner.Model` and

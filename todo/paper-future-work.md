@@ -1,3 +1,11 @@
+---
+status: open
+milestone: [7]
+size: L
+size_evidence: "research-grade, low priority"
+pkg: [delayed-sampling]
+kind: decision
+---
 # The paper's own future work — research-grade, low priority
 
 ## Why it matters

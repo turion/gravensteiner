@@ -1,3 +1,8 @@
+---
+status: closed
+pkg: [gravensteiner, delayed-sampling]
+closed_by: "f02577d todo: straighten the backlog into one coherent, sorted plan"
+---
 # The planned features, and which of them delayed sampling can absorb
 
 > **Still the feature-to-mechanism index; three claims corrected.** The table below is the one place
