@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
-# Validate the YAML frontmatter of every item file under todo/ against todo/SCHEMA.md.
+# Validate the YAML frontmatter of every item file under todo/ against todo/SCHEMA.md, and check
+# (or regenerate) todo/README.md's generated index against that frontmatter.
 #
-# Usage: todo/check.sh [DIR]
+# Usage: todo/check.sh [--write-index] [DIR]
 #   DIR defaults to this script's own directory, so `nix develop -c todo/check.sh` run from the
 #   repo root checks todo/. Pass a different DIR only to point the validator at a scratch fixture
 #   directory while testing malformed frontmatter; the maintainer and the arc always run it with
 #   no argument.
+#
+#   Without --write-index: reports frontmatter errors as before, and additionally treats a
+#   README.md whose generated section (everything at or below the marker comment) does not match
+#   what the current frontmatter would produce as another error class — exit non-zero, with a
+#   message to run --write-index. Skipped when DIR has no README.md (the fixture-directory case).
+#
+#   With --write-index: regenerates README.md's generated section in place, leaving everything
+#   above the marker comment untouched. Requires the marker to already be present; it does not
+#   invent one. Running it twice in a row produces no further change.
 #
 # Needs the Go build of `yq` (mikefarah/yq, v4) and `jq`, both on PATH inside `nix develop`.
 set -euo pipefail
@@ -15,7 +25,19 @@ if ! command -v yq >/dev/null 2>&1; then
   exit 1
 fi
 
-dir="${1:-$(dirname "$0")}"
+write_index=0
+dir=""
+for arg in "$@"; do
+  case "$arg" in
+    --write-index) write_index=1 ;;
+    *) dir="$arg" ;;
+  esac
+done
+dir="${dir:-$(dirname "$0")}"
+
+# The marker below which todo/README.md's index is generated wholesale; everything above it is
+# hand-written prose that regeneration never touches.
+index_marker='<!-- GENERATED INDEX — updated by `todo/check.sh --write-index`; do not hand-edit below this line -->'
 
 known_fields_json='["status","milestone","milestone_note","size","size_evidence","pkg","kind","needs","parent","closed_by","provenance"]'
 
@@ -142,8 +164,83 @@ def size_evidence_errors:
 | .[]
 JQ
 
+# Builds todo/README.md's generated index from one JSON array of open+closed item records (each
+# the item's frontmatter plus its slug and its H1 title). Milestone groups are rendered 1-8 in
+# ladder order, skipping a rung with no open items; within a group, a deterministic topological
+# sort orders a `needs` target above the item that needs it, breaking ties (and picking among
+# several ready items) alphabetically by slug so the output is reproducible. Only `needs` edges
+# whose target is a member of the *same* group are consulted — an edge crossing groups cannot be
+# honoured by a single group's row order and is silently not enforced there. A cycle within a group
+# is reported as {error: ...} instead of hanging or dropping items. Closed items follow in one
+# trailing section, sorted by slug, each with its closed_by.
+read -r -d '' gen_program <<'JQ' || true
+def esc_pipe: gsub("\\|"; "\\|");
+
+def linkcell:
+  ("[" + (.title|esc_pipe) + "](" + .slug + ".md)") as $base
+  | if (.milestone_note != null) then $base + " — " + (.milestone_note|esc_pipe) else $base end;
+
+def pkgcell: (.pkg // []) | join(", ");
+
+def depsOf($nodes; $recmap):
+  ( ($recmap[.].needs // []) | map(select( . as $d | ($nodes|index($d)) != null )) );
+
+def toposort($recmap):
+  . as $nodes
+  | def step($state):
+      ($state.remaining) as $rem
+      | if ($rem|length) == 0 then $state
+        else
+          ( [ $rem[] | select( (depsOf($nodes;$recmap) - $state.done | length) == 0 ) ] | sort ) as $ready
+          | if ($ready|length) == 0 then $state + {cycle:true}
+            else
+              ($ready[0]) as $next
+              | step({done: ($state.done + [$next]), remaining: ($rem - [$next])})
+            end
+        end;
+    step({done: [], remaining: $nodes});
+
+($records | map(select(.status=="open"))) as $open
+| ($records | INDEX(.slug)) as $recmap
+| [ range(1;9) as $m
+    | ($open | map(select((.milestone // []) | index($m) != null)) ) as $members
+    | if ($members|length) == 0 then empty
+      else
+        ($members | map(.slug)) as $nodes
+        | ($nodes | toposort($recmap)) as $sorted
+        | if ($sorted.cycle // false) then
+            {cycle: {milestone: $m, stuck: $sorted.remaining}}
+          else
+            { group: { milestone: $m, rows: ($sorted.done | map($recmap[.])) } }
+          end
+      end
+  ] as $groups
+| ([$groups[] | select(has("cycle"))]) as $cycles
+| if ($cycles|length) > 0 then
+    {error: ($cycles | map("milestone \(.cycle.milestone): needs cycle among " + (.cycle.stuck|join(", "))) | join("; "))}
+  else
+    ( [$groups[] | select(has("group")) | .group] ) as $g
+    | ( $g | map(
+          "## Milestone \(.milestone)\n\n" +
+          "| Item | Size | Packages |\n|---|---|---|\n" +
+          ( .rows | map("| " + (.|linkcell) + " | " + (.size // "?") + " | " + (.|pkgcell) + " |") | join("\n") )
+        ) | join("\n\n")
+    ) as $open_text
+    | ( $records | map(select(.status=="closed")) | sort_by(.slug)
+        | map("| " + (.|linkcell) + " | " + (.closed_by // "") + " |") | join("\n")
+      ) as $closed_rows
+    | { text: (
+          $open_text + "\n\n## Closed\n\n| Item | Closed by |\n|---|---|\n" + $closed_rows
+        )
+      }
+  end
+JQ
+
 no_frontmatter=0
 error_count=0
+
+records_file=$(mktemp)
+trap 'rm -f "$records_file"' EXIT
 
 shopt -s nullglob
 for f in "$dir"/*.md; do
@@ -164,6 +261,14 @@ for f in "$dir"/*.md; do
     continue
   fi
 
+  # Record this item for index generation, regardless of the schema errors checked below — a
+  # generation attempt is only ever made once error_count is confirmed zero, and by then every
+  # recorded item's frontmatter is known to be a valid object.
+  title=$(grep -m1 '^# ' "$f" | sed 's/^# //') || title=""
+  jq -n --arg slug "$base" --arg title "$title" --argjson fm "$fm_json" \
+    '($fm | if type == "object" then . else {} end) as $f | {slug: $slug, title: $title} + $f' \
+    >> "$records_file"
+
   body=$(awk 'BEGIN { n = 0 } /^---$/ { n++; next } n >= 2 { print }' "$f")
 
   errors=$(jq -n \
@@ -182,6 +287,42 @@ for f in "$dir"/*.md; do
 done
 
 echo "todo/check.sh: $no_frontmatter file(s) under $dir have no frontmatter yet."
+
+# Index generation/drift-checking only applies to a directory with a README.md to regenerate or
+# compare against — i.e. the real todo/, not a scratch fixture directory used to test malformed
+# frontmatter. Also skipped once schema errors are already known, since a record built from
+# rejected frontmatter cannot be trusted.
+if [ "$error_count" -eq 0 ] && [ -f "$dir/README.md" ]; then
+  marker_line=$(grep -n -F -m1 "$index_marker" "$dir/README.md" | cut -d: -f1 || true)
+  if [ -z "$marker_line" ]; then
+    echo "todo/check.sh: marker not found in $dir/README.md; cannot check or regenerate the index." >&2
+    error_count=$((error_count + 1))
+  else
+    records_json=$(jq -s '.' "$records_file")
+    gen_result=$(jq -n --argjson records "$records_json" "$gen_program")
+    gen_error=$(jq -r '.error // empty' <<< "$gen_result")
+    if [ -n "$gen_error" ]; then
+      echo "todo/check.sh: cannot generate $dir/README.md's index: $gen_error" >&2
+      error_count=$((error_count + 1))
+    else
+      generated_text=$(jq -r '.text' <<< "$gen_result")
+      candidate_file=$(mktemp)
+      trap 'rm -f "$records_file" "$candidate_file"' EXIT
+      { head -n "$marker_line" "$dir/README.md"; printf '\n'; printf '%s\n' "$generated_text"; } \
+        > "$candidate_file"
+
+      if [ "$write_index" -eq 1 ]; then
+        cp "$candidate_file" "$dir/README.md"
+      elif ! diff -q "$candidate_file" "$dir/README.md" >/dev/null 2>&1; then
+        echo "todo/check.sh: $dir/README.md's generated index is out of date; run: nix develop -c todo/check.sh --write-index" >&2
+        error_count=$((error_count + 1))
+      fi
+    fi
+  fi
+elif [ "$write_index" -eq 1 ] && [ ! -f "$dir/README.md" ]; then
+  echo "todo/check.sh: --write-index needs $dir/README.md to exist with the marker already in place." >&2
+  error_count=$((error_count + 1))
+fi
 
 if [ "$error_count" -gt 0 ]; then
   echo "todo/check.sh: $error_count error(s)." >&2

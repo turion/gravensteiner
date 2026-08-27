@@ -55,95 +55,93 @@ exist yet in the workspace.
 | 6 | The scalar end-to-end harness — see [the likelihood decision](apple-model-reformulation-options.md)'s note that a scalar version is implementable now with `conditionDist`'s existing clauses — *(blocked on [a seed corpus](seed-corpus-needed.md))* | One feature, one level, labels observed, using only `conditionDist`'s two existing clauses. Every later requirement should be validated against a working pipeline rather than in isolation. |
 | 7 | [No evaluation harness](no-evaluation-harness.md) — *(blocked on [a seed corpus](seed-corpus-needed.md))* | Every modelling decision so far rests on an argument, not a measurement, and the seed corpus makes accuracy and calibration measurable for the first time. The held-out split has to be fixed **before** the corpus is used. |
 
-## Shortlist — the most immediate items
+<!-- GENERATED INDEX — updated by `todo/check.sh --write-index`; do not hand-edit below this line -->
 
-Everything unblocked from this session is done. In priority order, what's next:
+## Milestone 1
 
-1. [Closer study of the morphometrics paper](morphometrics-apple-paper.md) — cheapest possible next
-   step (reading, not code) and the lead for item 2.
-2. [No seed corpus exists yet](seed-corpus-needed.md) — the actual blocker for items 6-7 above.
-3. [Conjugate pairs beyond `Normal`](conjugate-pairs-beyond-normal.md), its `Gamma`/inverse-gamma —
-   needed by item 4.
-4. [Descriptions are not observations](cultivar-descriptions-are-not-observations.md)'s remaining
-   conjugate-update wiring — needed before literature ingestion, i.e. before the seed corpus can
-   actually be used.
-
-## The specification
-
-Read these before picking up anything below; they supersede the sketch-level parts of the
-apple-model groups.
-
-| Item | Slated for |
-|---|---|
-| The v1 schema review, and the additions that matter most | now — some additions are unrecoverable after field collection starts |
-| [Cultivar descriptions are not fruit observations](cultivar-descriptions-are-not-observations.md) | before literature ingestion |
-| [The Bayesian network for observation model v1](model-v1-bayesian-network.md) | the specification the port is written against |
-
-## The critical path — one joint Gaussian, sparse
-
-The first three items below run in order — each is a prerequisite for the next, and the third
-decides whether the model runs at all.
-
-| Item | R | Slated for |
+| Item | Size | Packages |
 |---|---|---|
-| [`Value` has no affine normal form](value-affine-normal-form.md) | — | first — [the vector node](vector-valued-variables-and-dirichlet.md) and [the sparse representation](no-supernodes-for-multiple-parents.md) both consume it |
-| [`Distribution` and `Value` are scalar-only](vector-valued-variables-and-dirichlet.md) | — | the multivariate-normal half; the Dirichlet half has no client |
-| [No supernodes, so a node cannot have two parents](no-supernodes-for-multiple-parents.md) | — | is the bulk of the model, and must be sparse |
-| [Drop `Num` for affine combinators](drop-num-for-affine-combinators.md) | — | with [the affine normal form](value-affine-normal-form.md), and mechanical; do it with vectors in mind or it is done twice |
-| [Marginal and conditional distributions are not distinguished in the type](no-type-level-marginal-conditional.md) | — | with the normal form |
+| [The chosen appearance parameterisation](appearance-parameterisation.md) | M | gravensteiner |
+| [Only `Normal` is usable, and only the normal-normal conjugate pair delays](conjugate-pairs-beyond-normal.md) — The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only. | L | delayed-sampling |
+| [Cultivar descriptions are not fruit observations](cultivar-descriptions-are-not-observations.md) | L | gravensteiner |
+| [Closer study of the morphometrics paper](morphometrics-apple-paper.md) | S | gravensteiner |
+| [No seed corpus exists yet](seed-corpus-needed.md) | L | gravensteiner |
 
-## The discrete path — a label per tree
+## Milestone 2
 
-The items below run in this order; the last one's two sub-requirements (scoring K alternatives
-against one grafted context, and retracting a conditioning step) are the least certain things in the
-backlog and are worth prototyping early.
-
-| Item | R | Slated for |
+| Item | Size | Packages |
 |---|---|---|
-| [Nothing discrete exists, so the cultivar cannot be a node](discrete-nodes-and-dirichlet-categorical.md) | — | with the vectors — a categorical's parameter is a vector |
-| [A finite discrete latent should be enumerated, not sampled](exact-enumeration-of-discrete-latents.md) | — | route (1) is the plan; its per-candidate cost is the constraint |
-| [A node's parent cannot be selected by a discrete latent](no-stochastic-parent-selection.md) | — | deepest requirement; scoring K alternatives against one grafted context, and retracting a conditioning step, are the least certain things in the backlog |
-| [Only `Normal` is usable, and only normal-normal delays](conjugate-pairs-beyond-normal.md) | — | beta and gamma are confirmed needs; the rest have no client |
-| [No SMC integration](no-smc-integration.md) | — | the paper's payoff; one way to run the collapsed sweep, not the only one |
+| [An examination date distinct from the collection date](examination-date-distinct-from-collection.md) | M | gravensteiner |
+| [A minimal measurement set for `Fruit`'s `-- TODO Further properties`](fruit-measurement-set.md) | S | gravensteiner |
+| [Nest the phase inside `Colours`](nest-phase-inside-colours.md) | S | gravensteiner |
 
-## Persistence, growth and reporting
+## Milestone 3
 
-| Item | R | Slated for |
+| Item | Size | Packages |
 |---|---|---|
-| [A trained model cannot be saved or reloaded](marginals-cannot-be-saved-or-reloaded.md) | — | before there is a fitted state worth keeping |
-| [Training must not grow the graph](streaming-training-with-bounded-memory.md) | — | the realized-node fix and child index it leaned on are done; inlining on realize is what's left |
-| [`Observed` collapses `NotMentioned`/`NotMeasured` into `NotObserved`](mention-vs-not-measured-deferred.md) | — | low priority — needs a source class first |
-| [Nothing measures whether the model works](no-evaluation-harness.md) | — | with the seed corpus, not after it |
-| [No seed corpus exists yet](seed-corpus-needed.md) | — | blocks items 6-7 above — see [the morphometrics paper](morphometrics-apple-paper.md) for a lead |
+| [Findings from `Main.hs` that outlive it](apple-model-cleanups.md) | M | gravensteiner |
+| [Nothing measures whether the model works](no-evaluation-harness.md) | L | gravensteiner |
 
-## Library correctness and hygiene
+## Milestone 4
 
-| Item | Slated for |
+| Item | Size | Packages |
+|---|---|---|
+| [There must be an "other" outcome](identify-needs-other-outcome.md) | L | gravensteiner, delayed-sampling |
+
+## Milestone 5
+
+| Item | Size | Packages |
+|---|---|---|
+| [`certainty` should be calibrated, not believed](certainty-needs-calibration.md) | L | gravensteiner, delayed-sampling |
+| [How the fruit were chosen is missing](fruit-selection-protocol-missing.md) | S | gravensteiner |
+| [`Judgement` cannot yet represent a non-person judge](judgement-needs-non-person-judges.md) | L | gravensteiner |
+| [`Tree` has no location](tree-has-no-location.md) | S | gravensteiner |
+
+## Milestone 6
+
+| Item | Size | Packages |
+|---|---|---|
+| [`Cultivar` needs pedigree and a sport relation](cultivar-pedigree-and-sport-relation.md) | L | gravensteiner |
+| [Drop `Num`/`Fractional` for hand-rolled affine combinators](drop-num-for-affine-combinators.md) | M | delayed-sampling |
+| [A finite discrete latent should be enumerated, not sampled](exact-enumeration-of-discrete-latents.md) | L | delayed-sampling |
+| [A trained model cannot be extracted from the graph or loaded back into one](marginals-cannot-be-saved-or-reloaded.md) | L | delayed-sampling, gravensteiner |
+| [`Observed` collapses `NotMentioned` and `NotMeasured` into one `NotObserved`](mention-vs-not-measured-deferred.md) | L | delayed-sampling |
+| [The paper's examples are only partly covered by tests](missing-paper-examples-as-tests.md) | M | delayed-sampling |
+| [The Bayesian network for observation model v1](model-v1-bayesian-network.md) | L | delayed-sampling, gravensteiner |
+| [No SMC integration — the paper's whole payoff is unrealised](no-smc-integration.md) | L | delayed-sampling |
+| [Marginal and conditional distributions are not distinguished in the type](no-type-level-marginal-conditional.md) | M | delayed-sampling |
+| [Delayed sampling is not transparent — models must be rewritten to use it](not-transparent-to-monad-bayes-models.md) | L | delayed-sampling |
+| [`observe` takes a `Variable`, not a `Value`](observe-takes-a-variable-not-a-value.md) | L | delayed-sampling |
+| [`pdf`'s catch-all hides unimplemented distributions](pdf-catch-all-hides-unimplemented.md) | M | delayed-sampling |
+| [Training over many apples must not grow the graph](streaming-training-with-bounded-memory.md) | M | delayed-sampling |
+| [`Value` has no affine normal form](value-affine-normal-form.md) | M | delayed-sampling |
+| [`Distribution` and `Value` are scalar-only, so there is no vector-valued node](vector-valued-variables-and-dirichlet.md) | L | delayed-sampling |
+| [Nothing discrete exists, so the cultivar identity cannot be a node](discrete-nodes-and-dirichlet-categorical.md) | L | delayed-sampling |
+| [Only `Normal` is usable, and only the normal-normal conjugate pair delays](conjugate-pairs-beyond-normal.md) — The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only. | L | delayed-sampling |
+| [No supernodes, so a node cannot have two parents — and the Kalman example is degraded](no-supernodes-for-multiple-parents.md) | L | delayed-sampling |
+| [A node's parent cannot be selected by a discrete latent](no-stochastic-parent-selection.md) | L | delayed-sampling |
+
+## Milestone 7
+
+| Item | Size | Packages |
+|---|---|---|
+| [The paper's own future work — research-grade, low priority](paper-future-work.md) | L | delayed-sampling |
+
+## Closed
+
+| Item | Closed by |
 |---|---|
-| [`observe` takes a `Variable`, not a `Value`](observe-takes-a-variable-not-a-value.md) | single-variable case is cheap now |
-| [`pdf`'s catch-all hides unimplemented distributions](pdf-catch-all-hides-unimplemented.md) | later |
-| [The paper's examples are only partly covered by tests](missing-paper-examples-as-tests.md) | alongside each fix |
-| [Findings from `Main.hs` that outlive it](apple-model-cleanups.md) | `Interval` still derives `Num`; densities should stay in log space |
-
-## Decisions to record, not code to write
-
-| Item | Slated for |
-|---|---|
-| [Delayed sampling is not transparent to monad-bayes models](not-transparent-to-monad-bayes-models.md) | needs a decision; determines whether the model is written once or twice |
-| [`Judgement` cannot yet represent a non-person judge](judgement-needs-non-person-judges.md) | not urgent — extends `Judgement` for nurseries/labs once one needs recording |
-| [The paper's own future work](paper-future-work.md) | research-grade — but the non-tree case is where this model lives |
-| [Closer study of the morphometrics paper](morphometrics-apple-paper.md) | now more urgent than "before finalising the feature list" — it is the lead for [the missing seed corpus](seed-corpus-needed.md) |
-
-## Decided — kept as the record
-
-Closed, and kept because the reasoning is what justifies the current design. Nothing here is work to
-do.
-
-| Item | Outcome |
-|---|---|
-| [Haskell Bayesian library landscape](haskell-library-landscape.md) | **surveyed** — no Hackage package competes with this project's core infrastructure |
-| [Russet is a texture, not a colour](russet-is-not-a-colour.md) | **adopted** — the simplex premise goes, and with it the largest apparent feature gap |
-| [The likelihood question](apple-model-reformulation-options.md) | **decided** — option B, on unconstrained scales, with no composition anywhere |
-| [The target model is a deep, crossed hierarchy](apple-model-target-hierarchy.md) | **done** — written out formally in the network design; two consequences corrected |
-| [Exact zeros in the colour proportions are fatal](apple-model-zero-colours-are-fatal.md) | **done by deletion of the premise** — kept as the diagnosis of the old crash |
-| [The planned features, and which are absorbable](apple-features-and-their-conjugate-pairs.md) | the feature-to-requirement index; five features work today |
+| [The planned features, and which of them delayed sampling can absorb](apple-features-and-their-conjugate-pairs.md) | f02577d todo: straighten the backlog into one coherent, sorted plan |
+| [The likelihood question, and the decision it reached](apple-model-reformulation-options.md) | f02577d todo: straighten the backlog into one coherent, sorted plan |
+| [The target model is a deep, crossed hierarchy — and that reorders this backlog](apple-model-target-hierarchy.md) | c774c60 todo: observation model v1 review, network design, and requirements |
+| [Exact zeros in the colour proportions make every density NaN or infinite](apple-model-zero-colours-are-fatal.md) | c774c60 todo: observation model v1 review, network design, and requirements |
+| [`atMostOneParent` misses every expression-shaped parent](at-most-one-parent-misses-expression-parents.md) | 8ded243 Fix the local defects found while porting delayed-sampling |
+| [Dead code in the graph-mutation helpers](dead-code-in-graph-helpers.md) | 8ded243 Fix the local defects found while porting delayed-sampling |
+| [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) | d7b7171 todo: close graft-does-not-use-invariant-2 |
+| [`Graph` has no child index, so every graph operation scans every node](graph-has-no-child-index.md) | 7dc5d7f todo: clean up completed items and align priorities |
+| [Haskell Bayesian statistics library landscape](haskell-library-landscape.md) | 0677251 Related work research |
+| [Graph invariants are never checked](invariants-unchecked.md) | 8ded243 Fix the local defects found while porting delayed-sampling |
+| [No way to build a record of variables, or to observe one partially](records-of-variables-and-partial-observation.md) | 7dc5d7f todo: clean up completed items and align priorities |
+| [References to a realized node are handled inconsistently, and `graft` rejects them](references-to-realized-nodes-are-inconsistent.md) | 7dc5d7f todo: clean up completed items and align priorities |
+| [Russet is a texture, not a colour — and the simplex premise goes with it](russet-is-not-a-colour.md) | c774c60 todo: observation model v1 review, network design, and requirements |
+| [`Num (Value a)` is partial *and* silently order-dependent](value-num-is-partial-and-order-dependent.md) | 8ded243 Fix the local defects found while porting delayed-sampling |
