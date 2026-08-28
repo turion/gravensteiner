@@ -72,7 +72,6 @@ exist yet in the workspace.
 | Item | Size | Packages |
 |---|---|---|
 | [An examination date distinct from the collection date](examination-date-distinct-from-collection.md) | M | gravensteiner |
-| [A minimal measurement set for `Fruit`'s `-- TODO Further properties`](fruit-measurement-set.md) | S | gravensteiner |
 | [Nest the phase inside `Colours`](nest-phase-inside-colours.md) | M | gravensteiner |
 
 ## Milestone 3
@@ -137,6 +136,7 @@ exist yet in the workspace.
 | [Exact zeros in the colour proportions make every density NaN or infinite](apple-model-zero-colours-are-fatal.md) | c774c60 todo: observation model v1 review, network design, and requirements |
 | [`atMostOneParent` misses every expression-shaped parent](at-most-one-parent-misses-expression-parents.md) | 8ded243 Fix the local defects found while porting delayed-sampling |
 | [Dead code in the graph-mutation helpers](dead-code-in-graph-helpers.md) | 8ded243 Fix the local defects found while porting delayed-sampling |
+| [A minimal measurement set for `Fruit`'s `-- TODO Further properties`](fruit-measurement-set.md) | 9e3deff Model: hold the caliper's and the scale's readings on Appearance |
 | [`graft` and `prune` scan for all marginalized children](graft-does-not-use-invariant-2.md) | d7b7171 todo: close graft-does-not-use-invariant-2 |
 | [`Graph` has no child index, so every graph operation scans every node](graph-has-no-child-index.md) | 7dc5d7f todo: clean up completed items and align priorities |
 | [Haskell Bayesian statistics library landscape](haskell-library-landscape.md) | 0677251 Related work research |

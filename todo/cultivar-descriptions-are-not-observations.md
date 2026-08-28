@@ -195,6 +195,17 @@ descriptions that use it, versioned like everything else. And the residual disag
 authors' vocabularies is precisely what the author and source bias terms absorb — which is another
 reason those are not optional extras.
 
+### A shape band with no length is a separate elicited feature
+
+A source often states a shape *band* — ECPGR's fruit-shape table's "Intermediate", a monograph's
+"hochgebaut" — without giving a height or a diameter at all. That is not the same claim as "60–70
+mm": nesting `Shape` inside `Appearance` already lets `Shape Described` carry a source's stated
+numbers, so a monograph quoting lengths is recordable today, through the ordinary
+location/strength/spread elicitation this file describes. A band with no length behind it is
+different, because nothing was measured — it is a claim about the *ratio* directly, not about
+either length, so it is a distinct elicited feature on the log-ratio scale, with its own `strength`
+independent of any elicitation of height or diameter.
+
 ## Done when
 
 - `Observed` and `Described` exist as distinct types, with `Fruit` using the former and `Description`
@@ -208,6 +219,8 @@ reason those are not optional extras.
   its `Description` record, and is removable.
 - The deleted requirements document's interval-censoring row is struck, its reasoning folded into
   this file.
+- A shape band with no stated length elicits a distinct feature on the log-ratio scale, separate
+  from any elicitation of height or diameter.
 
 ## From the v1 model review (Tier 3)
 
