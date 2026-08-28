@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 
 {- | Some types are tagged with a higher kinded datatype phase that can be used to mark parts of the data as being "not observed" via 'Maybe' or 'Observed'.
@@ -33,6 +34,9 @@ import GHC.Records (HasField)
 -- barbies
 import Data.Functor.Barbie
 
+-- dimensional
+import Numeric.Units.Dimensional.Prelude
+
 -- delayed-sampling
 import Control.Monad.Bayes.DelayedSampling.Record (Observed (..))
 
@@ -59,11 +63,39 @@ data Colours = Colours
   }
   deriving (Show, Eq)
 
--- | Fruit appearance, factored out so 'Description' can state the same shape without dragging in 'Fruit'-only metadata (@observer@, @uuid@).
+-- | Measurable large-scale shape of a fruit.
+data Shape p = Shape
+  { height :: p (Length Double)
+  {- ^ Taken at the tallest point of the flesh, not the polar axis through the stalk cavity and calyx basin, per UPOV TG/14
+  characteristic 23. Units come from "Numeric.Units.Dimensional.SIUnits" via the re-exporting prelude, e.g. @58 *~ milli metre@.
+  -}
+  , diameter :: p (Length Double)
+  {- ^ Taken at the widest point, the fruit's equator (UPOV TG/14 characteristic 24); "maximum" here
+  names the caliper site, not a maximum over repeated measurements. E.g. @71 *~ milli metre@.
+  -}
+  }
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB, ApplicativeB, ConstraintsB)
+
+{- | The ratio of height to diameter can be computed from the shape, which is a useful descriptor
+for comparing cultivars. It is a function rather than a stored field because a stored ratio would
+be a deterministic function of the two stored measurements, and a likelihood treating all three as
+conditionally independent given the cultivar's parameters would count shape evidence twice.
+
+To apply this to a recorded @Shape Observed@, first convert with
+@bmap (\\o -> case o of Observed a -> Just a; NotObserved -> Nothing) s@ to get a @Shape Maybe@;
+a partially measured fruit then yields 'Nothing' rather than a type error.
+-}
+heightDiameterRatio :: (Functor p, Applicative p) => Shape p -> p (Dimensionless Double)
+heightDiameterRatio s = (/) <$> s.height <*> s.diameter
+
+-- | Everything that can be directly observed about a fruit
 data Appearance p = Appearance
   { colours :: p Colours
   , russet :: p Interval
-  -- TODO Further properties to be added here, such as size, shape, etc.
+  , shape :: Shape p
+  , weight :: p (Mass Double)
+  -- ^ The whole fruit, weighed on a kitchen scale. Example: @142 *~ gram@.
   }
   deriving stock (Generic)
   deriving anyclass (FunctorB, TraversableB, ApplicativeB, ConstraintsB)
