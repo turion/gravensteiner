@@ -15,7 +15,9 @@
   line in `flake.nix` next to the existing `sandwich.check = false;` (haskell-flake's spelling of
   nixpkgs' `dontCheck`), or drop the dependency. Seen so far: `sandwich`, fixed with `check = false`;
   and `optics` (3 of 127 inspection-testing tests fail), fixed by removing it from the cabal file —
-  so do not expect an `optics.check` line to exist.
+  so do not expect an `optics.check` line to exist. `dimensional` 1.6.2 was checked before planning:
+  it builds clean from this flake's nixpkgs on ghc912 with its test suite (exit 0), and that build
+  covers its whole test-checked dependency closure, so it needs no `flake.nix` line.
 - In `delayed-sampling`'s test suite, wrap graph operations in `checked`
   (`action <* ensureConsistency`) rather than calling them bare, so every test also checks
   the graph invariants. `ensureConsistency` walks the whole graph, which is why library code
