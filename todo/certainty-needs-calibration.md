@@ -18,8 +18,9 @@ it imports each pomologist's overconfidence as if it were evidence. Used as a *c
 two-parameter monotone map per pomologist, it becomes exactly the "make biases visible" feature —
 and the map is estimable from disagreements between pomologists on the same tree. Being
 `p Interval` rather than `Interval` matters beyond historical/third-party judgements not stating
-one: it is also what keeps documented/institutional judgements (see Tier 1's corrected "documented
-tree" item above) from having a certainty invented for them that they never actually reported.
+one: it is also what keeps documented/institutional judgements (see
+[Tier 1's corrected "documented tree" item](model-v1-review-tier-1.md)) from having a certainty
+invented for them that they never actually reported.
 The calibration map itself (`kappa_o`/`lambda_o` in
 [the network design](model-v1-bayesian-network.md)) is still future modelling work, not yet coded.
 

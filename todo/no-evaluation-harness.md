@@ -71,8 +71,8 @@ naming because they are unusually cheap:
   data rather than read off a self-reported `certainty` — see
   [certainty needs calibration](certainty-needs-calibration.md)), so held-out reference trees give a real
   accuracy figure without a pomologist adjudicating anything. This is one more reason the ability
-  to record such a tree, from Tier 1 of the schema review, is the highest-value
-  single addition.
+  to record such a tree, from [Tier 1 of the schema review](model-v1-review-tier-1.md), is the
+  highest-value single addition.
 - **Disagreements between pomologists on the same tree** are what identify `kappa_o` and
   `lambda_o`, and they are also a free consistency check: a model whose confusion structure is right
   should predict *which* pairs of cultivars get confused, not merely how often. Predicted confusion

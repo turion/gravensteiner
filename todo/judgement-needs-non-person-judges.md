@@ -9,10 +9,10 @@ pkg: [gravensteiner]
 
 ## Why it matters
 
-Tier 1 of the schema review originally suggested a `Provenance` field on
-`Tree` distinguishing documented / attributed / unknown cultivar identity, as if a nursery invoice
-or a gene-bank accession were a different kind of fact than a pomologist's opinion. It is not: a
-nursery mislabels stock, and even a gene test carries a small but non-negligible risk of
+[Tier 1 of the schema review](model-v1-review-tier-1.md) originally suggested a `Provenance` field
+on `Tree` distinguishing documented / attributed / unknown cultivar identity, as if a nursery
+invoice or a gene-bank accession were a different kind of fact than a pomologist's opinion. It is
+not: a nursery mislabels stock, and even a gene test carries a small but non-negligible risk of
 laboratory error (e.g. mixing up two samples). Every source of cultivar identity is fallible, and
 that is exactly what `Judgement` already models. So `Provenance` was removed rather than added; a
 documented tree is a `Judgement`, not a distinct type. It is *not* a `Judgement` with `certainty`
