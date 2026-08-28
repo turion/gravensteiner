@@ -1,11 +1,10 @@
 ---
 status: open
 milestone: [1, 6]
-milestone_note: "The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only."
+milestone_note: "The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only. [vector-valued variables](vector-valued-variables-and-dirichlet.md) and [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) are prerequisites of the Dirichlet-categorical pair only, not of the item as a whole."
 size: L
 size_evidence: "For each pair: a `Distribution` constructor; clauses in `pdf`, `sampleMarginal`,"
 pkg: [delayed-sampling]
-needs: [vector-valued-variables-and-dirichlet, discrete-nodes-and-dirichlet-categorical]
 parent: model-v1-bayesian-network
 ---
 # Only `Normal` is usable, and only the normal-normal conjugate pair delays

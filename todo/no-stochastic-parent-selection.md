@@ -5,6 +5,7 @@ size: L
 size_evidence: "Two sub-requirements fall out, and they are the practical content of this requirement:"
 pkg: [delayed-sampling]
 needs: [discrete-nodes-and-dirichlet-categorical, exact-enumeration-of-discrete-latents, no-supernodes-for-multiple-parents]
+parent: model-v1-bayesian-network
 provenance: "model-v1-delayed-sampling-requirements.md, R1 (table row and the full section 'R1 — stochastic edges, and why this is the hard one')."
 ---
 # A node's parent cannot be selected by a discrete latent

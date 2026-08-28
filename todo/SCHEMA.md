@@ -61,8 +61,6 @@ A closed item that recorded a decision, with no milestone:
 ---
 status: closed
 kind: decision
-size: M
-size_evidence: "no cue in source file"
 pkg: [delayed-sampling]
 closed_by: "a1b2c3d russet is a texture, not a colour"
 ---

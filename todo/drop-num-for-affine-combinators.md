@@ -4,6 +4,7 @@ milestone: [6]
 size: M
 size_evidence: "no cue in source file"
 pkg: [delayed-sampling]
+needs: [value-affine-normal-form]
 parent: model-v1-bayesian-network
 ---
 # Drop `Num`/`Fractional` for hand-rolled affine combinators

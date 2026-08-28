@@ -62,7 +62,7 @@ exist yet in the workspace.
 | Item | Size | Packages |
 |---|---|---|
 | [The chosen appearance parameterisation](appearance-parameterisation.md) | M | gravensteiner |
-| [Only `Normal` is usable, and only the normal-normal conjugate pair delays](conjugate-pairs-beyond-normal.md) — The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only. | L | delayed-sampling |
+| [Only `Normal` is usable, and only the normal-normal conjugate pair delays](conjugate-pairs-beyond-normal.md) — The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only. [vector-valued variables](vector-valued-variables-and-dirichlet.md) and [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) are prerequisites of the Dirichlet-categorical pair only, not of the item as a whole. | L | delayed-sampling |
 | [Cultivar descriptions are not fruit observations](cultivar-descriptions-are-not-observations.md) | L | gravensteiner |
 | [Closer study of the morphometrics paper](morphometrics-apple-paper.md) | S | gravensteiner |
 | [No seed corpus exists yet](seed-corpus-needed.md) | L | gravensteiner |
@@ -73,7 +73,7 @@ exist yet in the workspace.
 |---|---|---|
 | [An examination date distinct from the collection date](examination-date-distinct-from-collection.md) | M | gravensteiner |
 | [A minimal measurement set for `Fruit`'s `-- TODO Further properties`](fruit-measurement-set.md) | S | gravensteiner |
-| [Nest the phase inside `Colours`](nest-phase-inside-colours.md) | S | gravensteiner |
+| [Nest the phase inside `Colours`](nest-phase-inside-colours.md) | M | gravensteiner |
 
 ## Milestone 3
 
@@ -101,23 +101,23 @@ exist yet in the workspace.
 
 | Item | Size | Packages |
 |---|---|---|
+| [Only `Normal` is usable, and only the normal-normal conjugate pair delays](conjugate-pairs-beyond-normal.md) — The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only. [vector-valued variables](vector-valued-variables-and-dirichlet.md) and [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) are prerequisites of the Dirichlet-categorical pair only, not of the item as a whole. | L | delayed-sampling |
 | [`Cultivar` needs pedigree and a sport relation](cultivar-pedigree-and-sport-relation.md) | L | gravensteiner |
-| [Drop `Num`/`Fractional` for hand-rolled affine combinators](drop-num-for-affine-combinators.md) | M | delayed-sampling |
 | [A finite discrete latent should be enumerated, not sampled](exact-enumeration-of-discrete-latents.md) | L | delayed-sampling |
 | [A trained model cannot be extracted from the graph or loaded back into one](marginals-cannot-be-saved-or-reloaded.md) | L | delayed-sampling, gravensteiner |
 | [`Observed` collapses `NotMentioned` and `NotMeasured` into one `NotObserved`](mention-vs-not-measured-deferred.md) | L | delayed-sampling |
 | [The paper's examples are only partly covered by tests](missing-paper-examples-as-tests.md) | M | delayed-sampling |
 | [The Bayesian network for observation model v1](model-v1-bayesian-network.md) | L | delayed-sampling, gravensteiner |
 | [No SMC integration — the paper's whole payoff is unrealised](no-smc-integration.md) | L | delayed-sampling |
-| [Marginal and conditional distributions are not distinguished in the type](no-type-level-marginal-conditional.md) | M | delayed-sampling |
 | [Delayed sampling is not transparent — models must be rewritten to use it](not-transparent-to-monad-bayes-models.md) | L | delayed-sampling |
 | [`observe` takes a `Variable`, not a `Value`](observe-takes-a-variable-not-a-value.md) | L | delayed-sampling |
 | [`pdf`'s catch-all hides unimplemented distributions](pdf-catch-all-hides-unimplemented.md) | M | delayed-sampling |
 | [Training over many apples must not grow the graph](streaming-training-with-bounded-memory.md) | M | delayed-sampling |
 | [`Value` has no affine normal form](value-affine-normal-form.md) | M | delayed-sampling |
+| [Drop `Num`/`Fractional` for hand-rolled affine combinators](drop-num-for-affine-combinators.md) | M | delayed-sampling |
+| [Marginal and conditional distributions are not distinguished in the type](no-type-level-marginal-conditional.md) | M | delayed-sampling |
 | [`Distribution` and `Value` are scalar-only, so there is no vector-valued node](vector-valued-variables-and-dirichlet.md) | L | delayed-sampling |
 | [Nothing discrete exists, so the cultivar identity cannot be a node](discrete-nodes-and-dirichlet-categorical.md) | L | delayed-sampling |
-| [Only `Normal` is usable, and only the normal-normal conjugate pair delays](conjugate-pairs-beyond-normal.md) — The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only. | L | delayed-sampling |
 | [No supernodes, so a node cannot have two parents — and the Kalman example is degraded](no-supernodes-for-multiple-parents.md) | L | delayed-sampling |
 | [A node's parent cannot be selected by a discrete latent](no-stochastic-parent-selection.md) | L | delayed-sampling |
 

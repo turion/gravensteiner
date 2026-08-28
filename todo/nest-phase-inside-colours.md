@@ -1,9 +1,10 @@
 ---
 status: open
 milestone: [2]
-size: S
-size_evidence: "[record-of-variables sugar](records-of-variables-and-partial-observation.md) (done — see"
+size: M
+size_evidence: "no cue in source file"
 pkg: [gravensteiner]
+needs: [appearance-parameterisation]
 provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the finding 'Nest the phase inside `Colours`.'"
 ---
 # Nest the phase inside `Colours`
