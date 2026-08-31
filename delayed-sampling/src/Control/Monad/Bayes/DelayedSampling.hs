@@ -238,11 +238,12 @@ castNode (SomeNode node) = cast node
 
 data Graph = Graph
   { nodes :: IntMap SomeNode
-  , -- | Cache of each node's children, keyed by parent index. Reconciled on
-    -- every write to 'nodes' (see 'reconcileChildren' and 'rebuildChildren'),
-    -- never tracked ad hoc per call site — that is what correctly handles a
-    -- substitution silently dropping a parent edge (e.g. scaling by 0).
-    children :: IntMap IntSet
+  , children :: IntMap IntSet
+  {- ^ Cache of each node's children, keyed by parent index. Reconciled on
+  every write to 'nodes' (see 'reconcileChildren' and 'rebuildChildren'),
+  never tracked ad hoc per call site — that is what correctly handles a
+  substitution silently dropping a parent edge (e.g. scaling by 0).
+  -}
   , maxKey :: Int
   }
   deriving (Show, Eq)

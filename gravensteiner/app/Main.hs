@@ -123,19 +123,21 @@ dirichletColoursLikelihood
     } =
     Exp (negate $ sum $ getNonnegative <$> [yellowPrior * yellowDirichlet, redPrior * redDirichlet, greenPrior * greenDirichlet, brownPrior * brownDirichlet])
       -- FIXME make more efficient with Exp & log
-      / Exp (log $
-              traceShowWith ("beta to",) $
-                traceShowWith ("beta",) (beta $ traceShowWith ("priors",) (getNonnegative <$> [yellowPrior, redPrior, greenPrior, brownPrior])) ** getNonnegative (traceShowWith ("pc",) (pseudocount)))
+      / Exp
+        ( log $
+            traceShowWith ("beta to",) $
+              traceShowWith ("beta",) (beta $ traceShowWith ("priors",) (getNonnegative <$> [yellowPrior, redPrior, greenPrior, brownPrior])) ** getNonnegative (traceShowWith ("pc",) (pseudocount))
+        )
 
 coloursLikelihood :: DirichletColours -> Colours -> Log Double
 coloursLikelihood DirichletColours {yellowDirichlet, redDirichlet, greenDirichlet, brownDirichlet} Colours {yellow, red, green, brown} =
   Exp $ -- FIXME make more efficient
-    -- FIXME ugly to have all these get* -- FIXME make more efficient
-    -- FIXME ugly to have all these get*
+  -- FIXME ugly to have all these get* -- FIXME make more efficient
+  -- FIXME ugly to have all these get*
     log $ -- FIXME make more efficient
     -- FIXME ugly to have all these get* -- FIXME make more efficient
     -- FIXME ugly to have all these get*
-      -- FIXME make more efficient
+    -- FIXME make more efficient
     -- FIXME ugly to have all these get*
       product [getInterval yellow ** (getNonnegative yellowDirichlet - 1), getInterval red ** (getNonnegative redDirichlet - 1), getInterval green ** (getNonnegative greenDirichlet - 1), getInterval brown ** (getNonnegative brownDirichlet - 1)] / beta (getNonnegative <$> [yellowDirichlet, redDirichlet, greenDirichlet, brownDirichlet])
 

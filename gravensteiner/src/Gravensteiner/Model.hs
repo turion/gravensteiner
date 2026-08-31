@@ -1,8 +1,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 {- | Some types are tagged with a higher kinded datatype phase that can be used to mark parts of the data as being "not observed" via 'Maybe' or 'Observed'.
 Sampling data on the other hand will always produce data, so can use 'Identity' as the phase.
@@ -161,8 +161,9 @@ data Judgement p = Judgement
   , collection :: p UUID
   -- ^ The collection that was used to make this judgement, if any (e.g. absent for a gene test)
   , certainty :: p Interval
-  -- ^ The probability the judgement's maker would bet on this judgement being correct.
-  --   This self-information is their own subjective probability, not a probability derived from the data in the database.
+  {- ^ The probability the judgement's maker would bet on this judgement being correct.
+  This self-information is their own subjective probability, not a probability derived from the data in the database.
+  -}
   , date :: p Day
   , uuid :: UUID
   }

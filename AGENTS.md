@@ -2,8 +2,24 @@
 
 - **HLS is available** in the devShell and usable, but its diagnostics may be **stale** —
   cross-check against `cabal build -v0 all` before trusting them.
-- **Do not run `fourmolu`.** Formatting is handled manually by the maintainer; leave
-  whitespace alone even when `fourmolu --mode check` fails.
+- **No agent spends effort on formatting.** Formatting is applied *mechanically* by `jj fix` over
+  the stack, once, immediately before pushing at the end of an arc — never by a coder hand-adjusting
+  whitespace. CI enforces `fourmolu --mode check` on what is pushed, so a mid-arc revision may be
+  fourmolu-dirty and that is not a defect. `fix.tools.fourmolu` is already configured on this
+  machine (`fourmolu --stdin-input-file $path` over `glob:**/*.hs`) — see `jj config list
+  --include-defaults` — so a plain `jj fix` picks it up with no further setup.
+- **This machine's `jj fix` also has a foreign `hlint` tool configured**, applying another
+  project's automatic refactorings to every `.hs` file
+  (`fix.tools.hlint.command = ["hlint", "-", "--refactor", "-h",
+  "/home/turion/heilmannsoftware/connect/.hlint.yaml"]` over `glob:**/*.hs`) — unrelated to this
+  repo and liable to undo deliberate hlint decisions made here. `jj fix` has no `--tool` flag, so
+  the only way to scope it to fourmolu is disabling that tool at repo scope:
+
+      jj config set --repo fix.tools.hlint.enabled false
+
+  This writes to a config file *outside* the repository, under a per-clone hash — there is no
+  `.jj/repo/config.toml` to check in, so a fresh clone must run the command again. Find the file
+  with `jj config path --repo`; do not hard-code the path, since the hash differs per clone.
 - `jj agent-log` already embeds `-n10`, so passing another `-n`/`--limit` fails with
   `the argument '--limit <LIMIT>' cannot be used multiple times`. Call it bare.
 - `cabal build all` does **not** build test suites; use `cabal build -v0 --enable-tests all`
