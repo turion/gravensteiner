@@ -10,8 +10,10 @@ license: MIT
 license-file: LICENSE
 author: Manuel Bärenz
 maintainer: programming@manuelbaerenz.de
+category: Statistics
 build-type: Simple
 extra-doc-files: CHANGELOG.md
+tested-with: ghc ==9.6.7 || ==9.8.4 || ==9.10.3 || ==9.12.4
 
 common warnings
   ghc-options: -Wall
