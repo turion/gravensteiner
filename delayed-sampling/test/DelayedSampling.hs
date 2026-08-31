@@ -13,10 +13,10 @@ import Test.HUnit (assertFailure)
 import Test.Hspec
 
 shouldBeRight :: (Show e) => Either e a -> IO a
-shouldBeRight = either (\e -> assertFailure $ ("Expected Right, got Left (" <> (show e ++ ")"))) pure
+shouldBeRight = either (\e -> assertFailure ("Expected Right, got Left (" <> (show e ++ ")"))) pure
 
 shouldBeLeft :: (Show b) => Either a b -> IO a
-shouldBeLeft = either pure $ \b -> assertFailure $ ("Expected Left, got Right (" <> (show b ++ ")"))
+shouldBeLeft = either pure $ \b -> assertFailure ("Expected Left, got Right (" <> (show b ++ ")"))
 
 {- | Check the graph invariants after the action, so that every test below
   doubles as a test of 'ensureConsistency'.
@@ -89,7 +89,7 @@ test = describe "DelayedSampling" $ do
       err <- error_ <$> shouldBeLeft result
       case err of
         AlreadyRealized ResolvedVariable {variable} -> getVariable variable `shouldBe` 0
-        _ -> assertFailure $ ("Expected AlreadyRealized, got " <> show err)
+        _ -> assertFailure ("Expected AlreadyRealized, got " <> show err)
 
     it "can observe variables in a hierarchical model and weight correctly" $ do
       (result, p) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
@@ -154,7 +154,7 @@ test = describe "DelayedSampling" $ do
         MultipleParents i parents -> do
           i `shouldBe` 2
           fmap (\SomeVariable {getSomeVariable} -> getVariable getSomeVariable) parents `shouldBe` [0, 1]
-        _ -> assertFailure $ ("Expected MultipleParents, got " <> show err)
+        _ -> assertFailure ("Expected MultipleParents, got " <> show err)
 
     it "detects a marginalized node whose parent is not marginalized (Invariant 1)" $ do
       (result, _) <- sampleIO $ runWeightedT $ evalDelayedSamplingT $ do
