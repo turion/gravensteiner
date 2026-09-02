@@ -99,6 +99,91 @@ jobs:
           version: 1.6.0.4
       - run: ./cabal_check.sh
 
+  check-flake:
+    name: Check flake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.1
+      # Never widen this to check every declared system: nixpkgs 26.11 dropped x86_64-darwin,
+      # and once that system is gone from `systems`, aarch64-darwin cannot be built from this
+      # x86_64-linux runner either. No flag combination fixes either failure.
+      - run: nix flake check
+      - name: Check that .nix files are formatted
+        run: |
+          nix fmt
+          git diff --exit-code
+
+  build-flake:
+    name: Nix build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # So a failure on one OS still warms the other's cache.
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.1
+      - uses: cachix/cachix-action@v17
+        with:
+          name: gravensteiner
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - run: nix build .#default
+      - run: nix develop -c cabal test all -fdev
+
+  todo-backlog:
+    name: Validate the todo/ backlog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.1
+      - name: Validate frontmatter and the generated index
+        run: nix develop -c todo/check.sh
+      - name: Check links and orphans (see AGENTS.md for the one-liner this mirrors)
+        run: |
+          cat > "$RUNNER_TEMP/todo-links.sh" <<'SCRIPT'
+          set -euo pipefail
+          cd todo
+          # grep exits 1 for "no matches" (not an error here) and >1 for a real
+          # failure; disable errexit just for this call so we can tell them apart.
+          set +e
+          extracted=$(grep -ohP '(?<=\]\()[a-z0-9./-]+\.md(?=\))' *.md)
+          rc=$?
+          set -e
+          if [ "$rc" -gt 1 ]; then
+            echo "todo-backlog: link extraction failed (grep exit $rc)" >&2
+            exit "$rc"
+          fi
+          missing=""
+          if [ -n "$extracted" ]; then
+            missing=$(printf '%s\n' "$extracted" | sort -u \
+              | while read -r f; do [ -f "$f" ] || echo "MISSING: $f"; done)
+          fi
+          if [ -n "$missing" ]; then
+            printf '%s\n' "$missing"
+            echo "todo-backlog: dangling link(s) found" >&2
+            exit 1
+          fi
+          status=0
+          for f in *.md; do
+            [ "$f" = README.md ] && continue
+            if ! grep -q "($f)" README.md; then
+              if [ "$f" = SCHEMA.md ]; then
+                # SCHEMA.md is not an item, so it is never linked from README.md. Expected.
+                echo "ORPHAN: SCHEMA.md (expected, not a failure)"
+              else
+                echo "ORPHAN: $f"
+                status=1
+              fi
+            fi
+          done
+          if [ "$status" -ne 0 ]; then
+            echo "todo-backlog: unexpected orphan(s) found" >&2
+          fi
+          exit "$status"
+          SCRIPT
+          bash "$RUNNER_TEMP/todo-links.sh"
+
   success:
     name: Successfully build and test on all systems
     # Every job defined above must be listed here. A bare `needs:` list is not
@@ -114,6 +199,9 @@ jobs:
       - generateMatrix
       - build-cabal
       - check-cabal-file
+      - check-flake
+      - build-flake
+      - todo-backlog
     if: always()
     runs-on: ubuntu-latest
     steps:
