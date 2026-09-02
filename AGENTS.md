@@ -128,3 +128,42 @@ since breaking them costs more than it saves:
         | while read f; do [ -f "$f" ] || echo "MISSING: $f"; done
       for f in *.md; do [ "$f" = README.md ] && continue
         rg -q "\($f\)" README.md || echo "ORPHAN: $f"; done
+
+# Continuous integration
+
+`.github/workflows/ci.yml` runs on every push and pull request;
+`.github/workflows/update-flake-lock.yml` runs weekly (and on `workflow_dispatch`) to open a pull
+request bumping `flake.lock`; `.github/dependabot.yml` opens pull requests for stale GitHub
+Actions daily.
+
+- **What the two `ci.yml` halves check.** The cabal half (`build-cabal`, over the GHC matrix
+  `generateMatrix` derives from the cabal file's `tested-with`) verifies the version range the
+  cabal files advertise against compilers other than the ambient one. The nix half
+  (`check-flake`, `build-flake`) verifies the flake, including the `nix develop` shell that
+  haskell-flake builds from every dependency's nixpkgs derivation, test suite included. Read the
+  direction carefully: when *this repo* adds a `build-depends` entry, the failure mode documented
+  above (a dependency's own test suite failing under haskell-flake, e.g. `sandwich` or `optics`)
+  is caught **locally first**, by the house build gate `nix develop -c cabal build -v0
+  --enable-tests all`, on the very revision that adds the entry — CI cannot beat that. What CI
+  adds is the other direction: `update-flake-lock.yml`'s weekly pull request, where nixpkgs moves
+  underneath an *unchanged* dependency list. Nobody runs `nix flake update` by hand on a schedule,
+  so that failure has no local gate at all; `build-flake` running on that pull request is the only
+  thing that catches it.
+- **How to see a run.** After `jj git push`, `gh run list -L 1` (or `gh run watch`) shows the push-
+  triggered `ci.yml` run. The two bot pull request streams — Dependabot daily, `update-flake-lock`
+  weekly — announce themselves to nobody: the maintainer is their nominal author, so GitHub sends
+  him no notification, and they produce no terminal output at all. Find them with `gh pr list`,
+  then check a given one with `gh pr checks <n>`.
+- **The poisoned-eval-cache symptom.** Concurrent `nix` invocations on this machine can leave a
+  partial row in the eval cache. The symptom looks exactly like a broken flake: `nix develop`
+  starts failing with `expected flake output attribute 'devShells.x86_64-linux.default' to be a
+  derivation or path but found a set`. The fix is `rm -rf ~/.cache/nix/eval-cache-v5`, confirmed
+  by `nix develop --no-eval-cache -c true` succeeding — it is a workaround, not a repair, so it can
+  recur. Run `nix` commands one at a time to avoid triggering it.
+- **The `dev` flag.** `-Wall` is always on in both packages; `-Werror` sits behind `flag dev`
+  (`default: False`), and `ci.yml` passes `-fdev` on its cabal build and test steps. The local
+  gates deliberately do **not** pass `-fdev`, so a newer GHC's new warning class cannot turn a
+  working copy red. `gravensteiner`'s executable stanza carries three matching downgrades inside
+  its own `if flag(dev)` block — `-Wno-error=type-defaults`, `-Wno-error=unused-matches`,
+  `-Wno-error=unused-imports` — because `app/Main.hs` is the superseded precursor documented above
+  and is not being fixed; all three go when that file does.
