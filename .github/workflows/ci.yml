@@ -1,0 +1,122 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '23 14 * * 2'
+  workflow_dispatch:
+name: build
+jobs:
+  lint:
+    name: "Run hlint"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7.0.1
+    - name: Set up HLint
+      uses: haskell-actions/hlint-setup@v2.4.10
+      with:
+        version: "3.10"
+    - name: Run HLint
+      uses: haskell-actions/hlint-run@v2
+      with:
+        fail-on: warning
+
+  fourmolu:
+    name: "Run fourmolu"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7.0.1
+    - uses: haskell-actions/run-fourmolu@v13
+      with:
+        version: "0.19.0.1"
+
+  generateMatrix:
+    name: "Generate matrix from cabal"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: kleidukos/get-tested@v0.1.9.1
+        id: set-matrix
+        with:
+          cabal-file: "gravensteiner/gravensteiner.cabal"
+          ubuntu: true
+          version: 0.1.6.0
+
+  build-cabal:
+    runs-on: ubuntu-latest
+    needs: generateMatrix
+    strategy:
+      matrix: ${{ fromJSON(needs.generateMatrix.outputs.matrix) }}
+    name: Haskell GHC ${{ matrix.ghc }} cabal
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: haskell-actions/setup@v2.11.0
+        id: setup
+        with:
+          ghc-version: ${{ matrix.ghc }}
+      - name: Configure the build
+        run: |
+          cabal configure --enable-tests --disable-documentation
+          cabal build all --dry-run
+        # The last step generates dist-newstyle/cache/plan.json for the cache key.
+      - name: Restore cached dependencies
+        uses: actions/cache/restore@v6.1.0
+        id: cache
+        env:
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ env.key }}-plan-${{ hashFiles('**/plan.json') }}
+          restore-keys: ${{ env.key }}-
+      - name: Install dependencies
+        # If we had an exact cache hit, the dependencies will be up to date.
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cabal build all --enable-tests --only-dependencies
+      # Cache dependencies already here, so that we do not have to rebuild them should the subsequent steps fail.
+      - name: Save cached dependencies
+        uses: actions/cache/save@v6.1.0
+        # If we had an exact cache hit, trying to save the cache would error because of key clash.
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Cabal build packages
+        run: cabal build all --enable-tests -fdev
+      - name: Cabal test
+        run: cabal test all --enable-tests -fdev --test-show-details=Always
+
+  check-cabal-file:
+    name: Check cabal file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: haskell-actions/setup@v2.11.0
+      - uses: tfausak/cabal-gild-setup-action@v2
+        with:
+          version: 1.6.0.4
+      - run: ./cabal_check.sh
+
+  success:
+    name: Successfully build and test on all systems
+    # Every job defined above must be listed here. A bare `needs:` list is not
+    # enough to make this a real required check: GitHub skips a job whose
+    # dependency failed, and branch protection treats `skipped` as passing.
+    # `if: always()` plus the explicit result check below is what keeps a
+    # failed or skipped dependency from turning this job green. Do not change
+    # `always()` to `!cancelled()` — a cancelled dependency would then skip
+    # this job, and a skipped required check reports Success.
+    needs:
+      - lint
+      - fourmolu
+      - generateMatrix
+      - build-cabal
+      - check-cabal-file
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any dependency did not succeed
+        run: |
+          echo '${{ toJSON(needs) }}' | jq -e 'all(.[]; .result == "success")'
