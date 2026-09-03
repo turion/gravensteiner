@@ -40,6 +40,18 @@
 
         # `nix fmt` target; `rhine` and `changeset` both use nixpkgs-fmt.
         formatter = pkgs.nixpkgs-fmt;
+
+        # Lint the workflow files as part of `nix flake check`, so a bad `uses:`,
+        # an invalid expression or a `needs:` naming a job that does not exist
+        # fails locally instead of on the run it breaks. nixpkgs' actionlint
+        # propagates shellcheck and pyflakes, so `run:` scripts are linted too.
+        # The files are passed explicitly: actionlint applies the workflow schema
+        # to named files even though the store path is not `.github/workflows`.
+        checks.actionlint =
+          pkgs.runCommand "actionlint" { nativeBuildInputs = [ pkgs.actionlint ]; } ''
+            actionlint -no-color ${./.github/workflows}/*.yml
+            touch "$out"
+          '';
       };
     };
 }
