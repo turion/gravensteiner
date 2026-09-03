@@ -14,6 +14,10 @@
 
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
+      # Never re-add x86_64-darwin: nixpkgs 26.11 dropped it, and once that system is
+      # gone from `systems`, aarch64-darwin cannot be built from an x86_64-linux runner
+      # either. No flag combination fixes either failure. `.github/workflows/ci.yml`'s
+      # `check-flake` job therefore checks only the runner's own system.
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
       imports = [ inputs.haskell-flake.flakeModule ];
 

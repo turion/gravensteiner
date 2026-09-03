@@ -112,9 +112,8 @@ jobs:
         with:
           name: gravensteiner
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      # Never widen this to check every declared system: nixpkgs 26.11 dropped x86_64-darwin,
-      # and once that system is gone from `systems`, aarch64-darwin cannot be built from this
-      # x86_64-linux runner either. No flag combination fixes either failure.
+      # Checks only the runner's own system, deliberately — see the comment on `systems`
+      # in flake.nix for why the darwin systems cannot be checked from here.
       - run: nix flake check --accept-flake-config
       - name: Check that .nix files are formatted
         run: |
