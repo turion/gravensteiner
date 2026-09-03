@@ -23,7 +23,8 @@
 - `jj agent-log` already embeds `-n10`, so passing another `-n`/`--limit` fails with
   `the argument '--limit <LIMIT>' cannot be used multiple times`. Call it bare.
 - `cabal build all` does **not** build test suites; use `cabal build -v0 --enable-tests all`
-  (or `cabal test -v0 all`) when a change can break test modules.
+  (or `cabal test -v0 all`) when a change can break test modules — see "The `dev` flag" below
+  for the full house gate commands, which also carry `-fdev`.
 - **Adding a `build-depends` entry can break `nix develop` itself**, because haskell-flake builds
   every dependency from nixpkgs including its test suite, and several fail on ghc912. The symptom is
   `error: builder for '/nix/store/...-<pkg>.drv' failed` followed by `N out of M tests failed`, and
@@ -141,8 +142,8 @@ Actions daily.
   haskell-flake builds from every dependency's nixpkgs derivation, test suite included. Read the
   direction carefully: when *this repo* adds a `build-depends` entry, the failure mode documented
   above (a dependency's own test suite failing under haskell-flake, e.g. `sandwich` or `optics`)
-  is caught **locally first**, by the house build gate `nix develop -c cabal build -v0
-  --enable-tests all`, on the very revision that adds the entry — CI cannot beat that. What CI
+  is caught **locally first**, by the house build gate (see "The `dev` flag" below for the
+  exact command), on the very revision that adds the entry — CI cannot beat that. What CI
   adds is the other direction: `update-flake-lock.yml`'s weekly pull request, where nixpkgs moves
   underneath an *unchanged* dependency list. Nobody runs `nix flake update` by hand on a schedule,
   so that failure has no local gate at all; `build-flake` running on that pull request is the only
@@ -171,10 +172,18 @@ Actions daily.
   derivation or path but found a set`. The fix is `rm -rf ~/.cache/nix/eval-cache-v5`, confirmed
   by `nix develop --no-eval-cache -c true` succeeding — it is a workaround, not a repair, so it can
   recur. Run `nix` commands one at a time to avoid triggering it.
-- **The `dev` flag.** `-Wall` is always on in both packages; `-Werror` sits behind `flag dev`
-  (`default: False`), and `ci.yml` passes `-fdev` on its cabal build and test steps. The local
-  gates deliberately do **not** pass `-fdev`, so a newer GHC's new warning class cannot turn a
-  working copy red. `gravensteiner`'s executable stanza carries three matching downgrades inside
-  its own `if flag(dev)` block — `-Wno-error=type-defaults`, `-Wno-error=unused-matches`,
+- **The `dev` flag.** `-Wall` is always on in both packages; `-Werror` sits behind `flag dev`,
+  **off by default** — that is why `cabal check` passes clean and why either package could go to
+  Hackage without a portability objection. CI passes `-fdev` on its cabal build and test steps, and
+  so should every local build and test: the house gates are now
+
+      nix develop -c cabal build -v0 --enable-tests all -fdev
+      nix develop -c cabal test -v0 all -fdev
+
+  That is how "`-Werror` on every sealed revision" is actually enforced — a warning introduced
+  mid-arc fails the gate on the revision that introduces it, rather than surfacing later as a CI
+  failure on a pushed branch. `gravensteiner`'s executable stanza carries three matching downgrades
+  inside its own `if flag(dev)` block — `-Wno-error=type-defaults`, `-Wno-error=unused-matches`,
   `-Wno-error=unused-imports` — because `app/Main.hs` is the superseded precursor documented above
-  and is not being fixed; all three go when that file does.
+  and is not being fixed; without them, `-fdev` would fail on that file's own warnings. All three go
+  when that file does.
