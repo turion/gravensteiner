@@ -2,8 +2,8 @@
   description = "gravensteiner — Bayesian apple cultivar identification";
 
   inputs = {
-    nixpkgs.url       = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    flake-parts.url   = "github:hercules-ci/flake-parts";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     haskell-flake.url = "github:srid/haskell-flake";
   };
 

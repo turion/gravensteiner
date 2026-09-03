@@ -111,7 +111,7 @@ jobs:
       - run: nix flake check
       - name: Check that .nix files are formatted
         run: |
-          nix fmt
+          nix fmt .
           git diff --exit-code
 
   build-flake:
