@@ -52,6 +52,26 @@
             actionlint -no-color ${./.github/workflows}/*.yml
             touch "$out"
           '';
+
+        # ci.yml's `success` job is the one required check, and it can only fail for a job that
+        # its `needs:` list names. That list is hand-maintained, so a job added without touching
+        # it would be silently ungated — actionlint catches a *misspelt* dependency but not a
+        # missing one. Assert instead that every job except `success` itself is in the list.
+        checks.workflow-jobs-gated =
+          pkgs.runCommand "workflow-jobs-gated" { nativeBuildInputs = [ pkgs.yq-go ]; } ''
+            missing=$(yq '
+              (.jobs | keys | map(select(. != "success"))) as $all
+              | (.jobs.success.needs // []) as $needs
+              | ($all - $needs) | .[]
+            ' ${./.github/workflows/ci.yml})
+            if [ -n "$missing" ]; then
+              echo "ci.yml: these jobs are missing from success.needs, so a failure in them" >&2
+              echo "would not turn the required check red:" >&2
+              printf '  %s\n' $missing >&2
+              exit 1
+            fi
+            touch "$out"
+          '';
       };
     };
 }

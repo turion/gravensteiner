@@ -152,7 +152,9 @@ jobs:
 
   success:
     name: Successfully build and test on all systems
-    # Every job defined above must be listed here. A bare `needs:` list is not
+    # Every job defined above must be listed here; the flake's
+    # `checks.workflow-jobs-gated` asserts that, so adding a job without
+    # extending this list fails `nix flake check`. A bare `needs:` list is not
     # enough to make this a real required check: GitHub skips a job whose
     # dependency failed, and branch protection treats `skipped` as passing.
     # `if: always()` plus the explicit result check below is what keeps a
