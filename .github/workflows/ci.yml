@@ -12,9 +12,9 @@ jobs:
     name: "Run hlint"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7.0.1
+    - uses: actions/checkout@v7
     - name: Set up HLint
-      uses: haskell-actions/hlint-setup@v2.4.10
+      uses: haskell-actions/hlint-setup@v2
       with:
         version: "3.10"
     - name: Run HLint
@@ -26,7 +26,7 @@ jobs:
     name: "Run fourmolu"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7.0.1
+    - uses: actions/checkout@v7
     - uses: haskell-actions/run-fourmolu@v13
       with:
         version: "0.19.0.1"
@@ -37,6 +37,9 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     runs-on: ubuntu-latest
     steps:
+      # Every other action here is pinned to its major tag, so Dependabot's PRs are the
+      # interesting ones (a new major) rather than a stream of patch bumps. get-tested is
+      # the exception: it publishes no `v0` tag, so it has to be pinned exactly.
       - uses: kleidukos/get-tested@v0.1.9.1
         id: set-matrix
         with:
@@ -51,8 +54,8 @@ jobs:
       matrix: ${{ fromJSON(needs.generateMatrix.outputs.matrix) }}
     name: Haskell GHC ${{ matrix.ghc }} cabal
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: haskell-actions/setup@v2.11.0
+      - uses: actions/checkout@v7
+      - uses: haskell-actions/setup@v2
         id: setup
         with:
           ghc-version: ${{ matrix.ghc }}
@@ -62,7 +65,7 @@ jobs:
           cabal build all --dry-run
         # The last step generates dist-newstyle/cache/plan.json for the cache key.
       - name: Restore cached dependencies
-        uses: actions/cache/restore@v6.1.0
+        uses: actions/cache/restore@v6
         id: cache
         env:
           key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
@@ -76,7 +79,7 @@ jobs:
         run: cabal build all --enable-tests --only-dependencies
       # Cache dependencies already here, so that we do not have to rebuild them should the subsequent steps fail.
       - name: Save cached dependencies
-        uses: actions/cache/save@v6.1.0
+        uses: actions/cache/save@v6
         # If we had an exact cache hit, trying to save the cache would error because of key clash.
         if: steps.cache.outputs.cache-hit != 'true'
         with:
@@ -92,8 +95,8 @@ jobs:
     name: Check cabal file
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: haskell-actions/setup@v2.11.0
+      - uses: actions/checkout@v7
+      - uses: haskell-actions/setup@v2
       - uses: tfausak/cabal-gild-setup-action@v2
         with:
           version: 1.6.0.4
@@ -103,8 +106,8 @@ jobs:
     name: Check flake
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: cachix/install-nix-action@v31.11.1
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
       - uses: cachix/cachix-action@v17
         with:
           name: gravensteiner
@@ -126,8 +129,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: cachix/install-nix-action@v31.11.1
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
       - uses: cachix/cachix-action@v17
         with:
           name: gravensteiner
@@ -139,8 +142,8 @@ jobs:
     name: Validate the todo/ backlog
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: cachix/install-nix-action@v31.11.1
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
       - uses: cachix/cachix-action@v17
         with:
           name: gravensteiner
