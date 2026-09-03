@@ -105,13 +105,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: cachix/install-nix-action@v31.11.1
+      - uses: cachix/cachix-action@v17
+        with:
+          name: gravensteiner
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       # Never widen this to check every declared system: nixpkgs 26.11 dropped x86_64-darwin,
       # and once that system is gone from `systems`, aarch64-darwin cannot be built from this
       # x86_64-linux runner either. No flag combination fixes either failure.
-      - run: nix flake check
+      - run: nix flake check --accept-flake-config
       - name: Check that .nix files are formatted
         run: |
-          nix fmt .
+          nix fmt . --accept-flake-config
           git diff --exit-code
 
   build-flake:
@@ -128,8 +132,8 @@ jobs:
         with:
           name: gravensteiner
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-      - run: nix build .#default
-      - run: nix develop -c cabal test all -fdev
+      - run: nix build .#default --accept-flake-config
+      - run: nix develop --accept-flake-config -c cabal test all -fdev
 
   todo-backlog:
     name: Validate the todo/ backlog
@@ -137,8 +141,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: cachix/install-nix-action@v31.11.1
+      - uses: cachix/cachix-action@v17
+        with:
+          name: gravensteiner
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       - name: Validate frontmatter and the generated index
-        run: nix develop -c todo/check.sh
+        run: nix develop --accept-flake-config -c todo/check.sh
       - name: Check links and orphans (see AGENTS.md for the one-liner this mirrors)
         run: |
           cat > "$RUNNER_TEMP/todo-links.sh" <<'SCRIPT'

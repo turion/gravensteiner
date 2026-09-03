@@ -1,6 +1,11 @@
 {
   description = "gravensteiner — Bayesian apple cultivar identification";
 
+  nixConfig = {
+    extra-substituters = [ "https://gravensteiner.cachix.org" ];
+    extra-trusted-public-keys = [ "gravensteiner.cachix.org-1:0cE5neWb74eOFaogEv+aFtO5um4g3iivRaQmSj9ueeY=" ];
+  };
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
