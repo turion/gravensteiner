@@ -152,10 +152,15 @@ Actions daily.
   triggered `ci.yml` run. Neither bot pull request stream produces terminal output, and they do not
   notify alike: Dependabot's PRs are authored by `dependabot[bot]`, and the owner auto-watches
   repositories he created, so those **do** notify him. The weekly `update-flake-lock` PR is authored
-  by his own classic PAT instead, and GitHub's "your own updates" notifications are off by default —
-  so **that** stream is the silent one. `update-flake-lock`'s `pr-assignees`/`pr-reviewers` inputs
-  are a one-line way to make it surface, if he wants that; neither is set today. Find either stream
-  with `gh pr list`, then check a given one with `gh pr checks <n>`.
+  by his own token, `GH_TOKEN_FOR_UPDATES`, instead, and GitHub's "your own updates" notifications
+  are off by default — so **that** stream is the silent one. The token is a user credential rather
+  than the default `GITHUB_TOKEN`, so its checks still run — the default token would instead have
+  opened the PR with **no checks box at all** (an absent box, not a red X). `update-flake-lock`'s
+  `pr-assignees`/`pr-reviewers` inputs are a one-line way to make the silent-PR case surface, if he
+  wants that; neither is set today. The token is set to **no expiry**; were it ever swapped for an
+  expiring one, it is consumed only at the PR-creation step, so an expired token would fail the job
+  there and no PR would open at all, leaving `pr-assignees`/`pr-reviewers` nothing to assign. Find
+  either stream with `gh pr list`, then check a given one with `gh pr checks <n>`.
 - **`.nix` files have no local formatting gate.** `check-flake` runs `nix fmt . --accept-flake-config`
   (`nixpkgs-fmt`, the flake's `formatter` output) and fails on drift, but `jj fix` only covers `.hs`
   and `.cabal`, so a `flake.nix` edit — the next `check = false` line, say — only turns that required
