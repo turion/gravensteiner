@@ -122,12 +122,10 @@ since breaking them costs more than it saves:
   fail it now. It also fails if `todo/README.md`'s generated index has drifted (`--write-index`
   fixes it). It still never checks markdown links in prose bodies, only `needs`/`parent` slugs,
   nor `provenance`'s presence — nothing in the frontmatter marks which items need one. Also run
-  the old link-and-orphan one-liner by hand; its `ORPHAN: SCHEMA.md` is expected, not a real orphan:
-
-      cd todo && rg -o --no-filename '\]\(([a-z0-9./-]+\.md)\)' -r '$1' *.md | sort -u \
-        | while read f; do [ -f "$f" ] || echo "MISSING: $f"; done
-      for f in *.md; do [ "$f" = README.md ] && continue
-        rg -q "\($f\)" README.md || echo "ORPHAN: $f"; done
+  `todo/check-links.sh` by hand — it is the authoritative form of the link-and-orphan rule (CI's
+  `todo-backlog` job calls the same script) and it **asserts**, not just reports: it exits non-zero
+  on a dangling link or an unexpected orphan. Its `ORPHAN: SCHEMA.md` is expected, not a real
+  orphan.
 
 # Continuous integration
 
