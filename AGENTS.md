@@ -148,10 +148,23 @@ Actions daily.
   so that failure has no local gate at all; `build-flake` running on that pull request is the only
   thing that catches it.
 - **How to see a run.** After `jj git push`, `gh run list -L 1` (or `gh run watch`) shows the push-
-  triggered `ci.yml` run. The two bot pull request streams — Dependabot daily, `update-flake-lock`
-  weekly — announce themselves to nobody: the maintainer is their nominal author, so GitHub sends
-  him no notification, and they produce no terminal output at all. Find them with `gh pr list`,
-  then check a given one with `gh pr checks <n>`.
+  triggered `ci.yml` run. Neither bot pull request stream produces terminal output, and they do not
+  notify alike: Dependabot's PRs are authored by `dependabot[bot]`, and the owner auto-watches
+  repositories he created, so those **do** notify him. The weekly `update-flake-lock` PR is authored
+  by his own classic PAT instead, and GitHub's "your own updates" notifications are off by default —
+  so **that** stream is the silent one. `update-flake-lock`'s `pr-assignees`/`pr-reviewers` inputs
+  are a one-line way to make it surface, if he wants that; neither is set today. Find either stream
+  with `gh pr list`, then check a given one with `gh pr checks <n>`.
+- **`.nix` files have no local formatting gate.** `check-flake` runs `nix fmt . --accept-flake-config`
+  (`nixpkgs-fmt`, the flake's `formatter` output) and fails on drift, but `jj fix` only covers `.hs`
+  and `.cabal`, so a `flake.nix` edit — the next `check = false` line, say — only turns that required
+  check red once it has been pushed. There is no working `jj fix` route to close this today:
+  `nixpkgs-fmt` is not on `PATH`, neither in the ambient shell nor inside `nix develop`
+  (`command -v nixpkgs-fmt` fails both ways) — it is built only as the flake's `formatter` output,
+  not part of the devShell, so a `fix.tools.nixpkgs-fmt` entry naming it bare would just fail to find
+  the binary. Adding it to the devShell would fix that, but is a `flake.nix` change. Until then, run
+  **`nix fmt .`** by hand before pushing whenever a `flake.nix` edit might need it — the same command
+  CI runs, so a local pass means the check will pass too.
 - **The poisoned-eval-cache symptom.** Concurrent `nix` invocations on this machine can leave a
   partial row in the eval cache. The symptom looks exactly like a broken flake: `nix develop`
   starts failing with `expected flake output attribute 'devShells.x86_64-linux.default' to be a
