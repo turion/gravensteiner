@@ -8,6 +8,11 @@ two role guides — read the relevant one before starting that kind of work:
 | editing anything under `todo/` | [`todo/AGENTS.md`](todo/AGENTS.md) |
 | pushing, or touching CI, formatting or the flake | [`.github/AGENTS.md`](.github/AGENTS.md) |
 
+Each of those two directories also holds a one-line `CLAUDE.md` reading `@AGENTS.md`. **Do not
+delete them**: Claude Code auto-loads a nested `CLAUDE.md` when it reads a file in that directory,
+but does *not* auto-load a nested `AGENTS.md` — the shim is what makes the guide arrive on its own
+rather than only when someone follows the table above. Measured, not assumed.
+
 ## The house gates
 
 Every sealed revision must pass both of these, and the `-fdev` is not optional — it is what turns

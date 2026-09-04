@@ -41,8 +41,8 @@ fi
 
 # The files under todo/ that are not backlog items: they carry no frontmatter and are never linked
 # from README.md's generated index, so neither the orphan check below nor check.sh's frontmatter
-# validation applies to them. Keep this in step with the `README|SCHEMA|AGENTS` cases in check.sh.
-not_an_item="README.md SCHEMA.md AGENTS.md"
+# validation applies to them. Keep in step with the `README|SCHEMA|AGENTS|CLAUDE` cases in check.sh.
+not_an_item="README.md SCHEMA.md AGENTS.md CLAUDE.md"
 
 status=0
 for f in ./*.md; do

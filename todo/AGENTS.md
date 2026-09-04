@@ -73,8 +73,12 @@ since breaking them costs more than it saves:
   `todo/check-links.sh` by hand — it is the authoritative form of the link-and-orphan rule (CI's
   `todo-backlog` job calls the same script) and it **asserts**, not just reports: it exits non-zero
   on a dangling link or an unexpected orphan.
-- **Both scripts treat `README.md`, `SCHEMA.md` and this file as "not items"** and skip them: they
-  carry no frontmatter and are not linked from `README.md`'s generated index. Any *other* new
-  `.md` file added under `todo/` is therefore required to be a well-formed item — if you need
-  another non-item document here, add its basename to the `README|SCHEMA|AGENTS` cases in
-  `check.sh` (two of them) and to the `not_an_item` list in `check-links.sh`, in the same revision.
+- **Both scripts treat `README.md`, `SCHEMA.md`, this file and `CLAUDE.md` as "not items"** and
+  skip them: they carry no frontmatter and are not linked from `README.md`'s generated index. Any
+  *other* new `.md` file added under `todo/` is therefore required to be a well-formed item — if
+  you need another non-item document here, add its basename to the `README|SCHEMA|AGENTS|CLAUDE`
+  cases in `check.sh` (two of them) and to the `not_an_item` list in `check-links.sh`, in the same
+  revision.
+- **`todo/CLAUDE.md` is a one-line `@AGENTS.md` import, and must stay.** Claude Code auto-loads a
+  nested `CLAUDE.md` when it reads a file in that directory, but does *not* auto-load a nested
+  `AGENTS.md`; the shim is what makes this guide load by itself for anyone working in `todo/`.
