@@ -14,8 +14,8 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 
 ## Why it matters
 
-**Nest the phase inside `Colouration`.** `Fruit.colours` is `p Colouration`, so the colour fields are
-missing all together or present all together. A book that says "greenish-yellow" without
+**Nest the phase inside `Colouration`.** `Appearance.colours` was `p Colours`, so the colour fields
+were missing all together or present all together. A book that says "greenish-yellow" without
 mentioning blush is the common case, and under the parameterisation above the fields are
 genuinely independent observations. `Colouration p` with `groundColour :: p Interval` and so on is
 the shape; this is the

@@ -38,7 +38,7 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 > The upper end is still open, and ground colour is open at both ends: `logit 1` is reachable for
 > `Overcoloured 1` and for `Russeted 1` alike, and `groundColour :: p Interval` has no absent
 > constructor at all — nothing in the *type* keeps any of these off 0 or 1. What does is the
-> collection form's band-midpoint convention (no answer is ever exactly 0 or 1), which is a
+> collection form's rule that every recorded value lies strictly inside (0, 1), which is a
 > data-collection discipline, not a type guarantee. The round-trip tests added alongside the new
 > `test-suite` deliberately stay in the interior of each range and do not exercise this boundary.
 

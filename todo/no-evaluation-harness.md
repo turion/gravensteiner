@@ -33,7 +33,8 @@ is an evaluation: its 14 examples are all over `Gravensteiner.Model.Scale`'s tra
 them is the conjugate round-trip equality test or the finite-weights check this item asks for, nor
 anything against the seed corpus, which does not exist yet. Two check invariance under the length
 reference unit, eight are round trips that deliberately stay in the interior of each range, and four
-check the absent-coordinate case (`NoOvercolour`/`NotRusseted`).
+cover absent coordinates: two check the absent case (`NoOvercolour`/`NotRusseted`) and two check the
+complementary present-and-finite case (`Overcoloured`/`Russeted`).
 
 ## Three distinct things, and they need separate treatment
 

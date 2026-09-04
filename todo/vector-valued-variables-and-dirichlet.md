@@ -79,10 +79,11 @@ side: that item should be done with vectors in mind, or it will have to be done 
   `overcolourPattern`) no longer holds russet — russet stays its own field on `Appearance`, a
   texture rather than a colouration — so `Colouration` alone is not the *d* ≈ 6 carrier the
   appearance vector wants; the carrier that matches the network design is `Appearance` minus
-  `overcolourPattern` — `groundColour`, `overcolour`, `russet`, `weight`, `height` and `diameter` —
-  since `overcolourPattern` is categorical and sits outside the Gaussian block entirely, not
-  `Colouration` in isolation. Whatever record ends up as that carrier, the field names survive
-  into the graph, `Show` output stays readable, and this composes directly with the
+  `overcolourPattern` — `groundColour`, `overcolour`, `russet`, `weight`, `maxDiameter` and
+  `height` (relative to `maxDiameter`) — since `overcolourPattern` is categorical and sits
+  outside the Gaussian block entirely, not `Colouration` in isolation. Whatever record ends up as
+  that carrier, the field names survive into the graph, `Show` output stays readable, and this
+  composes directly with the
   [record-of-variables sugar](records-of-variables-and-partial-observation.md) (done — see
   `Control.Monad.Bayes.DelayedSampling.Record`), which wants a record-of-`Variable` layer anyway.
   Most attractive, least conventional.
