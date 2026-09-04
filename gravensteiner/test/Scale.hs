@@ -47,6 +47,17 @@ test = describe "Gravensteiner.Model.Scale" $ do
       shapeVal `shouldSatisfy` approx diffMilli
       shapeVal `shouldSatisfy` approx diffCenti
 
+  describe "default units" $ do
+    -- These pin the reference unit itself, unlike the round trips below: a round trip still
+    -- passes if 'logDiameter' and 'unLogDiameter' are both changed to the same wrong unit, because
+    -- the inverse absorbs the change. Comparing against 'log' of the bare magnitude, computed
+    -- independently of the transform's own unit choice, is what catches that drift.
+    it "logDiameter reads its argument in millimetres" $
+      logDiameter ((58 :: Double) *~ milli metre) `shouldSatisfy` approx (log 58)
+
+    it "logWeight reads its argument in grams" $
+      logWeight ((142 :: Double) *~ gram) `shouldSatisfy` approx (log 142)
+
   describe "round trips" $ do
     -- Interior values only: 0 is unreachable through 'NoOvercolour'/'NotRusseted' for the two
     -- coverage features, but 1 is not -- a fully blushed or fully russeted fruit gives
