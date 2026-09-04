@@ -40,7 +40,7 @@ jobs:
       # Every other action here is pinned to its major tag, so Dependabot's PRs are the
       # interesting ones (a new major) rather than a stream of patch bumps. get-tested is
       # the exception: it publishes no `v0` tag, so it has to be pinned exactly.
-      - uses: kleidukos/get-tested@v0.1.9.1
+      - uses: kleidukos/get-tested@v0.1.10.0
         id: set-matrix
         with:
           cabal-file: "gravensteiner/gravensteiner.cabal"
