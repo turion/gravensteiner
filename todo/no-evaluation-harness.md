@@ -27,8 +27,13 @@ only things that can arbitrate between the choices above. Building the harness a
 corpus is much cheaper than retrofitting it, because the held-out split has to be decided before the
 data is used rather than after.
 
-`gravensteiner.cabal` also still has **no `test-suite` stanza at all** — only an `executable` — so
-there is currently no place to put even a unit test, let alone an evaluation.
+`gravensteiner.cabal` now has a `test-suite gravensteiner-test` stanza (`gravensteiner/test/Spec.hs`,
+`gravensteiner/test/Scale.hs`), so there is somewhere to put a unit test. What it does not yet have
+is an evaluation: its 14 examples are all over `Gravensteiner.Model.Scale`'s transforms, and none of
+them is the conjugate round-trip equality test or the finite-weights check this item asks for, nor
+anything against the seed corpus, which does not exist yet. Two check invariance under the length
+reference unit, eight are round trips that deliberately stay in the interior of each range, and four
+check the absent-coordinate case (`NoOvercolour`/`NotRusseted`).
 
 ## Three distinct things, and they need separate treatment
 
@@ -88,8 +93,10 @@ harness to exist before the corpus is large, so that the re-check is a command r
 
 ## Done when
 
-- `gravensteiner` has a `test-suite`, containing at least the conjugate round-trip equality test and
-  a finite-weights check over the seed corpus.
+- `gravensteiner` has a `test-suite` — *(the stanza now exists; what survives of this clause is that
+  it still needs to contain the conjugate round-trip equality test and a finite-weights check over
+  the seed corpus, both still blocked on the corpus below)* — containing at least the conjugate
+  round-trip equality test and a finite-weights check over the seed corpus.
 - A held-out split is defined and recorded *before* the corpus is used for fitting, with reference
   trees reserved as ground truth.
 - Top-1 and top-*k* accuracy are reported on that split, and a reliability diagram is reported

@@ -61,7 +61,6 @@ exist yet in the workspace.
 
 | Item | Size | Packages |
 |---|---|---|
-| [The chosen appearance parameterisation](appearance-parameterisation.md) | M | gravensteiner |
 | [Only `Normal` is usable, and only the normal-normal conjugate pair delays](conjugate-pairs-beyond-normal.md) — The normal-inverse-gamma pair is milestone 1 (the spread half of conjugate elicitation); the beta-Bernoulli/beta-binomial, Dirichlet-categorical and gamma-Poisson/gamma-exponential pairs are milestone 6 only. [vector-valued variables](vector-valued-variables-and-dirichlet.md) and [discrete nodes](discrete-nodes-and-dirichlet-categorical.md) are prerequisites of the Dirichlet-categorical pair only, not of the item as a whole. | L | delayed-sampling |
 | [Cultivar descriptions are not fruit observations](cultivar-descriptions-are-not-observations.md) | L | gravensteiner |
 | [Closer study of the morphometrics paper](morphometrics-apple-paper.md) | S | gravensteiner |
@@ -72,7 +71,6 @@ exist yet in the workspace.
 | Item | Size | Packages |
 |---|---|---|
 | [An examination date distinct from the collection date](examination-date-distinct-from-collection.md) | M | gravensteiner |
-| [Nest the phase inside `Colours`](nest-phase-inside-colours.md) | M | gravensteiner |
 
 ## Milestone 3
 
@@ -130,6 +128,7 @@ exist yet in the workspace.
 
 | Item | Closed by |
 |---|---|
+| [The chosen appearance parameterisation](appearance-parameterisation.md) | c21c393 docs: add the fruit collection form |
 | [The planned features, and which of them delayed sampling can absorb](apple-features-and-their-conjugate-pairs.md) | f02577d todo: straighten the backlog into one coherent, sorted plan |
 | [The likelihood question, and the decision it reached](apple-model-reformulation-options.md) | f02577d todo: straighten the backlog into one coherent, sorted plan |
 | [The target model is a deep, crossed hierarchy — and that reorders this backlog](apple-model-target-hierarchy.md) | c774c60 todo: observation model v1 review, network design, and requirements |
@@ -142,6 +141,7 @@ exist yet in the workspace.
 | [Haskell Bayesian statistics library landscape](haskell-library-landscape.md) | 0677251 Related work research |
 | [Graph invariants are never checked](invariants-unchecked.md) | 8ded243 Fix the local defects found while porting delayed-sampling |
 | [Tier 1 of the v1 schema review — implemented, and given its own record](model-v1-review-tier-1.md) | 621076f Gravensteiner.Model: Tier 1 schema fixes |
+| [Nest the phase inside `Colours`](nest-phase-inside-colours.md) | 891d41d Model: replace Colours with a per-field phased Colouration |
 | [No way to build a record of variables, or to observe one partially](records-of-variables-and-partial-observation.md) | 7dc5d7f todo: clean up completed items and align priorities |
 | [References to a realized node are handled inconsistently, and `graft` rejects them](references-to-realized-nodes-are-inconsistent.md) | 7dc5d7f todo: clean up completed items and align priorities |
 | [Russet is a texture, not a colour — and the simplex premise goes with it](russet-is-not-a-colour.md) | c774c60 todo: observation model v1 review, network design, and requirements |

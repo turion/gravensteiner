@@ -52,7 +52,7 @@ transform is the same one that removes the constraint:
 
 ```
   x = ( logit groundColour          -- green .. yellow
-      , logit overcolour            -- fraction of NON-russeted skin
+      , logit overcolour            -- fraction of NON-russeted skin; only when overcoloured, see below
       , logit russet                -- only when russet > 0; see below
       , log weight
       , log maxDiameter
@@ -64,12 +64,18 @@ Being deliberate about this is a design decision in its own right: *features liv
 transformed scale where they are normal*, and every constrained quantity in the model gets there
 by log or logit. It is recorded once here rather than rediscovered per feature.
 
-Russet is **zero-inflated**, and the crucial property is that its indicator is *observed* — the
-observer records whether there is any russet at all. So the presence layer contributes a
-Bernoulli likelihood with a Beta prior per cultivar and adds **no latent variable**, and the
-logit-normal coordinate is simply absent (in the phase-parameter sense) when russet is zero.
-This is why the parameterisation kills
-[the fatal-zeros problem](apple-model-zero-colours-are-fatal.md) rather than relocating it.
+Russet and overcolour are both **zero-inflated**, and the crucial property for each is that its
+presence is *observed* — the observer records whether there is any russet at all, and separately
+whether there is any overcolour (blush) at all; `Overcolour` mirrors `Russet` exactly,
+`NoOvercolour | Overcoloured Interval`. So each presence layer contributes its own Bernoulli
+likelihood with a Beta prior per cultivar and adds **no latent variable**, and the corresponding
+logit-normal coordinate is simply absent (in the phase-parameter sense) when that feature is
+absent. This is why the parameterisation kills
+[the fatal-zeros problem](apple-model-zero-colours-are-fatal.md) rather than relocating it —
+though that diagnosis's own text, "no colour can be a structural zero", is now itself contradicted
+by `overcolour`'s presence layer; see
+[the chosen appearance parameterisation](appearance-parameterisation.md) for the decision that
+overrode it.
 
 Categorical features (`overcolourPattern`, and later shape class) are Dirichlet-categorical per
 cultivar and sit outside the Gaussian block entirely.
