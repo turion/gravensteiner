@@ -4,18 +4,17 @@ This is the form a pomologist reads with an apple in hand. It covers **one fruit
 eight questions in the order given — several later questions refer back to an earlier answer, and
 answering out of order leaves you guessing at a definition you have not read yet.
 
-Anchors below (named cultivars, percentage bands) are quoted from this arc's research notes on the
-descriptor standards (`research/descriptor-standards.md`), which are themselves quoted from UPOV
-TG/14/10 and the 2022 ECPGR Malus descriptors — see each question for the specific table. Where a
-state has no reference cultivar in that source, this form says so rather than supplying one: an
-invented anchor would poison a corpus that cannot be re-read cheaply.
+Anchors below (named cultivars, percentage bands) are quoted from UPOV TG/14/10 and the 2022 ECPGR
+Malus descriptors — see each question for the specific table. Where a state has no reference
+cultivar in that source, this form says so rather than supplying one: an invented anchor would
+poison a corpus that cannot be re-read cheaply.
 
 > **No answer on this form is ever exactly 0 or 1.** A feature that is genuinely absent (no
 > russet, no blush) is recorded by choosing "absent" — a separate answer, not the number 0 — and
-> the top band of a percentage scale is recorded at its midpoint, never at 1.0. This is not a
-> stylistic preference: the numbers feed a logit, and `logit(0)` and `logit(1)` are both infinite.
-> Writing 0 or 1 anywhere below does not mean "very little" or "all of it", it silently breaks the
-> record.
+> every other recorded value lies **strictly inside (0, 1)**, however close to 1 the judged
+> reading is. This is not a stylistic preference: the numbers feed a logit, and `logit(0)` and
+> `logit(1)` are both infinite. Writing 0 or 1 anywhere below does not mean "very little" or "all
+> of it", it silently breaks the record.
 
 ## 1. Is there any russet at all?
 
@@ -31,17 +30,17 @@ together.
 
 ## 2. If there is russet, how much?
 
-Judge the overall coverage — cheeks, eye basin and stalk cavity together, as one average — against
-these bands (ECPGR Table 20, "Overall russet coverage"), and record the band's **midpoint**, not a
-raw percentage:
+Judge the overall coverage — cheeks, eye basin and stalk cavity together, as one average — and
+record the number you judge, strictly inside (0, 1). Use these bands (ECPGR Table 20, "Overall
+russet coverage") as calibration anchors to judge against, not as a set of six permitted answers:
 
-| You see about... | ECPGR band | Records as | Anchor |
+| You see about... | ECPGR band | Anchor | Reference cultivar |
 |---|---|---|---|
 | 1-10 % | Very low | 0.055 | |
 | 11-25 % | Low | 0.18 | Cox's Orange Pippin |
 | around 50 % | Medium | 0.50 | Boskoop |
 | around 75 % | High | 0.75 | Zabergäu Renette |
-| over 90 % | Very high | 0.95 (never 1.0) | Egremont Russet, Canada Gris, Gris Braibant, Brownlee's Russet |
+| over 90 % | Very high | 0.95 | Egremont Russet, Canada Gris, Gris Braibant, Brownlee's Russet |
 
 ("Absent, 0 %" is Lobo's band — but that answer belongs to question 1, not here; a "no" at
 question 1 already recorded it.)
@@ -57,17 +56,17 @@ that this corpus feeds. Asking for the fraction of non-russeted skin instead kee
 readings independent, so the constraint that keeps the model tractable is answered here, in the
 question's wording, rather than left for someone downstream to fix.
 
-Judge against the same percentage bands as question 2 (ECPGR Table 17, "Over colour coverage"),
-recording the midpoint:
+Judge against the same calibration anchors as question 2 (ECPGR Table 17, "Over colour coverage"),
+and record the number you judge, strictly inside (0, 1):
 
-| You see about... | ECPGR band | Records as | Anchor |
+| You see about... | ECPGR band | Anchor | Reference cultivar |
 |---|---|---|---|
 | (none) | Absent, 0 % | *absent* (see below) | Granny Smith |
 | 1-10 % | Very low | 0.055 | |
 | 11-25 % | Low | 0.18 | Cox's Orange Pippin |
 | around 50 % | Medium | 0.50 | |
 | around 75 % | High | 0.75 | Spartan |
-| over 90 % | Very high | 0.95 (never 1.0) | |
+| over 90 % | Very high | 0.95 | |
 
 If there is no blush at all, record **absent** as its own answer (mirroring question 1), not 0 %.
 If question 4 does not apply (see below), the reason is that this question was answered "absent".
@@ -110,9 +109,9 @@ cannot pick out the base skin until you know which parts of the skin are exclude
 blushed.
 
 Judge where the base skin sits on the green-to-yellow axis, against ECPGR Table 16's six ordered
-states, and record the band's **midpoint** — never 0 or 1:
+states as calibration anchors, and record the number you judge, strictly inside (0, 1):
 
-| Axis band | ECPGR state | Records as | Anchor |
+| Axis band | ECPGR state | Anchor | Reference cultivar |
 |---|---|---|---|
 | 1 | Green | 0.08 | Granny Smith |
 | 2 | Whitish green | 0.25 | |
@@ -121,17 +120,22 @@ states, and record the band's **midpoint** — never 0 or 1:
 | 5 | Yellow | 0.75 | Golden Delicious |
 | 6 | (Yellow) - Orange | **0.92** | |
 
+This table is duplicated in `Gravensteiner.Model`'s `groundColour` haddock, because a Haddock
+comment cannot render a markdown table — if you change one copy, change the other to match.
+
 The state names and cultivar anchors in this table are **ECPGR Table 16's**; the six [0,1] numbers
-are **this project's own convention** of equal bands recorded at their midpoints — ECPGR publishes
-no numbers for them, only the six ordered states. Note the axis above runs green-to-yellow, the
-**reverse** of ECPGR's own numbering (Table 16 numbers Yellow 1 and Green 5) — never cite an ECPGR
-state number against one of the axis-band numbers in the left column.
+are **this project's own convention** of equal bands, positioned at their midpoints — ECPGR
+publishes no numbers for them, only the six ordered states. These are calibration anchors, not a
+set of permitted answers: record the number you actually judge, not the nearest anchor. Note the
+axis above runs green-to-yellow, the **reverse** of ECPGR's own numbering (Table 16 numbers Yellow
+1 and Green 5) — never cite an ECPGR state number against one of the axis-band numbers in the left
+column.
 
 Two cases where the base skin is not a straightforward green-yellow judgement:
 
-- **An orange base skin** ("(Yellow) - Orange" in ECPGR) is still on this axis, past the yellow
-  end rather than off it in some other direction — record it as **band 6, 0.92**, the number, not
-  the phrase "at the yellow end".
+- **An orange base skin** ("(Yellow) - Orange" in ECPGR) is **band 6, anchored at 0.92 — past
+  yellow on the same axis, not off it in some other direction**. Record the number you judge near
+  the top of the axis, not the phrase "at the yellow end".
 - **A fruit blushed so completely that the base skin cannot be seen at all** (what UPOV calls
   ground colour "not visible") is not a value on this axis. Record ground colour as **not
   observed** for this fruit. Writing 1.0 because "it looked very yellow where visible" is exactly

@@ -106,36 +106,40 @@ data Colouration p = Colouration
   blushed (see @todo\/russet-is-not-a-colour.md@). __Never exactly 0 or 1__: unlike 'overcolour' and
   'russet', ground colour is a /position/ rather than a coverage, so it has no absent constructor to
   protect it, 'Interval' is an unguarded @newtype@ over 'Double', and @logit 0@\/@logit 1@ are both
-  infinite. Record against six equal bands at their midpoints:
+  infinite. Judge against six calibration anchors and record the number actually judged, strictly
+  between 0 and 1 — the six numbers below are anchor positions along the axis, not a set of
+  permitted answers. (This table is duplicated in @docs\/collection-form.md@'s question 5, because
+  a Haddock comment cannot render a markdown table; if this table changes, change that copy too.)
 
-  +------+--------------------+---------+-----------------------+
-  | Axis | ECPGR state        | Records | Anchor                |
-  | band |                    | as      |                        |
-  +======+====================+=========+========================+
-  | 1    | Green              | 0.08    | Granny Smith           |
-  +------+--------------------+---------+-----------------------+
-  | 2    | Whitish green      | 0.25    |                        |
-  +------+--------------------+---------+-----------------------+
-  | 3    | Green yellow       | 0.42    | Cox's Orange Pippin    |
-  +------+--------------------+---------+-----------------------+
-  | 4    | Whitish yellow     | 0.58    |                        |
-  +------+--------------------+---------+-----------------------+
-  | 5    | Yellow             | 0.75    | Golden Delicious       |
-  +------+--------------------+---------+-----------------------+
-  | 6    | (Yellow) - Orange  | 0.92    |                        |
-  +------+--------------------+---------+-----------------------+
+  +------+-------------------+--------+---------------------+
+  | Axis | ECPGR state       | Anchor | Reference           |
+  | band |                   |        | cultivar            |
+  +======+===================+========+=====================+
+  | 1    | Green             | 0.08   | Granny Smith        |
+  +------+-------------------+--------+---------------------+
+  | 2    | Whitish green     | 0.25   |                     |
+  +------+-------------------+--------+---------------------+
+  | 3    | Green yellow      | 0.42   | Cox's Orange Pippin |
+  +------+-------------------+--------+---------------------+
+  | 4    | Whitish yellow    | 0.58   |                     |
+  +------+-------------------+--------+---------------------+
+  | 5    | Yellow            | 0.75   | Golden Delicious    |
+  +------+-------------------+--------+---------------------+
+  | 6    | (Yellow) - Orange | 0.92   |                     |
+  +------+-------------------+--------+---------------------+
 
-  So Granny Smith reads 0.08 and Golden Delicious 0.75, /not/ 0 and 1. The state names and
-  cultivars above are __ECPGR Table 16's__; the [0,1] values are __this project's own convention__
-  of six equal bands recorded at their midpoints, and ECPGR publishes no numbers for them. The axis
-  banding runs green-to-yellow, the /reverse/ of ECPGR's own state numbering (Table 16 numbers
-  Yellow 1 and Green 5) — an ECPGR state number must never be cited against an axis band.
+  Granny Smith's anchor sits at 0.08 and Golden Delicious's at 0.75, but the recorded value need
+  not match either exactly. The state names and cultivars above are __ECPGR Table 16's__; the
+  [0,1] values are __this project's own convention__ of six equal calibration anchors, positioned
+  at their midpoints, and ECPGR publishes no numbers for them. The axis banding runs
+  green-to-yellow, the /reverse/ of ECPGR's own state numbering (Table 16 numbers Yellow 1 and
+  Green 5) — an ECPGR state number must never be cited against an axis band.
 
   Two boundary cases, both settled by the maintainer: a ground colour ECPGR calls
-  "(Yellow) - Orange" is __band 6, 0.92 — past yellow on the same axis, not off it__, which keeps
-  the axis monotone in ripeness since it tracks chlorophyll degrading to reveal carotenoids. A
-  fruit whose ground colour UPOV would call __"not visible"__ (fully blushed) is /not observed/, not
-  a value on the axis.
+  "(Yellow) - Orange" is __band 6, anchored at 0.92 — past yellow on the same axis, not off it__,
+  which keeps the axis monotone in ripeness since it tracks chlorophyll degrading to reveal
+  carotenoids. A fruit whose ground colour UPOV would call __"not visible"__ (fully blushed) is
+  /not observed/, not a value on the axis.
   -}
   , overcolour :: p Overcolour
   {- ^ Extent as a fraction of __non-russeted__ skin, not of the whole fruit: the whole-apple
