@@ -69,3 +69,18 @@ executable gravensteiner
       -Wno-error=type-defaults
       -Wno-error=unused-matches
       -Wno-error=unused-imports
+
+test-suite gravensteiner-test
+  import: warnings
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+    Scale
+
+  hs-source-dirs: test
+  build-depends:
+    HUnit,
+    gravensteiner,
+    hspec,
+
+  default-language: GHC2021
