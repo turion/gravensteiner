@@ -56,22 +56,121 @@ newtype Interval = Interval {getInterval :: Double}
   deriving stock (Show, Eq, Ord)
   deriving newtype (Num, Fractional, Floating)
 
-data Colours = Colours
-  { yellow :: Interval
-  , red :: Interval
-  , green :: Interval
+{- | Whether a fruit shows any over colour (blush/flush) at all, mirroring 'Russet': the extent is a
+fraction of __non-russeted__ skin (see 'overcolour' on 'Colouration'), and ECPGR's over colour
+coverage scale makes "Absent, 0 %" its own state with three reference cultivars (Granny Smith,
+Treboux, Kaja) rather than a limiting case of a coverage that happens to be zero. Kept as a
+constructor rather than a zero for the same reason as 'Russet': @logit 0@ is @-Infinity@.
+-}
+data Overcolour = NoOvercolour | Overcoloured Interval
+  deriving stock (Show, Eq)
+
+{- | The union of UPOV char. 33 and ECPGR Table 19's over-colour pattern states (eight in total,
+after merging the two standards' overlapping vocabulary). Deliberately a plain enum: a simplex over
+these states would need Dirichlet-categorical, which is milestone 6, and 'version' is what carries a
+later migration to one.
+-}
+data OvercolourPattern
+  = {- | UPOV and ECPGR both. Reference cultivars: Richard Delicious (ECPGR); Bay 3484, Red
+    Jonaprince, Telamon (UPOV).
+    -}
+    OnlySolidFlush
+  | {- | UPOV and ECPGR both. Reference cultivars: __Gravensteiner__ (ECPGR); Charlotte, Cripps
+    Pink (UPOV, among others).
+    -}
+    SolidFlushWithStripes
+  | -- | UPOV and ECPGR both. Reference cultivar: Dülmener Rosenapfel.
+    OnlyStripes
+  | -- | UPOV only: mottling over a stated flush. Reference cultivars: Dalinbel, Scifresh.
+    FlushedAndMottled
+  | -- | UPOV only. Reference cultivars: Elstar, Pinova, Topaz (among others).
+    FlushedStripedAndMottled
+  | -- | UPOV only. Reference cultivar: Karneval.
+    Marbled
+  | {- | ECPGR only: mottling with no stated flush, distinct from 'FlushedAndMottled'. No reference
+    cultivar given.
+    -}
+    Mottled
+  | -- | ECPGR only. No reference cultivar given.
+    WashedOut
+  deriving stock (Show, Eq)
+
+{- | The three colour-related fields of 'Appearance', phase-parameterised /per field/ rather than as
+a whole: a source that states ground colour without mentioning blush is recordable as exactly that,
+which a single @p Colouration@ could not express. Questions producing these numbers are defined in
+@docs\/collection-form.md@.
+-}
+data Colouration p = Colouration
+  { groundColour :: p Interval
+  {- ^ 0 = green to 1 = yellow, read off the __base skin__: the skin that is neither russeted nor
+  blushed (see @todo\/russet-is-not-a-colour.md@). __Never exactly 0 or 1__: unlike 'overcolour' and
+  'russet', ground colour is a /position/ rather than a coverage, so it has no absent constructor to
+  protect it, 'Interval' is an unguarded @newtype@ over 'Double', and @logit 0@\/@logit 1@ are both
+  infinite. Record against six equal bands at their midpoints:
+
+  +------+--------------------+---------+-----------------------+
+  | Axis | ECPGR state        | Records | Anchor                |
+  | band |                    | as      |                        |
+  +======+====================+=========+========================+
+  | 1    | Green              | 0.08    | Granny Smith           |
+  +------+--------------------+---------+-----------------------+
+  | 2    | Whitish green      | 0.25    |                        |
+  +------+--------------------+---------+-----------------------+
+  | 3    | Green yellow       | 0.42    | Cox's Orange Pippin    |
+  +------+--------------------+---------+-----------------------+
+  | 4    | Whitish yellow     | 0.58    |                        |
+  +------+--------------------+---------+-----------------------+
+  | 5    | Yellow             | 0.75    | Golden Delicious       |
+  +------+--------------------+---------+-----------------------+
+  | 6    | (Yellow) - Orange  | 0.92    |                        |
+  +------+--------------------+---------+-----------------------+
+
+  So Granny Smith reads 0.08 and Golden Delicious 0.75, /not/ 0 and 1. The state names and
+  cultivars above are __ECPGR Table 16's__; the [0,1] values are __this project's own convention__
+  of six equal bands recorded at their midpoints, and ECPGR publishes no numbers for them. The axis
+  banding runs green-to-yellow, the /reverse/ of ECPGR's own state numbering (Table 16 numbers
+  Yellow 1 and Green 5) — an ECPGR state number must never be cited against an axis band.
+
+  Two boundary cases, both settled by the maintainer: a ground colour ECPGR calls
+  "(Yellow) - Orange" is __band 6, 0.92 — past yellow on the same axis, not off it__, which keeps
+  the axis monotone in ripeness since it tracks chlorophyll degrading to reveal carotenoids. A
+  fruit whose ground colour UPOV would call __"not visible"__ (fully blushed) is /not observed/, not
+  a value on the axis.
+  -}
+  , overcolour :: p Overcolour
+  {- ^ Extent as a fraction of __non-russeted__ skin, not of the whole fruit: the whole-apple
+  reading makes visible red approximately @blush * (1 - russet)@, bilinear in two latents, which
+  breaks conjugacy.
+  -}
+  , overcolourPattern :: p OvercolourPattern
+  {- ^ Deliberately not nested inside 'Overcoloured': pairing the extent with the pattern would stop
+  a source stating one without the other, which is what the per-field phase parameter is for.
+  -}
   }
-  deriving (Show, Eq)
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB, ApplicativeB, ConstraintsB)
+
+{- | How much of the fruit's surface is russeted, i.e. covered in a dull brown rough finish (UPOV
+*Ad. 35*). ECPGR Table 20 makes "Absent, 0 %" its own state (Lobo), while UPOV folds absent into
+"absent or small" and so does not distinguish it; kept as a constructor for the same reason as
+'Overcolour', to keep a zero away from 'logit'. The extent, when present, is overall coverage --
+ECPGR's Priority-1 aggregate over cheeks, eye basin and stalk cavity, not UPOV's three per-zone
+characteristics.
+-}
+data Russet = NotRusseted | Russeted Interval
+  deriving stock (Show, Eq)
 
 -- | Measurable large-scale shape of a fruit.
 data Shape p = Shape
   { height :: p (Length Double)
   {- ^ Taken at the tallest point of the flesh, not the polar axis through the stalk cavity and calyx basin, per UPOV TG/14
   characteristic 23. Units come from "Numeric.Units.Dimensional.SIUnits" via the re-exporting prelude, e.g. @58 *~ milli metre@.
+  The reference unit for the log scale this feeds is the __millimetre__.
   -}
   , diameter :: p (Length Double)
   {- ^ Taken at the widest point, the fruit's equator (UPOV TG/14 characteristic 24); "maximum" here
-  names the caliper site, not a maximum over repeated measurements. E.g. @71 *~ milli metre@.
+  names the caliper site, not a maximum over repeated measurements. E.g. @71 *~ milli metre@. The
+  reference unit for the log scale this feeds is the __millimetre__.
   -}
   }
   deriving stock (Generic)
@@ -91,11 +190,14 @@ heightDiameterRatio s = (/) <$> s.height <*> s.diameter
 
 -- | Everything that can be directly observed about a fruit
 data Appearance p = Appearance
-  { colours :: p Colours
-  , russet :: p Interval
+  { colouration :: Colouration p
+  , russet :: p Russet
+  -- ^ Its own field rather than nested in 'Colouration': russet is a texture, not a colouration.
   , shape :: Shape p
   , weight :: p (Mass Double)
-  -- ^ The whole fruit, weighed on a kitchen scale. Example: @142 *~ gram@.
+  {- ^ The whole fruit, weighed on a kitchen scale. Example: @142 *~ gram@. The reference unit for
+  the log scale this feeds is the __gram__.
+  -}
   }
   deriving stock (Generic)
   deriving anyclass (FunctorB, TraversableB, ApplicativeB, ConstraintsB)
