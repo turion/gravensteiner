@@ -1,3 +1,5 @@
 dist-newstyle/
 /result
 /.claude/settings.local.json
+# `cabal configure` writes this; CI generates it in the build-cabal job.
+cabal.project.local

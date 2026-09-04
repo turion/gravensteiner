@@ -1,1 +1,4 @@
-- ignore: {}
+# `gravensteiner/app/Main.hs` is a superseded precursor slated for deletion
+# (see AGENTS.md and todo/apple-model-cleanups.md); it is excluded by path
+# rather than fixed.
+- arguments: [--ignore-glob=gravensteiner/app/Main.hs]

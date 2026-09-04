@@ -92,7 +92,7 @@ instance (Typeable a, Eq a, Show a, Num a) => Num (Value a) where
   (+) = plus
   Const a * val = scale a val
   val * Const a = scale a val
-  val1 * val2 = error $ ("Value.*: not an affine expression: " <> (show val1 ++ " * " ++ show val2))
+  val1 * val2 = error ("Value.*: not an affine expression: " <> (show val1 ++ " * " ++ show val2))
   fromInteger = Const . fromInteger
   negate = scale (-1)
   abs = onConst "abs" abs
@@ -101,12 +101,12 @@ instance (Typeable a, Eq a, Show a, Num a) => Num (Value a) where
 instance (Typeable a, Eq a, Show a, Fractional a) => Fractional (Value a) where
   fromRational = Const . fromRational
   val / Const a = scale (recip a) val
-  val1 / val2 = error $ ("Value./: not an affine expression: " <> (show val1 ++ " / " ++ show val2))
+  val1 / val2 = error ("Value./: not an affine expression: " <> (show val1 ++ " / " ++ show val2))
 
 -- | Lift a function that is only defined on constants, naming itself in the error message.
 onConst :: (Show a) => String -> (a -> a) -> Value a -> Value a
 onConst _ f (Const a) = Const $ f a
-onConst name _ val = error $ ("Value." <> (name ++ ": only defined on constants, not on " ++ show val))
+onConst name _ val = error ("Value." <> (name ++ ": only defined on constants, not on " ++ show val))
 
 class Subst f where
   subst :: (Typeable a) => Variable a -> a -> f b -> f b
@@ -231,18 +231,19 @@ getParentsSome SomeNode {getSomeNode} = getParents getSomeNode
 deriving instance Show SomeNode
 
 instance Eq SomeNode where
-  SomeNode node1 == SomeNode node2 = maybe False (node1 ==) (cast node2)
+  SomeNode node1 == SomeNode node2 = Just node1 == cast node2
 
 castNode :: (Typeable a) => SomeNode -> Maybe (Node a)
 castNode (SomeNode node) = cast node
 
 data Graph = Graph
   { nodes :: IntMap SomeNode
-  , -- | Cache of each node's children, keyed by parent index. Reconciled on
-    -- every write to 'nodes' (see 'reconcileChildren' and 'rebuildChildren'),
-    -- never tracked ad hoc per call site — that is what correctly handles a
-    -- substitution silently dropping a parent edge (e.g. scaling by 0).
-    children :: IntMap IntSet
+  , children :: IntMap IntSet
+  {- ^ Cache of each node's children, keyed by parent index. Reconciled on
+  every write to 'nodes' (see 'reconcileChildren' and 'rebuildChildren'),
+  never tracked ad hoc per call site — that is what correctly handles a
+  substitution silently dropping a parent edge (e.g. scaling by 0).
+  -}
   , maxKey :: Int
   }
   deriving (Show, Eq)
@@ -263,7 +264,7 @@ reconcileChildren i oldParents newParents cs = foldr add (foldr remove cs remove
     newIdx = nub $ fmap someVariableIndex newParents
     removedIdx = oldIdx \\ newIdx
     addedIdx = newIdx \\ oldIdx
-    remove p = IntMap.adjust (IntSet.delete i) p
+    remove = IntMap.adjust (IntSet.delete i)
     add p = IntMap.insertWith IntSet.union p (IntSet.singleton i)
 
 -- | Recompute the child index for a whole node map from scratch.

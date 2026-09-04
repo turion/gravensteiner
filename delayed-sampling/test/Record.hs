@@ -14,8 +14,9 @@ import DelayedSampling (checked, shouldBeRight)
 import GHC.Generics (Generic)
 import Test.Hspec
 
--- | A synthetic record of two independent scalar features, standing in for
--- something like @Fruit@'s appearance fields.
+{- | A synthetic record of two independent scalar features, standing in for
+something like @Fruit@'s appearance fields.
+-}
 data TestRecord f = TestRecord
   { fieldA :: f Double
   , fieldB :: f Double

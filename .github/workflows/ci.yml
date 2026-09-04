@@ -1,0 +1,180 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '23 14 * * 2'
+  workflow_dispatch:
+name: build
+jobs:
+  lint:
+    name: "Run hlint"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up HLint
+      uses: haskell-actions/hlint-setup@v2
+      with:
+        version: "3.10"
+    - name: Run HLint
+      uses: haskell-actions/hlint-run@v2
+      with:
+        fail-on: warning
+
+  fourmolu:
+    name: "Run fourmolu"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: haskell-actions/run-fourmolu@v13
+      with:
+        version: "0.19.0.1"
+
+  generateMatrix:
+    name: "Generate matrix from cabal"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ubuntu-latest
+    steps:
+      # Every other action here is pinned to its major tag, so Dependabot's PRs are the
+      # interesting ones (a new major) rather than a stream of patch bumps. get-tested is
+      # the exception: it publishes no `v0` tag, so it has to be pinned exactly.
+      - uses: kleidukos/get-tested@v0.1.9.1
+        id: set-matrix
+        with:
+          cabal-file: "gravensteiner/gravensteiner.cabal"
+          ubuntu: true
+          version: 0.1.6.0
+
+  build-cabal:
+    runs-on: ubuntu-latest
+    needs: generateMatrix
+    strategy:
+      matrix: ${{ fromJSON(needs.generateMatrix.outputs.matrix) }}
+    name: Haskell GHC ${{ matrix.ghc }} cabal
+    steps:
+      - uses: actions/checkout@v7
+      - uses: haskell-actions/setup@v2
+        id: setup
+        with:
+          ghc-version: ${{ matrix.ghc }}
+      - name: Configure the build
+        run: |
+          cabal configure --enable-tests --disable-documentation
+          cabal build all --dry-run
+        # The last step generates dist-newstyle/cache/plan.json for the cache key.
+      - name: Restore cached dependencies
+        uses: actions/cache/restore@v6
+        id: cache
+        env:
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ env.key }}-plan-${{ hashFiles('**/plan.json') }}
+          restore-keys: ${{ env.key }}-
+      - name: Install dependencies
+        # If we had an exact cache hit, the dependencies will be up to date.
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cabal build all --enable-tests --only-dependencies
+      # Cache dependencies already here, so that we do not have to rebuild them should the subsequent steps fail.
+      - name: Save cached dependencies
+        uses: actions/cache/save@v6
+        # If we had an exact cache hit, trying to save the cache would error because of key clash.
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Cabal build packages
+        run: cabal build all --enable-tests -fdev
+      - name: Cabal test
+        run: cabal test all --enable-tests -fdev --test-show-details=Always
+
+  check-cabal-file:
+    name: Check cabal file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: haskell-actions/setup@v2
+      - uses: tfausak/cabal-gild-setup-action@v2
+        with:
+          version: 1.6.0.4
+      - run: ./cabal_check.sh
+
+  check-flake:
+    name: Check flake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
+        with:
+          name: gravensteiner
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      # Checks only the runner's own system, deliberately — see the comment on `systems`
+      # in flake.nix for why the darwin systems cannot be checked from here.
+      - run: nix flake check --accept-flake-config
+      - name: Check that .nix files are formatted
+        run: |
+          nix fmt . --accept-flake-config
+          git diff --exit-code
+
+  build-flake:
+    name: Nix build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # So a failure on one OS still warms the other's cache.
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
+        with:
+          name: gravensteiner
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - run: nix build .#default --accept-flake-config
+      - run: nix develop --accept-flake-config -c cabal test all -fdev
+
+  todo-backlog:
+    name: Validate the todo/ backlog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
+        with:
+          name: gravensteiner
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: Validate frontmatter and the generated index
+        run: nix develop --accept-flake-config -c todo/check.sh
+      - name: Check links and orphans
+        run: ./todo/check-links.sh
+
+  success:
+    name: Successfully build and test on all systems
+    # Every job defined above must be listed here; the flake's
+    # `checks.workflow-jobs-gated` asserts that, so adding a job without
+    # extending this list fails `nix flake check`. A bare `needs:` list is not
+    # enough to make this a real required check: GitHub skips a job whose
+    # dependency failed, and branch protection treats `skipped` as passing.
+    # `if: always()` plus the explicit result check below is what keeps a
+    # failed or skipped dependency from turning this job green. Do not change
+    # `always()` to `!cancelled()` — a cancelled dependency would then skip
+    # this job, and a skipped required check reports Success.
+    needs:
+      - lint
+      - fourmolu
+      - generateMatrix
+      - build-cabal
+      - check-cabal-file
+      - check-flake
+      - build-flake
+      - todo-backlog
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any dependency did not succeed
+        run: |
+          echo '${{ toJSON(needs) }}' | jq -e 'all(.[]; .result == "success")'

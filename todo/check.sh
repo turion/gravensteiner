@@ -42,13 +42,13 @@ index_marker='<!-- GENERATED INDEX — updated by `todo/check.sh --write-index`;
 known_fields_json='["status","milestone","milestone_note","size","size_evidence","pkg","kind","needs","parent","closed_by","provenance"]'
 
 # The universe of valid slugs `needs`/`parent` may point at: every item file's basename, minus the
-# two files that are not items.
+# four files that are not items (README.md, SCHEMA.md, AGENTS.md, CLAUDE.md).
 slugs_json=$(
   shopt -s nullglob
   for f in "$dir"/*.md; do
     base=$(basename "$f" .md)
     case "$base" in
-      README|SCHEMA) continue ;;
+      README|SCHEMA|AGENTS|CLAUDE) continue ;;
     esac
     printf '%s\n' "$base"
   done | jq -R . | jq -s .
@@ -261,7 +261,7 @@ shopt -s nullglob
 for f in "$dir"/*.md; do
   base=$(basename "$f" .md)
   case "$base" in
-    README|SCHEMA) continue ;;
+    README|SCHEMA|AGENTS|CLAUDE) continue ;;
   esac
 
   first_line=$(head -n1 "$f" || true)

@@ -10,11 +10,22 @@ license: MIT
 license-file: LICENSE
 author: Manuel Bärenz
 maintainer: programming@manuelbaerenz.de
+category: Statistics
 build-type: Simple
 extra-doc-files: CHANGELOG.md
+tested-with: ghc ==9.6.7 || ==9.8.4 || ==9.10.3 || ==9.12.4
+
+flag dev
+  description: Enable warnings as errors. Active on ci.
+  default: False
+  manual: True
 
 common warnings
   ghc-options: -Wall
+
+  if flag(dev)
+    ghc-options:
+      -Werror
   build-depends:
     barbies,
     base >=4.18 && <4.22,
@@ -44,3 +55,11 @@ executable gravensteiner
   build-depends: gravensteiner
   hs-source-dirs: app
   default-language: GHC2021
+
+  -- app/Main.hs is a superseded precursor slated for deletion (AGENTS.md);
+  -- these warnings are not fixed, see todo/apple-model-cleanups.md.
+  if flag(dev)
+    ghc-options:
+      -Wno-error=type-defaults
+      -Wno-error=unused-matches
+      -Wno-error=unused-imports

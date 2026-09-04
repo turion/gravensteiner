@@ -1,6 +1,5 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -42,6 +41,7 @@ data Observed a = Observed a | NotObserved
   bundled into a single class so 'AllB' can quantify over it.
 -}
 class (Typeable a, Show a, Eq a) => Basic a
+
 instance (Typeable a, Show a, Eq a) => Basic a
 
 -- | Initialize a whole record of distributions at once.
