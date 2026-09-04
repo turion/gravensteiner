@@ -48,7 +48,10 @@ common warnings
 
 library
   import: warnings
-  exposed-modules: Gravensteiner.Model
+  exposed-modules:
+    Gravensteiner.Model
+    Gravensteiner.Model.Scale
+
   hs-source-dirs: src
   default-language: GHC2021
 
