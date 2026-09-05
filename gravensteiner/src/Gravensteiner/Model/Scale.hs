@@ -3,10 +3,10 @@
 {- | Transforms between recorded, real-world measurements and the network design's unconstrained
 continuous coordinates -- the vector documented in
 @research\/appearance-coordinates.md@ (the arc's shared research directory, not shipped with this
-package): logit ground colour, logit overcolour extent, logit russet extent, log weight, log
-diameter and log height\/diameter ratio. Every constrained quantity in the model gets to this scale
-by log or logit, per @todo\/model-v1-bayesian-network.md@'s rule that features live on a scale where
-they are normal.
+package): logit ground colour's green and yellow axes, logit overcolour extent, logit russet
+extent, log weight, log diameter and log height\/diameter ratio. Every constrained quantity in the
+model gets to this scale by log or logit, per @todo\/model-v1-bayesian-network.md@'s rule that
+features live on a scale where they are normal.
 
 The length and mass transforms take their reference unit as an /argument/ rather than baking one
 into the function body. With "Numeric.Units.Dimensional", @58 *~ milli metre@ and
@@ -39,10 +39,11 @@ import Numeric.Units.Dimensional.Prelude
 import Gravensteiner.Model (Closed, ClosedInterval)
 import Gravensteiner.Model.Interval (Interval, getInterval, unsafeInterval)
 
-{- | Ground colour to the logit scale. 'Interval' guards the (0, 1) rule itself -- 'interval' is
-the only way to construct one outside "Gravensteiner.Model.Interval", and it rejects both endpoints
-and any non-finite input -- so this can no longer produce @+-Infinity@ for a validly constructed
-argument.
+{- | An open-interval @(0,1)@ reading to the logit scale -- the interior payload of a 'Graded'
+value, and of plain-'Interval' fields such as 'Gravensteiner.Model.certainty'. 'Interval' guards
+the (0, 1) rule itself -- 'interval' is the only way to construct one outside
+"Gravensteiner.Model.Interval", and it rejects both endpoints and any non-finite input -- so this
+can no longer produce @+-Infinity@ for a validly constructed argument.
 -}
 logitInterval :: Interval -> Double
 logitInterval p = P.log (getInterval p P./ (1 P.- getInterval p))

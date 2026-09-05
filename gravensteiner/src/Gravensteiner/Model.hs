@@ -111,54 +111,80 @@ data OvercolourPattern
     WashedOut
   deriving stock (Show, Eq)
 
+{- | Ground colour is __two independently phased axes, not one__: 'green' is the chlorophyll
+reading and 'yellow' the carotenoid one. A single green-to-orange axis assumes the two pigments move
+in lockstep, which they do not -- a cultivar that goes deep green to deep gold and a paler one that
+goes green to near-cream would land at the same mid-axis point on a conflated single axis, and be
+indistinguishable. The phase distributes into this record rather than sitting once on 'Colouration',
+exactly as 'Colouration' itself distributes into 'Appearance' (see 'colouration') -- each field keeps
+its own @p@, so a source can state green without mentioning yellow. Fully green is
+@green = 'Maximal', yellow = 'Minimal'@: each endpoint now means one simple thing, no chlorophyll at
+all or no carotenoid at all, rather than two ends of a conflated axis. A base skin entirely hidden
+under blush (UPOV's ground colour __"not visible"__) is /not observed/ for either field, exactly as
+before -- an absent phase value, not a position on either axis.
+
+ECPGR Table 16's six ordered ground-colour states, quoted below, describe exactly the conflated
+single axis this record replaces -- a __one-dimensional ordinal descriptor__, not two independent
+readings -- so they no longer anchor a live reading of either field below. Re-anchoring them onto two
+axes is domain work nobody has done (see @research\/descriptor-standards.md@, the arc's research
+directory); neither 'green' nor 'yellow' states a calibration anchor, and none should be invented.
+(This table is duplicated in @docs\/collection-form.md@, because a Haddock comment cannot render a
+markdown table; if this table changes, change that copy too.)
+
++------+-------------------+--------+---------------------+
+| Axis | ECPGR state       | Anchor | Reference           |
+| band |                   |        | cultivar            |
++======+===================+========+=====================+
+| 1    | Green             | 0.08   | Granny Smith        |
++------+-------------------+--------+---------------------+
+| 2    | Whitish green     | 0.25   |                     |
++------+-------------------+--------+---------------------+
+| 3    | Green yellow      | 0.42   | Cox's Orange Pippin |
++------+-------------------+--------+---------------------+
+| 4    | Whitish yellow    | 0.58   |                     |
++------+-------------------+--------+---------------------+
+| 5    | Yellow            | 0.75   | Golden Delicious    |
++------+-------------------+--------+---------------------+
+| 6    | (Yellow) - Orange | 0.92   |                     |
++------+-------------------+--------+---------------------+
+
+The state names, cultivars and the six [0,1] numbers above are this project's now-superseded
+single-axis convention over __ECPGR Table 16's__ own one-dimensional states; they no longer describe
+a value stored anywhere in this model.
+-}
+data GroundColour p = GroundColour
+  { green :: p ClosedInterval
+  {- ^ Coverage of chlorophyll on the __base skin__: the skin that is neither russeted nor blushed
+  (see 'russet' and 'overcolour'). 'Minimal' is no chlorophyll left at all; 'Maximal' is the fully
+  green extreme. No calibration anchor is established for this axis: ECPGR and UPOV both describe
+  ground colour as a single ordinal state (see 'GroundColour'\'s table above), not as a chlorophyll
+  extent judged on its own, so there is nothing sourced to anchor this field against yet.
+  -}
+  , yellow :: p ClosedInterval
+  {- ^ Coverage of carotenoid on the same base skin. 'Minimal' is no carotenoid revealed at all;
+  'Maximal' is the fully yellow extreme -- and, past it, what ECPGR calls "(Yellow) - Orange" is now
+  just a further point on this same axis, not a separate hue direction or an endpoint of its own;
+  ECPGR gives no anchor for where past-yellow orange sits, so none is stated here either.
+
+  __Always recorded, even when 'green' reads strongly green.__ Chlorophyll masks carotenoid, so a
+  yellow reading taken under high green is arguably a ripeness prediction rather than an observation;
+  recording it as absent under high green instead was considered and rejected, because whether the
+  masking is a real problem is something to settle empirically once there is data, not by
+  construction now. No calibration anchor is established for this axis either, for the same reason as
+  'green'.
+  -}
+  }
+  deriving stock (Generic)
+  deriving anyclass (FunctorB, TraversableB, ApplicativeB, ConstraintsB)
+
 {- | The three colour-related fields of 'Appearance', phase-parameterised /per field/ rather than as
 a whole: a source that states ground colour without mentioning blush is recordable as exactly that,
 which a single @p Colouration@ could not express. Questions producing these numbers are defined in
 @docs\/collection-form.md@.
 -}
 data Colouration p = Colouration
-  { groundColour :: p Interval
-  {- ^ 0 = green to 1 = yellow, read off the __base skin__: the skin that is neither russeted nor
-  blushed (see @todo\/russet-is-not-a-colour.md@). __Never exactly 0 or 1__: unlike 'overcolour' and
-  'russet', ground colour is a /position/ rather than a coverage, so it has no absent constructor to
-  protect it -- but 'Interval' guards the (0, 1) rule itself: the only way to construct one outside
-  "Gravensteiner.Model.Interval" is 'interval', which rejects both endpoints and any non-finite
-  input, so a validly constructed value can no longer send @logit@ to infinity. Judge against six
-  calibration anchors and record the number actually judged, strictly between 0 and 1 — the six
-  numbers below are anchor positions along the axis, not a set of
-  permitted answers. (This table is duplicated in @docs\/collection-form.md@'s question 5, because
-  a Haddock comment cannot render a markdown table; if this table changes, change that copy too.)
-
-  +------+-------------------+--------+---------------------+
-  | Axis | ECPGR state       | Anchor | Reference           |
-  | band |                   |        | cultivar            |
-  +======+===================+========+=====================+
-  | 1    | Green             | 0.08   | Granny Smith        |
-  +------+-------------------+--------+---------------------+
-  | 2    | Whitish green     | 0.25   |                     |
-  +------+-------------------+--------+---------------------+
-  | 3    | Green yellow      | 0.42   | Cox's Orange Pippin |
-  +------+-------------------+--------+---------------------+
-  | 4    | Whitish yellow    | 0.58   |                     |
-  +------+-------------------+--------+---------------------+
-  | 5    | Yellow            | 0.75   | Golden Delicious    |
-  +------+-------------------+--------+---------------------+
-  | 6    | (Yellow) - Orange | 0.92   |                     |
-  +------+-------------------+--------+---------------------+
-
-  Granny Smith's anchor sits at 0.08 and Golden Delicious's at 0.75, but the recorded value need
-  not match either exactly. The state names and cultivars above are __ECPGR Table 16's__; the
-  [0,1] values are __this project's own convention__ of six equal calibration anchors, positioned
-  at their midpoints, and ECPGR publishes no numbers for them. The axis banding runs
-  green-to-yellow, the /reverse/ of ECPGR's own state numbering (Table 16 numbers Yellow 1 and
-  Green 5) — an ECPGR state number must never be cited against an axis band.
-
-  Two boundary cases, both settled by the maintainer: a ground colour ECPGR calls
-  "(Yellow) - Orange" is __band 6, anchored at 0.92 — past yellow on the same axis, not off it__,
-  which keeps the axis monotone in ripeness since it tracks chlorophyll degrading to reveal
-  carotenoids. A fruit whose ground colour UPOV would call __"not visible"__ (fully blushed) is
-  /not observed/, not a value on the axis.
-  -}
+  { groundColour :: GroundColour p
+  -- ^ Two independently phased axes, chlorophyll and carotenoid -- see 'GroundColour'.
   , overcolour :: p ClosedInterval
   {- ^ Extent as a fraction of __non-russeted__ skin, not of the whole fruit: the whole-apple
   reading makes visible red approximately @blush * (1 - russet)@, bilinear in two latents, which

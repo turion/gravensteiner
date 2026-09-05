@@ -1,7 +1,7 @@
 # Collection form: recording one fruit's appearance
 
 This is the form a pomologist reads with an apple in hand. It covers **one fruit**. Answer the
-eight questions in the order given — several later questions refer back to an earlier answer, and
+nine questions in the order given — several later questions refer back to an earlier answer, and
 answering out of order leaves you guessing at a definition you have not read yet.
 
 Anchors below (named cultivars, percentage bands) are quoted from UPOV TG/14/10 and the 2022 ECPGR
@@ -114,15 +114,64 @@ Choose one of the eight states (the union of UPOV char. 33 and ECPGR Table 19's 
 | Mottled | *no reference cultivar in the source — none is given here either* |
 | Washed out | *no reference cultivar in the source — none is given here either* |
 
-## 5. What is the ground colour, read off the base skin?
+## 5. What is the base skin's green (chlorophyll) reading?
 
 Read this **only off the base skin — the patch of skin that is neither russeted (question 1/2) nor
-blushed (question 3/4)**. This is why it is asked last of the four colouration questions: you
-cannot pick out the base skin until you know which parts of the skin are excluded as russeted or
-blushed.
+blushed (question 3/4)**. This is why it and question 6 are asked after the four colouration
+questions above: you cannot pick out the base skin until you know which parts of the skin are
+excluded as russeted or blushed.
 
-Judge where the base skin sits on the green-to-yellow axis, against ECPGR Table 16's six ordered
-states as calibration anchors, and record the number you judge, strictly inside (0, 1):
+Ground colour is **two separate readings, not one axis**: chlorophyll degrading and carotenoid
+being revealed do not move in lockstep, so a cultivar that goes deep green to deep gold and a paler
+one that goes green to near-cream would be indistinguishable on a single green-to-orange axis. This
+question is chlorophyll only; question 6 asks carotenoid separately.
+
+**Answer: none / some / entirely.**
+
+- **None** → there is no chlorophyll left in the base skin at all. Its own recorded answer, not the
+  number 0.
+- **Entirely** → the base skin is as green as chlorophyll gets — the fully green extreme. Its own
+  recorded answer, not the number 1.
+- **Some** → record the number you judge, strictly inside (0, 1), for where between those two
+  extremes the base skin's green reads.
+
+**No calibration anchor is established for this axis.** ECPGR Table 16 and UPOV char. 29 both
+describe ground colour as a single ordinal state running green-to-yellow (quoted under question 6
+below), not as a chlorophyll extent judged on its own — there are no published anchors for a
+standalone green axis, and inventing one would poison the corpus the same way an invented reference
+cultivar would. Record your own independent judgement.
+
+A fruit blushed so completely that the base skin cannot be seen at all (what UPOV calls ground
+colour "not visible") is not a value on this axis. Record **both this question and question 6** as
+**not observed** for this fruit.
+
+## 6. What is the base skin's yellow (carotenoid) reading?
+
+Read this off the same base skin as question 5. This question is carotenoid only, independent of
+question 5's green reading.
+
+**Always answer this question, even if question 5 read strongly green ("entirely").** Chlorophyll
+masks carotenoid, so a yellow reading taken under high green is arguably a ripeness prediction
+rather than an observation. Recording it as absent whenever question 5 reads high green was
+considered and rejected: whether the masking is a real problem for the corpus is something to
+settle empirically once there is data, not by construction now — so this question is never skipped
+on account of question 5's answer.
+
+**Answer: none / some / entirely.**
+
+- **None** → there is no carotenoid revealed in the base skin at all. Its own recorded answer, not
+  the number 0.
+- **Entirely** → the base skin is as yellow as carotenoid gets, or past it: **what ECPGR calls
+  "(Yellow) - Orange" is a further point on this same axis, not a separate hue direction or a state
+  of its own** — an orange base skin is still this axis, at its far end. Its own recorded answer,
+  not the number 1.
+- **Some** → record the number you judge, strictly inside (0, 1).
+
+**No calibration anchor is established for this axis**, for the same reason as question 5. ECPGR
+Table 16's six states below are a **one-dimensional ordinal descriptor** over the old conflated
+green-to-orange axis this project used before splitting ground colour into two — not anchors for a
+carotenoid reading taken alone. Quoted here for reference only, and duplicated in
+`Gravensteiner.Model`'s `GroundColour` haddock — if you change one copy, change the other to match:
 
 | Axis band | ECPGR state | Anchor | Reference cultivar |
 |---|---|---|---|
@@ -131,42 +180,24 @@ states as calibration anchors, and record the number you judge, strictly inside 
 | 3 | Green yellow | 0.42 | Cox's Orange Pippin |
 | 4 | Whitish yellow | 0.58 | |
 | 5 | Yellow | 0.75 | Golden Delicious |
-| 6 | (Yellow) - Orange | **0.92** | |
+| 6 | (Yellow) - Orange | 0.92 | |
 
-This table is duplicated in `Gravensteiner.Model`'s `groundColour` haddock, because a Haddock
-comment cannot render a markdown table — if you change one copy, change the other to match.
+A fruit blushed so completely that the base skin cannot be seen at all (what UPOV calls ground
+colour "not visible") is not a value on this axis. Record **both this question and question 5** as
+**not observed** for this fruit.
 
-The state names and cultivar anchors in this table are **ECPGR Table 16's**; the six [0,1] numbers
-are **this project's own convention** of equal bands, positioned at their midpoints — ECPGR
-publishes no numbers for them, only the six ordered states. These are calibration anchors, not a
-set of permitted answers: record the number you actually judge, not the nearest anchor. Note the
-axis above runs green-to-yellow, the **reverse** of ECPGR's own numbering (Table 16 numbers Yellow
-1 and Green 5) — never cite an ECPGR state number against one of the axis-band numbers in the left
-column.
-
-Two cases where the base skin is not a straightforward green-yellow judgement:
-
-- **An orange base skin** ("(Yellow) - Orange" in ECPGR) is **band 6, anchored at 0.92 — past
-  yellow on the same axis, not off it in some other direction**. Record the number you judge near
-  the top of the axis, not the phrase "at the yellow end".
-- **A fruit blushed so completely that the base skin cannot be seen at all** (what UPOV calls
-  ground colour "not visible") is not a value on this axis. Record ground colour as **not
-  observed** for this fruit. Writing 1.0 because "it looked very yellow where visible" is exactly
-  the mistake this form exists to prevent — it is not on the axis, and 1.0 is a poisoned value
-  regardless.
-
-## 6. Height, in millimetres
+## 7. Height, in millimetres
 
 Measure at the tallest point of the flesh — not along the polar axis through the stalk cavity and
 calyx basin (UPOV TG/14 characteristic 23). Record in **millimetres**, e.g. `58`.
 
-## 7. Diameter, in millimetres
+## 8. Diameter, in millimetres
 
 Measure at the widest point — the fruit's equator (UPOV TG/14 characteristic 24). "Widest" names
 where you take the caliper reading, not a maximum over repeated measurements. Record in
 **millimetres**, e.g. `71`.
 
-## 8. Weight, in grams
+## 9. Weight, in grams
 
 Weigh the whole fruit on a kitchen scale. Record in **grams**, e.g. `142`.
 

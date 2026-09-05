@@ -1,6 +1,7 @@
 module Scale (test) where
 
 -- base
+import Data.Functor.Identity (Identity (..))
 import Data.Maybe (fromJust, isJust)
 import Prelude
 
@@ -14,7 +15,7 @@ import Numeric.Units.Dimensional.Prelude (centi, gram, metre, milli, (*~))
 import Numeric.Units.Dimensional.Prelude qualified as Dim ((/))
 
 -- gravensteiner
-import Gravensteiner.Model (Closed (..), ClosedInterval, Interval, getInterval, interval)
+import Gravensteiner.Model (Closed (..), ClosedInterval, GroundColour (..), Interval, getInterval, interval)
 import Gravensteiner.Model.Scale
 
 {- | Absolute-difference tolerance for every floating-point comparison in this module. None of
@@ -66,13 +67,13 @@ test = describe "Gravensteiner.Model.Scale" $ do
       logWeight ((142 :: Double) *~ gram) `shouldSatisfy` approx (log 142)
 
   describe "round trips" $ do
-    -- Ground colour has no absent constructor at all and is exposed at both ends; what keeps it
-    -- away from 0 and 1 is the collection form's own rule, not the type. So this suite stays
-    -- strictly inside (0, 1) for ground colour specifically -- a known gap, not evidence there is
-    -- none. 'ClosedInterval' fields (overcolour, russet) close both ends in the type itself, so
-    -- 'logClosed'/'unLogClosed' are round-tripped below at all three constructors, 'Minimal' and
-    -- 'Maximal' included, not just the interior.
-    it "logit/logistic round-trips an interior ground colour" $
+    -- 'ClosedInterval' fields (overcolour, russet, and now ground colour's own 'green' and
+    -- 'yellow') close both ends in the type itself, so 'logClosed'/'unLogClosed' are round-tripped
+    -- below at all three constructors, 'Minimal' and 'Maximal' included, not just the interior.
+    -- 'certainty' is the one remaining plain 'Interval' field with no absent constructor of its
+    -- own; 'logitInterval'/'logisticInterval' below exercise the interior payload shared by that
+    -- field and by every 'Graded' value.
+    it "logit/logistic round-trips an interior Interval value" $
       mapM_
         ( \p ->
             getInterval (logisticInterval (logitInterval (mkInterval p)))
@@ -93,6 +94,44 @@ test = describe "Gravensteiner.Model.Scale" $ do
             other -> expectationFailure ("expected Graded, got " <> show other)
         )
         [0.02, 0.5, 0.97]
+
+    -- Ground colour's own two fields, 'green' and 'yellow' (each a 'ClosedInterval'), go through
+    -- the same 'logClosed'/'unLogClosed' pair as 'overcolour' and 'russet' -- there is no
+    -- field-specific transform, by design. These assertions build an actual 'GroundColour
+    -- Identity' and go through its real record accessors, at all three constructors each, rather
+    -- than relying on the generic 'ClosedInterval' tests above to stand in for them.
+    let mkGroundColour :: ClosedInterval -> ClosedInterval -> GroundColour Identity
+        mkGroundColour g y = GroundColour {green = Identity g, yellow = Identity y}
+
+        roundTripsClosed :: ClosedInterval -> Expectation
+        roundTripsClosed Minimal = unLogClosed (logClosed Minimal) `shouldBe` (Minimal :: ClosedInterval)
+        roundTripsClosed Maximal = unLogClosed (logClosed Maximal) `shouldBe` (Maximal :: ClosedInterval)
+        roundTripsClosed (Graded iv) = case unLogClosed (logClosed (Graded iv)) of
+          Graded iv' -> getInterval iv' `shouldSatisfy` approx (getInterval iv)
+          other -> expectationFailure ("expected Graded, got " <> show other)
+
+    describe "GroundColour's green and yellow" $ do
+      it "round-trips green at Minimal" $
+        roundTripsClosed (runIdentity (green (mkGroundColour Minimal Minimal)))
+
+      it "round-trips green at Maximal" $
+        roundTripsClosed (runIdentity (green (mkGroundColour Maximal Minimal)))
+
+      it "round-trips green's interior Graded value" $
+        mapM_
+          (\p -> roundTripsClosed (runIdentity (green (mkGroundColour (Graded (mkInterval p)) Minimal))))
+          [0.02, 0.5, 0.97]
+
+      it "round-trips yellow at Minimal" $
+        roundTripsClosed (runIdentity (yellow (mkGroundColour Minimal Minimal)))
+
+      it "round-trips yellow at Maximal" $
+        roundTripsClosed (runIdentity (yellow (mkGroundColour Minimal Maximal)))
+
+      it "round-trips yellow's interior Graded value" $
+        mapM_
+          (\p -> roundTripsClosed (runIdentity (yellow (mkGroundColour Minimal (Graded (mkInterval p))))))
+          [0.02, 0.5, 0.97]
 
     it "log/exp round-trips a length" $
       mapM_
