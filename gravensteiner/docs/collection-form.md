@@ -28,9 +28,11 @@ together.
 
 - **None** → skip question 2 and go straight to question 3. Non-russeted skin is the whole fruit's
   surface.
-- **Entirely covered** → skip question 2 and go straight to question 3. There is no non-russeted
-  skin at all: an observer cannot distinguish "no gap at all" from "one hairline gap left", so this
-  is its own recorded answer, not the number 1.
+- **Entirely covered** → skip question 2. There is no non-russeted skin at all: an observer
+  cannot distinguish "no gap at all" from "one hairline gap left", so this is its own recorded
+  answer, not the number 1. With no non-russeted skin left to judge, questions 3, 5 and 6 have no
+  subject either: record all three as **not observed** for this fruit, and skip question 4 as a
+  result — question 4 is conditional on question 3, and "not observed" is not "absent".
 - **Some** → answer question 2.
 
 ## 2. If there is russet, how much?
@@ -54,7 +56,9 @@ cultivar, so "entirely covered" has no anchor here either — it too belongs to 
 ## 3. How much of the *non-russeted* skin carries a red blush (overcolour)?
 
 **Ask this as a fraction of the skin that is not russeted — not of the whole apple.** If question
-1/2 found russet, exclude that russeted area first and judge the blush against what remains.
+1/2 found russet, exclude that russeted area first and judge the blush against what remains. If
+question 1 was answered "entirely covered", there is no remains to judge: skip this question and
+record it, along with questions 5 and 6, as **not observed** — see question 1.
 
 **Answer: absent / some / entirely covered**, judging "some" against the bands below.
 
@@ -142,6 +146,9 @@ A fruit blushed so completely that the base skin cannot be seen at all (what UPO
 colour "not visible") is not a value on this axis. Record **both this question and question 6** as
 **not observed** for this fruit.
 
+A fruit whose skin is entirely covered by russet (question 1) has no base skin either, for the same
+reason. Record **both this question and question 6** as **not observed** for this fruit.
+
 ## 6. What is the base skin's yellow (carotenoid) reading?
 
 Read this off the same base skin as question 5. This question is carotenoid only, independent of
@@ -181,6 +188,9 @@ carotenoid reading taken alone. Quoted here for reference only:
 A fruit blushed so completely that the base skin cannot be seen at all (what UPOV calls ground
 colour "not visible") is not a value on this axis. Record **both this question and question 5** as
 **not observed** for this fruit.
+
+A fruit whose skin is entirely covered by russet (question 1) has no base skin either, for the same
+reason. Record **both this question and question 5** as **not observed** for this fruit.
 
 ## 7. Height, in millimetres
 
