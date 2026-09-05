@@ -29,12 +29,15 @@ data is used rather than after.
 
 `gravensteiner.cabal` now has a `test-suite gravensteiner-test` stanza (`gravensteiner/test/Spec.hs`,
 `gravensteiner/test/Scale.hs`), so there is somewhere to put a unit test. What it does not yet have
-is an evaluation: its 14 examples are all over `Gravensteiner.Model.Scale`'s transforms, and none of
+is an evaluation: its 32 examples are all over `Gravensteiner.Model.Scale`'s transforms, and none of
 them is the conjugate round-trip equality test or the finite-weights check this item asks for, nor
 anything against the seed corpus, which does not exist yet. Two check invariance under the length
-reference unit, eight are round trips that deliberately stay in the interior of each range, and four
-cover absent coordinates: two check the absent case (`NoOvercolour`/`NotRusseted`) and two check the
-complementary present-and-finite case (`Overcoloured`/`Russeted`).
+reference unit, two pin the millimetre and gram defaults, sixteen are round trips — covering the
+interior of each range, `Minimal`/`Maximal`/`Graded` at all three `ClosedInterval` fields including
+`GroundColour`'s own `green` and `yellow`, and the logit/logistic pair past both saturation
+thresholds, at both infinities and at `NaN` — three check that `Minimal`/`Maximal`/an interior
+`Graded` yield the right finiteness once transformed, and nine exercise the `interval` smart
+constructor's own endpoint and non-finite rejections.
 
 ## Three distinct things, and they need separate treatment
 

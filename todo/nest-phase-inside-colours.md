@@ -8,9 +8,14 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 
 > **Landed**, in the same revision as
 > [the chosen appearance parameterisation](appearance-parameterisation.md): `Gravensteiner.Model`
-> now has `Colouration p` with `groundColour :: p Interval`, `overcolour :: p Overcolour` and
-> `overcolourPattern :: p OvercolourPattern`, so a book that gives ground colour without
+> now has `Colouration p` with `groundColour :: GroundColour p`, `overcolour :: p ClosedInterval`
+> and `overcolourPattern :: p OvercolourPattern`, so a book that gives ground colour without
 > mentioning blush is recordable as such rather than the whole record being all-or-nothing.
+>
+> **Correction (`turion1.4`): the phase nests one level deeper than this.** `GroundColour p` itself
+> has two independently phased `ClosedInterval` fields, `green` and `yellow`, rather than
+> `groundColour` being a single `p Interval` — so a book can state ground colour's green reading
+> without its yellow one too, the same independence this item argued for one level up.
 
 ## Why it matters
 

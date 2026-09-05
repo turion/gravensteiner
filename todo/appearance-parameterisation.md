@@ -6,15 +6,18 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 ---
 # The chosen appearance parameterisation
 
-> **Landed.** `Gravensteiner.Model` now has `Colouration p` with `groundColour :: p Interval`,
-> `overcolour :: p Overcolour` and `overcolourPattern :: p OvercolourPattern`, nested inside
-> `Appearance p` alongside a zero-inflated `russet :: p Russet` that stays its own field rather
-> than joining the record — russet is a texture, not a colouration. The reference units are
-> millimetre (height, diameter) and gram (weight). The elicitation protocol — overcolour as a
-> fraction of non-russeted skin — is written into `gravensteiner/docs/collection-form.md`'s
-> wording, and `Gravensteiner.Model.Scale` carries the logit/log coordinate transforms for every
-> feature above, including `logOvercolour` and `logRusset`. The phase parameter this item's body
-> assumed is a separate concern: it landed too, and closes with
+> **Landed.** `Gravensteiner.Model` now has `Colouration p` with `groundColour :: GroundColour p`
+> — two independently phased `ClosedInterval` fields, `green` and `yellow`, rather than one axis
+> (`turion1.4`) — `overcolour :: p ClosedInterval` and `overcolourPattern :: p OvercolourPattern`,
+> nested inside `Appearance p` alongside a zero-**and-one**-inflated `russet :: p ClosedInterval`
+> that stays its own field rather than joining the record — russet is a texture, not a colouration.
+> The reference units are millimetre (height, diameter) and gram (weight). The elicitation
+> protocol — overcolour as a fraction of non-russeted skin — is written into
+> `gravensteiner/docs/collection-form.md`'s wording, and `Gravensteiner.Model.Scale` carries the
+> logit/log coordinate transforms for every feature above: a single `logClosed`/`unLogClosed` pair
+> now covers every `ClosedInterval` field (`overcolour`, `russet`, and ground colour's own `green`
+> and `yellow`) rather than each field having its own named transform (`turion1.3`). The phase
+> parameter this item's body assumed is a separate concern: it landed too, and closes with
 > [nest-phase-inside-colours](nest-phase-inside-colours.md).
 >
 > Not landed: `overcolourPattern` is a schema type, a plain enumeration, not yet a node in the
@@ -22,8 +25,9 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 > [the network design](model-v1-bayesian-network.md).
 >
 > **This arc overrode this item's own "no structural zeros except russet's".**
-> `overcolour :: p Overcolour` now has the same presence layer as russet —
-> `NoOvercolour | Overcoloured Interval` — rather than being a bare `Interval`. Three sources bore
+> `overcolour` was given the same presence layer as `russet` — at the time, `p Overcolour` with
+> `NoOvercolour | Overcoloured Interval`, since superseded by the shared `p ClosedInterval` (see
+> the correction below) — rather than being a bare `Interval`. Three sources bore
 > on this and disagreed: this item and
 > [the zero-colours diagnosis](apple-model-zero-colours-are-fatal.md) (closed, "Resolved by
 > design", "no colour can be a structural zero") on one side,
@@ -35,12 +39,18 @@ provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the find
 > [the zero-colours diagnosis](apple-model-zero-colours-are-fatal.md)'s "no colour can be a
 > structural zero" — that is a decision to meet, not a stale agreement to trust.
 >
-> The upper end is still open, and ground colour is open at both ends: `logit 1` is reachable for
-> `Overcoloured 1` and for `Russeted 1` alike, and `groundColour :: p Interval` has no absent
-> constructor at all — nothing in the *type* keeps any of these off 0 or 1. What does is the
-> collection form's rule that every recorded value lies strictly inside (0, 1), which is a
-> data-collection discipline, not a type guarantee. The round-trip tests added alongside the new
-> `test-suite` deliberately stay in the interior of each range and do not exercise this boundary.
+> **Correction (`turion1.2`–`turion1.4`): both ends are now closed by the type itself.** `Interval`
+> (`Gravensteiner.Model.Interval`) is built only through the smart constructor `interval :: Double
+> -> Maybe Interval`, which rejects `0`, `1`, both infinities and `NaN` outright; the bare
+> constructor is hidden. Every field that can genuinely reach either endpoint —
+> `overcolour :: p ClosedInterval`, `russet :: p ClosedInterval`, and now `groundColour`'s own
+> `green` and `yellow` fields — carries `ClosedInterval = Closed Interval`,
+> `Closed a = Minimal | Graded a | Maximal`; `Overcoloured` and `Russeted` no longer exist as
+> constructors, and neither does `Overcolour`/`Russet` as a type. `logit 1` is therefore
+> unreachable: `Minimal` and `Maximal` carry no `Interval` payload to take a logit of, so the
+> boundary is absent from the coordinate rather than pinned at an infinity. The round-trip tests in
+> `gravensteiner/test/Scale.hs` do exercise `Minimal` and `Maximal` at every `ClosedInterval` field,
+> `GroundColour`'s `green` and `yellow` included, not only the interior.
 
 ## Why it matters
 

@@ -64,6 +64,6 @@ for. Why `-Werror` sits behind a flag instead of being always on, and which warn
   conjugate round-trip equality test and a finite-weights check over a seed corpus — is tracked in
   `todo/no-evaluation-harness.md`, not an oversight to route around.
 - `gravensteiner/docs/collection-form.md` is the observer-facing data-collection form: the
-  eight-question protocol used to elicit an apple's appearance, including the "fraction of
+  nine-question protocol used to elicit an apple's appearance, including the "fraction of
   non-russeted skin" wording that keeps the model conjugate.
 - `todo/README.md` names the **next planning session** at the top. Start there.
