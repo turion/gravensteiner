@@ -128,43 +128,49 @@ single axis this record replaces -- a __one-dimensional ordinal descriptor__, no
 readings -- so they no longer anchor a live reading of either field below. Re-anchoring them onto two
 axes is domain work nobody has done (see @research\/descriptor-standards.md@, the arc's research
 directory); neither 'green' nor 'yellow' states a calibration anchor, and none should be invented.
-(This is the table's canonical home. @docs\/collection-form.md@ quotes the same anchors for the
-observer, in plain form, since a Haddock comment cannot render a markdown table.)
+(This is the table's canonical home. @docs\/collection-form.md@ quotes the same states for the
+observer, in plain form, since a Haddock comment cannot render a markdown table.) No axis-band
+number or project anchor is reproduced here: ECPGR numbers these same states the other way round
+(Yellow is 1, Green is 5), and giving them a second, reversed number alongside ECPGR's own invited
+exactly that mix-up.
 
-+------+-------------------+--------+---------------------+
-| Axis | ECPGR state       | Anchor | Reference           |
-| band |                   |        | cultivar            |
-+======+===================+========+=====================+
-| 1    | Green             | 0.08   | Granny Smith        |
-+------+-------------------+--------+---------------------+
-| 2    | Whitish green     | 0.25   |                     |
-+------+-------------------+--------+---------------------+
-| 3    | Green yellow      | 0.42   | Cox's Orange Pippin |
-+------+-------------------+--------+---------------------+
-| 4    | Whitish yellow    | 0.58   |                     |
-+------+-------------------+--------+---------------------+
-| 5    | Yellow            | 0.75   | Golden Delicious    |
-+------+-------------------+--------+---------------------+
-| 6    | (Yellow) - Orange | 0.92   |                     |
-+------+-------------------+--------+---------------------+
++-------------------+---------------------+
+| ECPGR state       | Reference           |
+|                   | cultivar            |
++===================+=====================+
+| Green             | Granny Smith        |
++-------------------+---------------------+
+| Whitish green     |                     |
++-------------------+---------------------+
+| Green yellow      | Cox's Orange Pippin |
++-------------------+---------------------+
+| Whitish yellow    |                     |
++-------------------+---------------------+
+| Yellow            | Golden Delicious    |
++-------------------+---------------------+
+| (Yellow) - Orange |                     |
++-------------------+---------------------+
 
-The state names, cultivars and the six [0,1] numbers above are this project's now-superseded
-single-axis convention over __ECPGR Table 16's__ own one-dimensional states; they no longer describe
-a value stored anywhere in this model.
+The state names and cultivars above are ECPGR Table 16's own one-dimensional states; they no longer
+describe a value stored anywhere in this model.
 -}
 data GroundColour p = GroundColour
   { green :: p ClosedInterval
-  {- ^ Coverage of chlorophyll on the __base skin__: the skin that is neither russeted nor blushed
-  (see 'russet' and 'overcolour'). 'Minimal' is no chlorophyll left at all; 'Maximal' is the fully
-  green extreme. No calibration anchor is established for this axis: ECPGR and UPOV both describe
-  ground colour as a single ordinal state (see 'GroundColour'\'s table above), not as a chlorophyll
-  extent judged on its own, so there is nothing sourced to anchor this field against yet.
+  {- ^ The base skin's chlorophyll reading -- the __base skin__ being the skin that is neither
+  russeted nor blushed (see 'russet' and 'overcolour'): the position between no chlorophyll left at
+  all and as green as chlorophyll gets, an intensity rather than an area fraction. 'Minimal' is no
+  chlorophyll left at all; 'Maximal' is the fully green extreme. No calibration anchor is
+  established for this axis: ECPGR describes ground colour as a single ordinal state (see
+  'GroundColour'\'s table above), not as a chlorophyll extent judged on its own, so there is nothing
+  sourced to anchor this field against yet.
   -}
   , yellow :: p ClosedInterval
-  {- ^ Coverage of carotenoid on the same base skin. 'Minimal' is no carotenoid revealed at all;
-  'Maximal' is the fully yellow extreme -- and, past it, what ECPGR calls "(Yellow) - Orange" is now
-  just a further point on this same axis, not a separate hue direction or an endpoint of its own;
-  ECPGR gives no anchor for where past-yellow orange sits, so none is stated here either.
+  {- ^ The base skin's carotenoid reading: the position between no carotenoid revealed at all and as
+  yellow as carotenoid gets, an intensity rather than an area fraction (see 'green' for the same
+  distinction). 'Minimal' is no carotenoid revealed at all; 'Maximal' is the fully yellow extreme.
+  This axis does not currently separate yellow from orange: what ECPGR calls "(Yellow) - Orange" has
+  no representation of its own here, so an orange base skin also reads 'Maximal' -- a limitation of
+  the axis as it stands, not a claim that the two are the same colour.
 
   __Always recorded, even when 'green' reads strongly green.__ Chlorophyll masks carotenoid, so a
   yellow reading taken under high green is arguably a ripeness prediction rather than an observation;

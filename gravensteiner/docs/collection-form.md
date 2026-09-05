@@ -136,11 +136,10 @@ question is chlorophyll only; question 6 asks carotenoid separately.
 - **Some** → record the number you judge, strictly inside (0, 1), for where between those two
   extremes the base skin's green reads.
 
-**No calibration anchor is established for this axis.** ECPGR Table 16 and UPOV char. 29 both
-describe ground colour as a single ordinal state running green-to-yellow (quoted under question 6
-below), not as a chlorophyll extent judged on its own — there are no published anchors for a
-standalone green axis, and inventing one would poison the corpus the same way an invented reference
-cultivar would. Record your own independent judgement.
+**No calibration anchor is established for this axis.** ECPGR Table 16 describes ground colour as a
+single ordinal state (quoted under question 6 below), not as a chlorophyll extent judged on its own
+— there are no published anchors for a standalone green axis, and inventing one would poison the
+corpus the same way an invented reference cultivar would. Record your own independent judgement.
 
 A fruit blushed so completely that the base skin cannot be seen at all (what UPOV calls ground
 colour "not visible") is not a value on this axis. Record **both this question and question 6** as
@@ -165,25 +164,28 @@ on account of question 5's answer.
 
 - **None** → there is no carotenoid revealed in the base skin at all. Its own recorded answer, not
   the number 0.
-- **Entirely** → the base skin is as yellow as carotenoid gets, or past it: **what ECPGR calls
-  "(Yellow) - Orange" is a further point on this same axis, not a separate hue direction or a state
-  of its own** — an orange base skin is still this axis, at its far end. Its own recorded answer,
-  not the number 1.
+- **Entirely** → the base skin is as yellow as carotenoid gets. Its own recorded answer, not the
+  number 1. **This axis does not currently separate yellow from orange**: what ECPGR calls
+  "(Yellow) - Orange" has no representation of its own here, so an orange base skin is recorded the
+  same way, as "entirely" — a limitation of the axis as it stands, not a claim that the two are the
+  same colour.
 - **Some** → record the number you judge, strictly inside (0, 1).
 
 **No calibration anchor is established for this axis**, for the same reason as question 5. ECPGR
 Table 16's six states below are a **one-dimensional ordinal descriptor** over the old conflated
 green-to-orange axis this project used before splitting ground colour into two — not anchors for a
-carotenoid reading taken alone. Quoted here for reference only:
+carotenoid reading taken alone. Quoted here for reference only, with no axis-band number or project
+anchor reproduced: ECPGR numbers these same states the other way round (Yellow is 1, Green is 5),
+and giving them a second, reversed number here invited exactly that mix-up.
 
-| Axis band | ECPGR state | Anchor | Reference cultivar |
-|---|---|---|---|
-| 1 | Green | 0.08 | Granny Smith |
-| 2 | Whitish green | 0.25 | |
-| 3 | Green yellow | 0.42 | Cox's Orange Pippin |
-| 4 | Whitish yellow | 0.58 | |
-| 5 | Yellow | 0.75 | Golden Delicious |
-| 6 | (Yellow) - Orange | 0.92 | |
+| ECPGR state | Reference cultivar |
+|---|---|
+| Green | Granny Smith |
+| Whitish green | |
+| Green yellow | Cox's Orange Pippin |
+| Whitish yellow | |
+| Yellow | Golden Delicious |
+| (Yellow) - Orange | |
 
 A fruit blushed so completely that the base skin cannot be seen at all (what UPOV calls ground
 colour "not visible") is not a value on this axis. Record **both this question and question 5** as
@@ -210,8 +212,8 @@ Weigh the whole fruit on a kitchen scale. Record in **grams**, e.g. `142`.
 ## Reading from a published description
 
 A monograph or other published description is a fixed text, not a live observer — you cannot ask
-it a follow-up question, so the "costs nothing" argument behind question 3's wording does not
-apply when *ingesting* one. Two things follow:
+it a follow-up question, so a silence in it cannot be resolved the way a live observer's could. Two
+things follow:
 
 - **A source that says nothing about a feature has not said the feature is absent.** A monograph
   silent about russet has not stated the fruit is unrusseted; one silent about Deckfarbe (blush)
