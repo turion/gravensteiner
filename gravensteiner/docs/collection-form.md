@@ -50,11 +50,13 @@ question 1 already recorded it.)
 **Ask this as a fraction of the skin that is not russeted — not of the whole apple.** If question
 1/2 found russet, exclude that russeted area first and judge the blush against what remains.
 
-*Why worded this way:* the visible red you would see over the whole fruit is roughly
-`blush × (1 − russet)` — a product of two unknown quantities, which breaks the statistical model
-that this corpus feeds. Asking for the fraction of non-russeted skin instead keeps the two
-readings independent, so the constraint that keeps the model tractable is answered here, in the
-question's wording, rather than left for someone downstream to fix.
+*Why worded this way:* neither ECPGR nor UPOV states what its over-colour percentage scale is a
+share *of* — the non-russeted-skin reading below is **this project's own convention**, not a
+reading of either standard. The reason for choosing it is that the visible red you would see over
+the whole fruit is roughly `blush × (1 − russet)` — a product of two unknown quantities, which
+breaks the statistical model that this corpus feeds. Asking for the fraction of non-russeted skin
+instead keeps the two readings independent, so the constraint that keeps the model tractable is
+answered here, in the question's wording, rather than left for someone downstream to fix.
 
 Judge against the same calibration anchors as question 2 (ECPGR Table 17, "Over colour coverage"),
 and record the number you judge, strictly inside (0, 1):
@@ -71,17 +73,17 @@ and record the number you judge, strictly inside (0, 1):
 If there is no blush at all, record **absent** as its own answer (mirroring question 1), not 0 %.
 If question 4 does not apply (see below), the reason is that this question was answered "absent".
 
-**Warning — the anchors above are whole-fruit percentages, and this question is not.** ECPGR's
-bands and cultivars (both here and in question 2) are shares *of the whole fruit*; there is no
-published precedent for scoring blush against non-russeted skin only, which is why question 3
-asks for it explicitly rather than assuming it. On a barely russeted cultivar the two are close
-enough not to matter — Granny Smith and Spartan are safe anchors as given. On a russeted one they
-are not: **Cox's Orange Pippin** is ECPGR's own example of this — it is *both* Low russet (11-25 %
-of the whole fruit) *and* Low overcolour (11-25 % of the whole fruit), so once you exclude its
-russeted 11-25 %, its blush covers a larger share of what is left than "11-25 %" suggests. Judge
-the actual apple in front of you against the bands above; do not read "Cox's Orange Pippin = Low"
-as telling you the number for this question — no corrected figure for Cox is available (the
-maintainer has been asked for one).
+**Warning — it is not known what the anchors above are a share of.** Neither ECPGR nor UPOV states
+what its over-colour or russet percentage scales are relative to, so it is not known whether the
+bands and cultivars above (both here and in question 2) already reflect non-russeted skin
+(matching this question) or the whole fruit (not matching it) — there is no published precedent
+either way. On a barely russeted cultivar this is close enough not to matter — Granny Smith and
+Spartan are safe anchors as given. On a russeted one it might not be: **Cox's Orange Pippin** is
+*both* Low russet (11-25 %) *and* Low overcolour (11-25 %), which makes it exactly the cultivar
+where a mismatch between the two readings would matter most — but with both standards silent,
+there is no known direction to correct it in. Judge the actual apple in front of you against the
+bands above as calibration only; do not read "Cox's Orange Pippin = Low" as telling you the number
+for this question — no correction is computable from these anchors.
 
 ## 4. If question 3 was not "absent": what pattern is the blush?
 
@@ -159,10 +161,6 @@ Weigh the whole fruit on a kitchen scale. Record in **grams**, e.g. `142`.
 
 ## Reading from a published description
 
-*(Provisional — the maintainer has confirmed a live observer can judge blush against non-russeted
-skin reliably, so the form above is settled; the conversion below, for turning a published
-whole-fruit figure into this form's fields, has not yet been confirmed and should be revisited.)*
-
 A monograph or other published description is a fixed text, not a live observer — you cannot ask
 it a follow-up question, so the "costs nothing" argument behind question 3's wording does not
 apply when *ingesting* one. Two things follow:
@@ -176,14 +174,13 @@ apply when *ingesting* one. Two things follow:
   positive claim of absence into the presence layer that the model treats as an observed
   Bernoulli outcome — the source never made that claim. Use `NotRusseted` / `NoOvercolour` only
   when the source explicitly states the fruit carries no russet, or no blush.
-- **Published blush figures are stated over the whole fruit**, the same denominator ECPGR itself
-  uses, not over the non-russeted skin question 3 above asks for. To bring a stated whole-fruit
-  blush fraction `b` and a stated russet fraction `r` onto this form's scale, divide:
-  `overcolour = b / (1 - r)`. Flag this as a **conversion, not a measurement** — it amplifies
-  whatever guess went into `b` and `r`, and it amplifies it most exactly where russet is largest
-  (as `r → 1`, `1 - r → 0`).
-  - **If the result exceeds 1, record `NotDescribed`, not a clamp to 1.** A whole-fruit blush
-    larger than the whole non-russeted share means the two stated figures do not fit together —
-    clamping would manufacture a maximum-confidence answer out of a conversion that has just shown
-    itself to be out of range. This happens for real cultivars: Boskoop's own russet anchor is
-    around 50 %, so any published whole-fruit blush above 50 % overshoots for Boskoop.
+- **Published blush figures are recorded as stated, with no conversion.** This project's reading is
+  that a monograph scoring "the amount of over colour on the skin" already means the visible,
+  non-russeted skin question 3 asks a live observer for — the same convention this form uses
+  throughout. That is **this project's reading of an unstated convention, not a sourced fact**:
+  neither ECPGR nor UPOV says what a published over-colour or russet percentage is relative to (see
+  question 3's warning above). Recording as stated also fits a fact the standards *do* state: ECPGR
+  §2.13 scores russet as an average over "at least 12 representative fruits", so a published figure
+  is a **population average**, not a single fruit's reading — a population can legitimately show
+  more total coverage than any one fruit in it, so there is no per-fruit bound for a stated figure
+  to violate, and nothing to convert or clamp.
