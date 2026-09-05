@@ -36,6 +36,18 @@ every literal passed here is safely inside (0, 1).
 mkInterval :: Double -> Interval
 mkInterval = fromJust . interval
 
+{- | The 'logClosed'\/'unLogClosed' round trip, checked at whichever constructor it is given:
+'Minimal' and 'Maximal' round-trip exactly (no 'Double' payload to drift), and a 'Graded'
+payload round-trips within 'tol'. The one predicate every round-trip test below drives, so the
+check is stated once rather than once per constructor and again per 'GroundColour' field.
+-}
+roundTripsClosed :: ClosedInterval -> Expectation
+roundTripsClosed Minimal = unLogClosed (logClosed Minimal) `shouldBe` (Minimal :: ClosedInterval)
+roundTripsClosed Maximal = unLogClosed (logClosed Maximal) `shouldBe` (Maximal :: ClosedInterval)
+roundTripsClosed (Graded iv) = case unLogClosed (logClosed (Graded iv)) of
+  Graded iv' -> getInterval iv' `shouldSatisfy` approx (getInterval iv)
+  other -> expectationFailure ("expected Graded, got " <> show other)
+
 test :: Spec
 test = describe "Gravensteiner.Model.Scale" $ do
   describe "unit invariance" $ do
@@ -82,18 +94,29 @@ test = describe "Gravensteiner.Model.Scale" $ do
         [0.02, 0.5, 0.97]
 
     it "logClosed/unLogClosed round-trips Minimal" $
-      unLogClosed (logClosed Minimal) `shouldBe` (Minimal :: ClosedInterval)
+      roundTripsClosed Minimal
 
     it "logClosed/unLogClosed round-trips Maximal" $
-      unLogClosed (logClosed Maximal) `shouldBe` (Maximal :: ClosedInterval)
+      roundTripsClosed Maximal
 
     it "logClosed/unLogClosed round-trips an interior Graded value" $
+      mapM_ (roundTripsClosed . Graded . mkInterval) [0.02, 0.5, 0.97]
+
+    it "logit/logistic round-trips past both saturation thresholds, at both infinities, and at NaN" $
+      -- The naive @1 / (1 + exp (-x))@ hits exactly 0.0 or 1.0 well before these magnitudes --
+      -- around +-37, then again at +-infinity -- which is the bug 'logisticInterval' now guards
+      -- against. 'NaN' takes the same dedicated branch, since it saturates neither comparison.
+      -- Every one of these must still come back strictly interior, and its own logit
+      -- must be finite: the two 'Done when' clauses this test exists to satisfy.
       mapM_
-        ( \p -> case unLogClosed (logClosed (Graded (mkInterval p))) of
-            Graded iv -> getInterval iv `shouldSatisfy` approx p
-            other -> expectationFailure ("expected Graded, got " <> show other)
+        ( \x ->
+            let iv = logisticInterval x
+                p = getInterval iv
+             in do
+                  p `shouldSatisfy` \v -> v > 0 && v < 1
+                  logitInterval iv `shouldSatisfy` \l -> not (isNaN l) && not (isInfinite l)
         )
-        [0.02, 0.5, 0.97]
+        [37, 40, 100, 745, 800, 1000, 1 / 0, -37, -40, -100, -745, -800, -1000, -(1 / 0), 0 / 0]
 
     -- Ground colour's own two fields, 'green' and 'yellow' (each a 'ClosedInterval'), go through
     -- the same 'logClosed'/'unLogClosed' pair as 'overcolour' and 'russet' -- there is no
@@ -102,13 +125,6 @@ test = describe "Gravensteiner.Model.Scale" $ do
     -- than relying on the generic 'ClosedInterval' tests above to stand in for them.
     let mkGroundColour :: ClosedInterval -> ClosedInterval -> GroundColour Identity
         mkGroundColour g y = GroundColour {green = Identity g, yellow = Identity y}
-
-        roundTripsClosed :: ClosedInterval -> Expectation
-        roundTripsClosed Minimal = unLogClosed (logClosed Minimal) `shouldBe` (Minimal :: ClosedInterval)
-        roundTripsClosed Maximal = unLogClosed (logClosed Maximal) `shouldBe` (Maximal :: ClosedInterval)
-        roundTripsClosed (Graded iv) = case unLogClosed (logClosed (Graded iv)) of
-          Graded iv' -> getInterval iv' `shouldSatisfy` approx (getInterval iv)
-          other -> expectationFailure ("expected Graded, got " <> show other)
 
     describe "GroundColour's green and yellow" $ do
       it "round-trips green at Minimal" $

@@ -37,20 +37,40 @@ import Numeric.Units.Dimensional.Prelude
 
 -- gravensteiner
 import Gravensteiner.Model (Closed, ClosedInterval)
-import Gravensteiner.Model.Interval (Interval, getInterval, unsafeInterval)
+import Gravensteiner.Model.Interval (Interval, getInterval, interval, unsafeInterval)
 
 {- | An open-interval @(0,1)@ reading to the logit scale -- the interior payload of a 'Graded'
 value, and of plain-'Interval' fields such as 'Gravensteiner.Model.certainty'. 'Interval' guards
-the (0, 1) rule itself -- 'interval' is the only way to construct one outside
-"Gravensteiner.Model.Interval", and it rejects both endpoints and any non-finite input -- so this
-can no longer produce @+-Infinity@ for a validly constructed argument.
+the (0, 1) rule itself -- every 'Interval' in existence has gone through either 'interval', which
+rejects both endpoints and any non-finite input, or 'logisticInterval'\'s own interior check below
+-- so this can no longer produce @+-Infinity@, full stop, not just "for a validly constructed
+argument".
 -}
 logitInterval :: Interval -> Double
 logitInterval p = P.log (getInterval p P./ (1 P.- getInterval p))
 
--- | Inverse of 'logitInterval'.
+{- | Inverse of 'logitInterval'. Total, as it must be: every fitted marginal is a 'Double' that
+has to become a reading. The naive @1 \/ (1 + exp (-x))@ saturates to exactly @0.0@ or @1.0@ once
+@x@ passes roughly \(\pm 37\) (verified: 'Double' has no room between @0.9999999999999998@ and
+@1.0@), which 'interval' would reject -- so this checks the naive result first and, only for the
+handful of magnitudes where it saturates, falls back to a fixed epsilon on the appropriate side
+rather than the unreachable exact endpoint. That keeps the interior round trip untouched: every
+input that does not saturate takes the checked branch unchanged. A @NaN@ input -- which no caller
+should ever produce, since it cannot come from a finite fitted marginal -- falls back to the
+midpoint rather than propagating, purely to keep this total.
+-}
 logisticInterval :: Double -> Interval
-logisticInterval x = unsafeInterval (1 P./ (1 P.+ P.exp (P.negate x)))
+logisticInterval x
+  | isNaN x = unsafeInterval 0.5
+  | otherwise = case interval y of
+      Just iv -> iv
+      Nothing -> unsafeInterval (if x <= 0 then epsilon else 1 P.- epsilon)
+  where
+    y = 1 P./ (1 P.+ P.exp (P.negate x))
+    -- Small enough to be indistinguishable from the true saturated limit at any magnitude the
+    -- suite exercises, and large enough that its 'logitInterval' stays comfortably finite rather
+    -- than merely non-infinite.
+    epsilon = 1e-15
 
 {- | A 'ClosedInterval' reading to the logit scale: 'Minimal' and 'Maximal' carry no payload and so
 stay themselves, and 'Graded's interior 'Interval' becomes a 'Double' via 'logitInterval'. The

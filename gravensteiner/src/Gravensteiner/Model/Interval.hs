@@ -31,8 +31,11 @@ interval x
   | otherwise = Just (Interval x)
 
 {- | Unchecked construction, for callers that can prove interiority some other way instead of
-paying for the check -- currently only 'Gravensteiner.Model.Scale.logisticInterval', whose
-logistic function's range is always (0, 1) for finite input. Exported from this module only:
+paying for the check -- currently only 'Gravensteiner.Model.Scale.logisticInterval', and only for
+fixed epsilon literals it can prove interior by inspection, /not/ for the logistic function's raw
+output: in 'Double', @1 \/ (1 + exp (-x))@ saturates to exactly @0.0@ or @1.0@ for large enough
+@|x|@, so "the logistic function's range is always (0, 1) for finite input" is false in floating
+point and is not a justification this constructor can rely on. Exported from this module only:
 "Gravensteiner.Model" does not re-export it, so every other consumer must go through 'interval'.
 -}
 unsafeInterval :: Double -> Interval
