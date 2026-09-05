@@ -70,6 +70,7 @@ exist yet in the workspace.
 
 | Item | Size | Packages |
 |---|---|---|
+| [Open-licensed photographs to illustrate the form's anchors](anchor-illustrations.md) | L | gravensteiner |
 | [An examination date distinct from the collection date](examination-date-distinct-from-collection.md) | M | gravensteiner |
 
 ## Milestone 3
@@ -77,6 +78,7 @@ exist yet in the workspace.
 | Item | Size | Packages |
 |---|---|---|
 | [Findings from `Main.hs` that outlive it](apple-model-cleanups.md) | M | gravensteiner |
+| [Chlorophyll masks carotenoid — revisit once there is data](ground-colour-masking.md) | L | gravensteiner |
 | [Nothing measures whether the model works](no-evaluation-harness.md) | L | gravensteiner |
 
 ## Milestone 4
