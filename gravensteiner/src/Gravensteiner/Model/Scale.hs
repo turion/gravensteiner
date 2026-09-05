@@ -36,7 +36,7 @@ import Prelude qualified as P
 import Numeric.Units.Dimensional.Prelude
 
 -- gravensteiner
-import Gravensteiner.Model (Overcolour (..), Russet (..))
+import Gravensteiner.Model (Closed, ClosedInterval)
 import Gravensteiner.Model.Interval (Interval, getInterval, unsafeInterval)
 
 {- | Ground colour to the logit scale. 'Interval' guards the (0, 1) rule itself -- 'interval' is
@@ -51,32 +51,18 @@ logitInterval p = P.log (getInterval p P./ (1 P.- getInterval p))
 logisticInterval :: Double -> Interval
 logisticInterval x = unsafeInterval (1 P./ (1 P.+ P.exp (P.negate x)))
 
-{- | Overcolour extent to the logit scale, 'Nothing' when the fruit shows no overcolour at all.
-The optionality lives in the type -- "the coordinate is simply absent when the feature is zero" is
-then a fact the compiler knows, not a rule stated in a comment.
+{- | A 'ClosedInterval' reading to the logit scale: 'Minimal' and 'Maximal' carry no payload and so
+stay themselves, and 'Graded's interior 'Interval' becomes a 'Double' via 'logitInterval'. The
+presence indicator (which of the three this is) is directly observed and contributes a Bernoulli
+likelihood with no latent variable, so the logit coordinate is simply /absent/ at an endpoint --
+'Minimal'/'Maximal' carry no @Double@ to be missing -- rather than pinned at an infinity.
 -}
-logOvercolour :: Overcolour -> Maybe Double
-logOvercolour NoOvercolour = Nothing
-logOvercolour (Overcoloured extent) = Just (logitInterval extent)
+logClosed :: ClosedInterval -> Closed Double
+logClosed = fmap logitInterval
 
--- | Inverse of 'logOvercolour'.
-unLogOvercolour :: Maybe Double -> Overcolour
-unLogOvercolour Nothing = NoOvercolour
-unLogOvercolour (Just x) = Overcoloured (logisticInterval x)
-
-{- | Russet extent to the logit scale, 'Nothing' when the fruit shows no russet at all. Same shape
-as 'logOvercolour', for the same reason: russet's presence is observed directly and contributes no
-latent variable, so the logit-normal coordinate is simply absent rather than a coordinate pinned at
-@logit 0 = -Infinity@.
--}
-logRusset :: Russet -> Maybe Double
-logRusset NotRusseted = Nothing
-logRusset (Russeted extent) = Just (logitInterval extent)
-
--- | Inverse of 'logRusset'.
-unLogRusset :: Maybe Double -> Russet
-unLogRusset Nothing = NotRusseted
-unLogRusset (Just x) = Russeted (logisticInterval x)
+-- | Inverse of 'logClosed'.
+unLogClosed :: Closed Double -> ClosedInterval
+unLogClosed = fmap logisticInterval
 
 {- | A length to the log scale, under a caller-supplied reference unit. Kept polymorphic in the
 unit rather than fixed to 'logDiameter'\'s millimetre so that the same measurement, read off under a

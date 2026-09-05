@@ -10,11 +10,12 @@ cultivar in that source, this form says so rather than supplying one: an invente
 poison a corpus that cannot be re-read cheaply.
 
 > **No answer on this form is ever exactly 0 or 1.** A feature that is genuinely absent (no
-> russet, no blush) is recorded by choosing "absent" — a separate answer, not the number 0 — and
-> every other recorded value lies **strictly inside (0, 1)**, however close to 1 the judged
-> reading is. This is not a stylistic preference: the numbers feed a logit, and `logit(0)` and
-> `logit(1)` are both infinite. Writing 0 or 1 anywhere below does not mean "very little" or "all
-> of it", it silently breaks the record.
+> russet, no blush) is recorded by choosing "none"/"absent" — a separate answer, not the number 0
+> — and a feature that entirely covers the skin it is judged against is recorded by choosing
+> "entirely covered", not the number 1. Every other recorded value lies **strictly inside (0,
+> 1)**, however close to either end the judged reading is. This is not a stylistic preference: the
+> numbers feed a logit, and `logit(0)` and `logit(1)` are both infinite. Writing 0 or 1 anywhere
+> below does not mean "very little" or "all of it", it silently breaks the record.
 
 ## 1. Is there any russet at all?
 
@@ -22,11 +23,14 @@ Russet is a dull, brown, rough, corky patch on the skin (UPOV *Ad. 35*) — it i
 *overlays* colour, not a shade of it. Look at the stalk cavity, the cheeks and the eye basin
 together.
 
-**Answer: yes / no.**
+**Answer: none / some / entirely covered.**
 
-- **No** → skip question 2 and go straight to question 3. Non-russeted skin is the whole fruit's
+- **None** → skip question 2 and go straight to question 3. Non-russeted skin is the whole fruit's
   surface.
-- **Yes** → answer question 2.
+- **Entirely covered** → skip question 2 and go straight to question 3. There is no non-russeted
+  skin at all: an observer cannot distinguish "no gap at all" from "one hairline gap left", so this
+  is its own recorded answer, not the number 1.
+- **Some** → answer question 2.
 
 ## 2. If there is russet, how much?
 
@@ -42,13 +46,16 @@ russet coverage") as calibration anchors to judge against, not as a set of six p
 | around 75 % | High | 0.75 | Zabergäu Renette |
 | over 90 % | Very high | 0.95 | Egremont Russet, Canada Gris, Gris Braibant, Brownlee's Russet |
 
-("Absent, 0 %" is Lobo's band — but that answer belongs to question 1, not here; a "no" at
-question 1 already recorded it.)
+("Absent, 0 %" is Lobo's band — but that answer belongs to question 1, not here; a "none" at
+question 1 already recorded it. Neither standard names a 100 % band with its own reference
+cultivar, so "entirely covered" has no anchor here either — it too belongs to question 1.)
 
 ## 3. How much of the *non-russeted* skin carries a red blush (overcolour)?
 
 **Ask this as a fraction of the skin that is not russeted — not of the whole apple.** If question
 1/2 found russet, exclude that russeted area first and judge the blush against what remains.
+
+**Answer: absent / some / entirely covered**, judging "some" against the bands below.
 
 *Why worded this way:* neither ECPGR nor UPOV states what its over-colour percentage scale is a
 share *of* — the non-russeted-skin reading below is **this project's own convention**, not a
@@ -71,7 +78,11 @@ and record the number you judge, strictly inside (0, 1):
 | over 90 % | Very high | 0.95 | |
 
 If there is no blush at all, record **absent** as its own answer (mirroring question 1), not 0 %.
-If question 4 does not apply (see below), the reason is that this question was answered "absent".
+If the whole non-russeted skin is blushed, record **entirely covered** as its own answer, not
+100 % — an observer cannot distinguish "no unblushed skin left at all" from "one unblushed speck",
+so this is a state, not a number on the band scale. Neither ECPGR nor UPOV names a 100 % state with
+its own reference cultivar, so none is given here either. If question 4 does not apply (see below),
+the reason is that this question was answered "absent".
 
 **Warning — it is not known what the anchors above are a share of.** Neither ECPGR nor UPOV states
 what its over-colour or russet percentage scales are relative to, so it is not known whether the
@@ -167,13 +178,13 @@ apply when *ingesting* one. Two things follow:
 
 - **A source that says nothing about a feature has not said the feature is absent.** A monograph
   silent about russet has not stated the fruit is unrusseted, and one silent about Deckfarbe
-  (blush) has not stated the fruit is unblushed — `Russet` and `Overcolour` have no way to express
-  "not mentioned" versus "stated absent", but `Description`'s fields use
+  (blush) has not stated the fruit is unblushed — `ClosedInterval`'s `Minimal` has no way to
+  express "not mentioned" versus "stated absent", but `Description`'s fields use
   `Described a = DescribedAs (Elicited a) | NotDescribed`, which does. **Record silence as
-  `NotDescribed` for both fields.** Recording it as `NotRusseted` or `NoOvercolour` instead feeds a
-  positive claim of absence into the presence layer that the model treats as an observed
-  Bernoulli outcome — the source never made that claim. Use `NotRusseted` / `NoOvercolour` only
-  when the source explicitly states the fruit carries no russet, or no blush.
+  `NotDescribed` for both fields.** Recording it as `Minimal` instead feeds a positive claim of
+  absence into the presence layer that the model treats as an observed Bernoulli outcome — the
+  source never made that claim. Use `Minimal` only when the source explicitly states the fruit
+  carries no russet, or no blush.
 - **Published blush figures are recorded as stated, with no conversion.** This project's reading is
   that a monograph scoring "the amount of over colour on the skin" already means the visible,
   non-russeted skin question 3 asks a live observer for — the same convention this form uses

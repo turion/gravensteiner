@@ -14,7 +14,7 @@ import Numeric.Units.Dimensional.Prelude (centi, gram, metre, milli, (*~))
 import Numeric.Units.Dimensional.Prelude qualified as Dim ((/))
 
 -- gravensteiner
-import Gravensteiner.Model (Interval, Overcolour (..), Russet (..), getInterval, interval)
+import Gravensteiner.Model (Closed (..), ClosedInterval, Interval, getInterval, interval)
 import Gravensteiner.Model.Scale
 
 {- | Absolute-difference tolerance for every floating-point comparison in this module. None of
@@ -66,12 +66,12 @@ test = describe "Gravensteiner.Model.Scale" $ do
       logWeight ((142 :: Double) *~ gram) `shouldSatisfy` approx (log 142)
 
   describe "round trips" $ do
-    -- Interior values only: 0 is unreachable through 'NoOvercolour'/'NotRusseted' for the two
-    -- coverage features, but 1 is not -- a fully blushed or fully russeted fruit gives
-    -- @logit 1 = +Infinity@, and neither presence layer touches that end. Ground colour has no
-    -- absent constructor at all and is exposed at both ends; what keeps it away from 0 and 1 is the
-    -- collection form's own rule, not the type. So this suite stays strictly inside (0, 1) and
-    -- leaves both boundaries untested -- a known gap, not evidence there is none.
+    -- Ground colour has no absent constructor at all and is exposed at both ends; what keeps it
+    -- away from 0 and 1 is the collection form's own rule, not the type. So this suite stays
+    -- strictly inside (0, 1) for ground colour specifically -- a known gap, not evidence there is
+    -- none. 'ClosedInterval' fields (overcolour, russet) close both ends in the type itself, so
+    -- 'logClosed'/'unLogClosed' are round-tripped below at all three constructors, 'Minimal' and
+    -- 'Maximal' included, not just the interior.
     it "logit/logistic round-trips an interior ground colour" $
       mapM_
         ( \p ->
@@ -80,19 +80,17 @@ test = describe "Gravensteiner.Model.Scale" $ do
         )
         [0.02, 0.5, 0.97]
 
-    it "round-trips an interior overcolour extent" $
-      mapM_
-        ( \p -> case unLogOvercolour (logOvercolour (Overcoloured (mkInterval p))) of
-            Overcoloured iv -> getInterval iv `shouldSatisfy` approx p
-            NoOvercolour -> expectationFailure "expected Overcoloured, got NoOvercolour"
-        )
-        [0.02, 0.5, 0.97]
+    it "logClosed/unLogClosed round-trips Minimal" $
+      unLogClosed (logClosed Minimal) `shouldBe` (Minimal :: ClosedInterval)
 
-    it "round-trips an interior russet extent" $
+    it "logClosed/unLogClosed round-trips Maximal" $
+      unLogClosed (logClosed Maximal) `shouldBe` (Maximal :: ClosedInterval)
+
+    it "logClosed/unLogClosed round-trips an interior Graded value" $
       mapM_
-        ( \p -> case unLogRusset (logRusset (Russeted (mkInterval p))) of
-            Russeted iv -> getInterval iv `shouldSatisfy` approx p
-            NotRusseted -> expectationFailure "expected Russeted, got NotRusseted"
+        ( \p -> case unLogClosed (logClosed (Graded (mkInterval p))) of
+            Graded iv -> getInterval iv `shouldSatisfy` approx p
+            other -> expectationFailure ("expected Graded, got " <> show other)
         )
         [0.02, 0.5, 0.97]
 
@@ -122,21 +120,16 @@ test = describe "Gravensteiner.Model.Scale" $ do
         [-1, 0, 2]
 
   describe "absent coordinates" $ do
-    it "NoOvercolour yields no overcolour coordinate" $
-      logOvercolour NoOvercolour `shouldBe` Nothing
+    it "Minimal has no coordinate to be non-finite" $
+      logClosed (Minimal :: ClosedInterval) `shouldBe` Minimal
 
-    it "NotRusseted yields no russet coordinate" $
-      logRusset NotRusseted `shouldBe` Nothing
+    it "Maximal has no coordinate to be non-finite" $
+      logClosed (Maximal :: ClosedInterval) `shouldBe` Maximal
 
-    it "an interior Overcoloured extent yields a finite overcolour coordinate" $
-      case logOvercolour (Overcoloured (mkInterval 0.3)) of
-        Nothing -> expectationFailure "expected Just, got Nothing"
-        Just v -> v `shouldSatisfy` (not . isInfinite)
-
-    it "an interior Russeted extent yields a finite russet coordinate" $
-      case logRusset (Russeted (mkInterval 0.3)) of
-        Nothing -> expectationFailure "expected Just, got Nothing"
-        Just v -> v `shouldSatisfy` (not . isInfinite)
+    it "an interior Graded extent yields a finite coordinate" $
+      case logClosed (Graded (mkInterval 0.3)) of
+        Graded v -> v `shouldSatisfy` (not . isInfinite)
+        other -> expectationFailure ("expected Graded, got " <> show other)
 
   describe "interval" $ do
     it "rejects the lower endpoint" $

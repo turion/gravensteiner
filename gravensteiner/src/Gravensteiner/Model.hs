@@ -59,14 +59,27 @@ data Person = Person
   , uuid :: UUID
   }
 
-{- | Whether a fruit shows any over colour (blush/flush) at all, mirroring 'Russet': the extent is a
-fraction of __non-russeted__ skin (see 'overcolour' on 'Colouration'), and ECPGR's over colour
-coverage scale makes "Absent, 0 %" its own state with three reference cultivars (Granny Smith,
-Treboux, Kaja) rather than a limiting case of a coverage that happens to be zero. Kept as a
-constructor rather than a zero for the same reason as 'Russet': @logit 0@ is @-Infinity@.
+{- | A @[0,1]@ reading recorded at either closed end without ever forcing 'logit' to an infinity:
+an observer cannot distinguish a coverage of 0 from 0.000001, so "none of this at all" and "all of
+it" are states a pomologist really does record, not points a continuous judgement happens to land
+on. 'Minimal' and 'Maximal' are the two structural endpoints; 'Graded' carries the judged position
+strictly between them, via 'Interval'.
+
+A logit-normal assigns zero density to the endpoints -- @logit 0 = -Infinity@ is not a numerical
+inconvenience a sampler routes around -- so giving them positive probability needs a mixture: a
+discrete component at the boundary plus a continuous one inside. That mixture is what the three
+constructors are: the presence indicator (which endpoint, if any) is directly observed and
+contributes a Bernoulli likelihood with no latent variable, and 'Graded's payload is a second,
+nested Beta-Bernoulli layer inside it -- two such layers in stick-breaking order are a generalized
+Dirichlet, which contains the Dirichlet as a special case.
 -}
-data Overcolour = NoOvercolour | Overcoloured Interval
-  deriving stock (Show, Eq)
+data Closed a = Minimal | Graded a | Maximal
+  deriving stock (Show, Eq, Functor)
+
+{- | A closed-interval reading: 'Minimal', an interior 'Interval' via 'Graded', or 'Maximal'. Used
+at every field recording a coverage or extent that can genuinely reach either end -- see 'Closed'.
+-}
+type ClosedInterval = Closed Interval
 
 {- | The union of UPOV char. 33 and ECPGR Table 19's over-colour pattern states (eight in total,
 after merging the two standards' overlapping vocabulary). Deliberately a plain enum: a simplex over
@@ -146,28 +159,23 @@ data Colouration p = Colouration
   carotenoids. A fruit whose ground colour UPOV would call __"not visible"__ (fully blushed) is
   /not observed/, not a value on the axis.
   -}
-  , overcolour :: p Overcolour
+  , overcolour :: p ClosedInterval
   {- ^ Extent as a fraction of __non-russeted__ skin, not of the whole fruit: the whole-apple
   reading makes visible red approximately @blush * (1 - russet)@, bilinear in two latents, which
-  breaks conjugacy.
+  breaks conjugacy. 'Minimal' is ECPGR's over colour coverage scale's "Absent, 0 %", its own named
+  state with three reference cultivars (Granny Smith, Treboux, Kaja) rather than a limiting case of
+  a coverage that happens to be zero. 'Maximal' is the symmetric fully-overcoloured endpoint;
+  neither ECPGR nor UPOV names a 100 % state with its own reference cultivar, so none is given here
+  either.
   -}
   , overcolourPattern :: p OvercolourPattern
-  {- ^ Deliberately not nested inside 'Overcoloured': pairing the extent with the pattern would stop
-  a source stating one without the other, which is what the per-field phase parameter is for.
+  {- ^ Deliberately not nested inside 'overcolour''s extent: pairing the extent with the pattern
+  would stop a source stating one without the other, which is what the per-field phase parameter
+  is for.
   -}
   }
   deriving stock (Generic)
   deriving anyclass (FunctorB, TraversableB, ApplicativeB, ConstraintsB)
-
-{- | How much of the fruit's surface is russeted, i.e. covered in a dull brown rough finish (UPOV
-*Ad. 35*). ECPGR Table 20 makes "Absent, 0 %" its own state (Lobo), while UPOV folds absent into
-"absent or small" and so does not distinguish it; kept as a constructor for the same reason as
-'Overcolour', to keep a zero away from 'logit'. The extent, when present, is overall coverage --
-ECPGR's Priority-1 aggregate over cheeks, eye basin and stalk cavity, not UPOV's three per-zone
-characteristics.
--}
-data Russet = NotRusseted | Russeted Interval
-  deriving stock (Show, Eq)
 
 -- | Measurable large-scale shape of a fruit.
 data Shape p = Shape
@@ -200,8 +208,16 @@ heightDiameterRatio s = (/) <$> s.height <*> s.diameter
 -- | Everything that can be directly observed about a fruit
 data Appearance p = Appearance
   { colouration :: Colouration p
-  , russet :: p Russet
-  -- ^ Its own field rather than nested in 'Colouration': russet is a texture, not a colouration.
+  , russet :: p ClosedInterval
+  {- ^ Its own field rather than nested in 'Colouration': russet is a texture, not a colouration.
+  How much of the fruit's surface is russeted, i.e. covered in a dull brown rough finish (UPOV
+  *Ad. 35*). 'Minimal' is ECPGR Table 20's "Absent, 0 %" (Lobo), its own named state, while UPOV
+  folds absent into "absent or small" and so does not distinguish it. 'Maximal' is the symmetric
+  fully-russeted endpoint; neither standard names a 100 % state with its own reference cultivar, so
+  none is given here either. 'Graded's extent, when present, is overall coverage -- ECPGR's
+  Priority-1 aggregate over cheeks, eye basin and stalk cavity, not UPOV's three per-zone
+  characteristics.
+  -}
   , shape :: Shape p
   , weight :: p (Mass Double)
   {- ^ The whole fruit, weighed on a kitchen scale. Example: @142 *~ gram@. The reference unit for
