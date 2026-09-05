@@ -36,19 +36,20 @@ import Prelude qualified as P
 import Numeric.Units.Dimensional.Prelude
 
 -- gravensteiner
-import Gravensteiner.Model (Interval (..), Overcolour (..), Russet (..))
+import Gravensteiner.Model (Overcolour (..), Russet (..))
+import Gravensteiner.Model.Interval (Interval, getInterval, unsafeInterval)
 
-{- | Ground colour to the logit scale. 'Interval' is an unguarded @newtype@ over 'Double' with no
-smart constructor, so this is partial at the boundary in the same way 'Prelude.log' is: the house
-rule that no recorded answer is ever exactly 0 or 1 (see the collection form) is what keeps this
-finite in practice, not anything this function checks.
+{- | Ground colour to the logit scale. 'Interval' guards the (0, 1) rule itself -- 'interval' is
+the only way to construct one outside "Gravensteiner.Model.Interval", and it rejects both endpoints
+and any non-finite input -- so this can no longer produce @+-Infinity@ for a validly constructed
+argument.
 -}
 logitInterval :: Interval -> Double
-logitInterval (Interval p) = P.log (p P./ (1 P.- p))
+logitInterval p = P.log (getInterval p P./ (1 P.- getInterval p))
 
 -- | Inverse of 'logitInterval'.
 logisticInterval :: Double -> Interval
-logisticInterval x = Interval (1 P./ (1 P.+ P.exp (P.negate x)))
+logisticInterval x = unsafeInterval (1 P./ (1 P.+ P.exp (P.negate x)))
 
 {- | Overcolour extent to the logit scale, 'Nothing' when the fruit shows no overcolour at all.
 The optionality lives in the type -- "the coordinate is simply absent when the feature is zero" is

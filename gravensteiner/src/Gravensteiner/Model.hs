@@ -7,7 +7,12 @@
 {- | Some types are tagged with a higher kinded datatype phase that can be used to mark parts of the data as being "not observed" via 'Maybe' or 'Observed'.
 Sampling data on the other hand will always produce data, so can use 'Identity' as the phase.
 -}
-module Gravensteiner.Model where
+module Gravensteiner.Model (
+  module Gravensteiner.Model,
+  Interval,
+  getInterval,
+  interval,
+) where
 
 -- uuid
 import Data.UUID (UUID)
@@ -40,6 +45,9 @@ import Numeric.Units.Dimensional.Prelude
 -- delayed-sampling
 import Control.Monad.Bayes.DelayedSampling.Record (Observed (..))
 
+-- gravensteiner
+import Gravensteiner.Model.Interval (Interval, getInterval, interval)
+
 -- | Recorded in serialisation to allow for future migrations
 version :: Int
 version = 1
@@ -50,11 +58,6 @@ data Person = Person
   , phone :: Maybe Text
   , uuid :: UUID
   }
-
--- | A number assumed to be between 0 and 1
-newtype Interval = Interval {getInterval :: Double}
-  deriving stock (Show, Eq, Ord)
-  deriving newtype (Num, Fractional, Floating)
 
 {- | Whether a fruit shows any over colour (blush/flush) at all, mirroring 'Russet': the extent is a
 fraction of __non-russeted__ skin (see 'overcolour' on 'Colouration'), and ECPGR's over colour
@@ -105,9 +108,11 @@ data Colouration p = Colouration
   {- ^ 0 = green to 1 = yellow, read off the __base skin__: the skin that is neither russeted nor
   blushed (see @todo\/russet-is-not-a-colour.md@). __Never exactly 0 or 1__: unlike 'overcolour' and
   'russet', ground colour is a /position/ rather than a coverage, so it has no absent constructor to
-  protect it, 'Interval' is an unguarded @newtype@ over 'Double', and @logit 0@\/@logit 1@ are both
-  infinite. Judge against six calibration anchors and record the number actually judged, strictly
-  between 0 and 1 — the six numbers below are anchor positions along the axis, not a set of
+  protect it -- but 'Interval' guards the (0, 1) rule itself: the only way to construct one outside
+  "Gravensteiner.Model.Interval" is 'interval', which rejects both endpoints and any non-finite
+  input, so a validly constructed value can no longer send @logit@ to infinity. Judge against six
+  calibration anchors and record the number actually judged, strictly between 0 and 1 — the six
+  numbers below are anchor positions along the axis, not a set of
   permitted answers. (This table is duplicated in @docs\/collection-form.md@'s question 5, because
   a Haddock comment cannot render a markdown table; if this table changes, change that copy too.)
 

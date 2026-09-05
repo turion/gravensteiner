@@ -1,6 +1,7 @@
 module Scale (test) where
 
 -- base
+import Data.Maybe (fromJust, isJust)
 import Prelude
 
 -- hspec
@@ -13,7 +14,7 @@ import Numeric.Units.Dimensional.Prelude (centi, gram, metre, milli, (*~))
 import Numeric.Units.Dimensional.Prelude qualified as Dim ((/))
 
 -- gravensteiner
-import Gravensteiner.Model (Interval (..), Overcolour (..), Russet (..))
+import Gravensteiner.Model (Interval, Overcolour (..), Russet (..), getInterval, interval)
 import Gravensteiner.Model.Scale
 
 {- | Absolute-difference tolerance for every floating-point comparison in this module. None of
@@ -27,6 +28,12 @@ tol = 1e-9
 
 approx :: Double -> Double -> Bool
 approx expected actual = abs (actual - expected) < tol
+
+{- | Unwraps a known-interior literal into an 'Interval', for building test fixtures below --
+every literal passed here is safely inside (0, 1).
+-}
+mkInterval :: Double -> Interval
+mkInterval = fromJust . interval
 
 test :: Spec
 test = describe "Gravensteiner.Model.Scale" $ do
@@ -68,14 +75,14 @@ test = describe "Gravensteiner.Model.Scale" $ do
     it "logit/logistic round-trips an interior ground colour" $
       mapM_
         ( \p ->
-            getInterval (logisticInterval (logitInterval (Interval p)))
+            getInterval (logisticInterval (logitInterval (mkInterval p)))
               `shouldSatisfy` approx p
         )
         [0.02, 0.5, 0.97]
 
     it "round-trips an interior overcolour extent" $
       mapM_
-        ( \p -> case unLogOvercolour (logOvercolour (Overcoloured (Interval p))) of
+        ( \p -> case unLogOvercolour (logOvercolour (Overcoloured (mkInterval p))) of
             Overcoloured iv -> getInterval iv `shouldSatisfy` approx p
             NoOvercolour -> expectationFailure "expected Overcoloured, got NoOvercolour"
         )
@@ -83,7 +90,7 @@ test = describe "Gravensteiner.Model.Scale" $ do
 
     it "round-trips an interior russet extent" $
       mapM_
-        ( \p -> case unLogRusset (logRusset (Russeted (Interval p))) of
+        ( \p -> case unLogRusset (logRusset (Russeted (mkInterval p))) of
             Russeted iv -> getInterval iv `shouldSatisfy` approx p
             NotRusseted -> expectationFailure "expected Russeted, got NotRusseted"
         )
@@ -122,11 +129,39 @@ test = describe "Gravensteiner.Model.Scale" $ do
       logRusset NotRusseted `shouldBe` Nothing
 
     it "an interior Overcoloured extent yields a finite overcolour coordinate" $
-      case logOvercolour (Overcoloured (Interval 0.3)) of
+      case logOvercolour (Overcoloured (mkInterval 0.3)) of
         Nothing -> expectationFailure "expected Just, got Nothing"
         Just v -> v `shouldSatisfy` (not . isInfinite)
 
     it "an interior Russeted extent yields a finite russet coordinate" $
-      case logRusset (Russeted (Interval 0.3)) of
+      case logRusset (Russeted (mkInterval 0.3)) of
         Nothing -> expectationFailure "expected Just, got Nothing"
         Just v -> v `shouldSatisfy` (not . isInfinite)
+
+  describe "interval" $ do
+    it "rejects the lower endpoint" $
+      interval 0 `shouldBe` Nothing
+
+    it "rejects the upper endpoint" $
+      interval 1 `shouldBe` Nothing
+
+    it "rejects a value below 0" $
+      interval (-0.1) `shouldBe` Nothing
+
+    it "rejects a value above 1" $
+      interval 1.1 `shouldBe` Nothing
+
+    it "rejects NaN" $
+      interval (0 / 0) `shouldBe` Nothing
+
+    it "rejects positive infinity" $
+      interval (1 / 0) `shouldBe` Nothing
+
+    it "rejects negative infinity" $
+      interval (-1 / 0) `shouldBe` Nothing
+
+    it "accepts an interior value" $
+      interval 0.5 `shouldSatisfy` isJust
+
+    it "accepts the suite's existing interior literals" $
+      mapM_ (\p -> interval p `shouldSatisfy` isJust) [0.02, 0.3, 0.5, 0.97]

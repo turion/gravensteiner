@@ -52,6 +52,9 @@ library
     Gravensteiner.Model
     Gravensteiner.Model.Scale
 
+  other-modules:
+    Gravensteiner.Model.Interval
+
   hs-source-dirs: src
   default-language: GHC2021
 
