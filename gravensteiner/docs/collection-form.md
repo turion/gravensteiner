@@ -13,9 +13,10 @@ poison a corpus that cannot be re-read cheaply.
 > russet, no blush) is recorded by choosing "none"/"absent" — a separate answer, not the number 0
 > — and a feature that entirely covers the skin it is judged against is recorded by choosing
 > "entirely covered", not the number 1. Every other recorded value lies **strictly inside (0,
-> 1)**, however close to either end the judged reading is. This is not a stylistic preference: the
-> numbers feed a logit, and `logit(0)` and `logit(1)` are both infinite. Writing 0 or 1 anywhere
-> below does not mean "very little" or "all of it", it silently breaks the record.
+> 1)**, however close to either end the judged reading is. This is not a stylistic preference: 0
+> and 1 belong only to the two named states above, never to the graded scale between them. Writing
+> 0 or 1 anywhere below does not mean "very little" or "all of it", it silently breaks the record —
+> use the named state instead.
 
 ## 1. Is there any russet at all?
 
@@ -58,12 +59,8 @@ cultivar, so "entirely covered" has no anchor here either — it too belongs to 
 **Answer: absent / some / entirely covered**, judging "some" against the bands below.
 
 *Why worded this way:* neither ECPGR nor UPOV states what its over-colour percentage scale is a
-share *of* — the non-russeted-skin reading below is **this project's own convention**, not a
-reading of either standard. The reason for choosing it is that the visible red you would see over
-the whole fruit is roughly `blush × (1 − russet)` — a product of two unknown quantities, which
-breaks the statistical model that this corpus feeds. Asking for the fraction of non-russeted skin
-instead keeps the two readings independent, so the constraint that keeps the model tractable is
-answered here, in the question's wording, rather than left for someone downstream to fix.
+share *of* — judging blush against the non-russeted skin, rather than the whole apple, is **this
+project's own convention**, not a reading of either standard.
 
 Judge against the same calibration anchors as question 2 (ECPGR Table 17, "Over colour coverage"),
 and record the number you judge, strictly inside (0, 1):
@@ -170,8 +167,7 @@ on account of question 5's answer.
 **No calibration anchor is established for this axis**, for the same reason as question 5. ECPGR
 Table 16's six states below are a **one-dimensional ordinal descriptor** over the old conflated
 green-to-orange axis this project used before splitting ground colour into two — not anchors for a
-carotenoid reading taken alone. Quoted here for reference only, and duplicated in
-`Gravensteiner.Model`'s `GroundColour` haddock — if you change one copy, change the other to match:
+carotenoid reading taken alone. Quoted here for reference only:
 
 | Axis band | ECPGR state | Anchor | Reference cultivar |
 |---|---|---|---|
@@ -208,14 +204,13 @@ it a follow-up question, so the "costs nothing" argument behind question 3's wor
 apply when *ingesting* one. Two things follow:
 
 - **A source that says nothing about a feature has not said the feature is absent.** A monograph
-  silent about russet has not stated the fruit is unrusseted, and one silent about Deckfarbe
-  (blush) has not stated the fruit is unblushed — `ClosedInterval`'s `Minimal` has no way to
-  express "not mentioned" versus "stated absent", but `Description`'s fields use
-  `Described a = DescribedAs (Elicited a) | NotDescribed`, which does. **Record silence as
-  `NotDescribed` for both fields.** Recording it as `Minimal` instead feeds a positive claim of
-  absence into the presence layer that the model treats as an observed Bernoulli outcome — the
-  source never made that claim. Use `Minimal` only when the source explicitly states the fruit
-  carries no russet, or no blush.
+  silent about russet has not stated the fruit is unrusseted; one silent about Deckfarbe (blush)
+  has not stated the fruit is unblushed; and the same goes for the base skin's green and yellow
+  readings — a source that never brings up ground colour has not said the fruit carries no
+  chlorophyll or no carotenoid. **Record silence as "not mentioned", kept separate from "none".**
+  Writing "none" instead states a positive fact the source never gave you — that the fruit is
+  provably free of the feature — so record "none" only when the source explicitly says so, and
+  "not mentioned" whenever the feature simply never comes up.
 - **Published blush figures are recorded as stated, with no conversion.** This project's reading is
   that a monograph scoring "the amount of over colour on the skin" already means the visible,
   non-russeted skin question 3 asks a live observer for — the same convention this form uses

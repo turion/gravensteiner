@@ -128,8 +128,8 @@ single axis this record replaces -- a __one-dimensional ordinal descriptor__, no
 readings -- so they no longer anchor a live reading of either field below. Re-anchoring them onto two
 axes is domain work nobody has done (see @research\/descriptor-standards.md@, the arc's research
 directory); neither 'green' nor 'yellow' states a calibration anchor, and none should be invented.
-(This table is duplicated in @docs\/collection-form.md@, because a Haddock comment cannot render a
-markdown table; if this table changes, change that copy too.)
+(This is the table's canonical home. @docs\/collection-form.md@ quotes the same anchors for the
+observer, in plain form, since a Haddock comment cannot render a markdown table.)
 
 +------+-------------------+--------+---------------------+
 | Axis | ECPGR state       | Anchor | Reference           |
@@ -337,7 +337,16 @@ data Spread a = Spread
   , scaleStrength :: Double
   }
 
--- | Whether a 'Description' stated a value for a field at all.
+{- | Whether a 'Description' stated a value for a field at all -- kept distinct from whether a
+stated value itself asserts presence or absence. A monograph silent about a feature has not
+claimed the feature is absent: recording that silence as a stated 'Minimal' would feed a positive
+claim of absence into the model's presence layer, which treats it as an observed Bernoulli outcome
+the source never gave. 'NotDescribed' is silence, the field was never brought up at all;
+'DescribedAs' is a value the source did state, including a stated absence -- only when the source
+explicitly says the fruit carries none of the feature does 'Minimal' belong inside it. The
+collection form's "Reading from a published description" section gives the observer the same rule
+in their own words: record silence as "not mentioned", kept separate from "none".
+-}
 data Described a = DescribedAs (Elicited a) | NotDescribed
 
 -- | Where a 'Description' comes from, for provenance and citation purposes.
