@@ -80,6 +80,7 @@ exist yet in the workspace.
 | [Findings from `Main.hs` that outlive it](apple-model-cleanups.md) | M | gravensteiner |
 | [Ground colour's two axes — masking and the orange question, revisit once there is data](ground-colour-masking.md) | L | gravensteiner |
 | [Nothing measures whether the model works](no-evaluation-harness.md) | L | gravensteiner |
+| [The blush reading gets noisier as russet rises, and nothing says so](reading-uncertainty.md) | L | gravensteiner |
 
 ## Milestone 4
 
