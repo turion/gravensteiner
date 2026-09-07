@@ -1,12 +1,56 @@
 ---
-status: open
-milestone: [1]
-size: M
-size_evidence: "no cue in source file"
+status: closed
 pkg: [gravensteiner]
+closed_by: "c21c393 docs: add the fruit collection form"
 provenance: "model-v1-review.md, Tier 3 ('appearance and measurement'), the finding 'The chosen appearance parameterisation.'"
 ---
 # The chosen appearance parameterisation
+
+> **Landed.** `Gravensteiner.Model` now has `Colouration p` with `groundColour :: GroundColour p`
+> — two independently phased `ClosedInterval` fields, `green` and `yellow`, rather than one axis
+> (`turion1.4`) — `overcolour :: p ClosedInterval` and `overcolourPattern :: p OvercolourPattern`,
+> nested inside `Appearance p` alongside a zero-**and-one**-inflated `russet :: p ClosedInterval`
+> that stays its own field rather than joining the record — russet is a texture, not a colouration.
+> The reference units are millimetre (height, diameter) and gram (weight). The elicitation
+> protocol — overcolour as a fraction of non-russeted skin — is written into
+> `gravensteiner/docs/collection-form.md`'s wording, and `Gravensteiner.Model.Scale` carries the
+> logit/log coordinate transforms for every feature above: a single `logClosed`/`unLogClosed` pair
+> now covers every `ClosedInterval` field (`overcolour`, `russet`, and ground colour's own `green`
+> and `yellow`) rather than each field having its own named transform (`turion1.3`). The phase
+> parameter this item's body assumed is a separate concern: it landed too, and closes with
+> [nest-phase-inside-colours](nest-phase-inside-colours.md).
+>
+> Not landed: `overcolourPattern` is a schema type, a plain enumeration, not yet a node in the
+> Bayesian network — that is milestone-6 discrete-node work, tracked in
+> [the network design](model-v1-bayesian-network.md).
+>
+> **This arc overrode this item's own "no structural zeros except russet's".**
+> `overcolour` was given the same presence layer as `russet` — at the time, `p Overcolour` with
+> `NoOvercolour | Overcoloured Interval`, since superseded by the shared `p ClosedInterval` (see
+> the correction below) — rather than being a bare `Interval`. Three sources bore
+> on this and disagreed: this item and
+> [the zero-colours diagnosis](apple-model-zero-colours-are-fatal.md) (closed, "Resolved by
+> design", "no colour can be a structural zero") on one side,
+> [russet is not a colour](russet-is-not-a-colour.md) on the other — the last two closed by the
+> *same* commit, `c774c60`, so the contradiction was introduced in one sitting. The maintainer
+> settled it on ECPGR Table 17's evidence: "Absent, 0 %" is a named over-colour state with three
+> reference cultivars, so Granny Smith has no blush rather than very little skin coverage. The
+> shipped schema therefore now **contradicts**
+> [the zero-colours diagnosis](apple-model-zero-colours-are-fatal.md)'s "no colour can be a
+> structural zero" — that is a decision to meet, not a stale agreement to trust.
+>
+> **Correction (`turion1.2`–`turion1.4`): both ends are now closed by the type itself.** `Interval`
+> (`Gravensteiner.Model.Interval`) is built only through the smart constructor `interval :: Double
+> -> Maybe Interval`, which rejects `0`, `1`, both infinities and `NaN` outright; the bare
+> constructor is hidden. Every field that can genuinely reach either endpoint —
+> `overcolour :: p ClosedInterval`, `russet :: p ClosedInterval`, and now `groundColour`'s own
+> `green` and `yellow` fields — carries `ClosedInterval = Closed Interval`,
+> `Closed a = Minimal | Graded a | Maximal`; `Overcoloured` and `Russeted` no longer exist as
+> constructors, and neither does `Overcolour`/`Russet` as a type. `logit 1` is therefore
+> unreachable: `Minimal` and `Maximal` carry no `Interval` payload to take a logit of, so the
+> boundary is absent from the coordinate rather than pinned at an infinity. The round-trip tests in
+> `gravensteiner/test/Scale.hs` do exercise `Minimal` and `Maximal` at every `ClosedInterval` field,
+> `GroundColour`'s `green` and `yellow` included, not only the interior.
 
 ## Why it matters
 

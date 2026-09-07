@@ -5,13 +5,16 @@ closed_by: "c774c60 todo: observation model v1 review, network design, and requi
 ---
 # Russet is a texture, not a colour — and the simplex premise goes with it
 
-> **Adopted.** The v1 schema in `Gravensteiner.Model` already separates russet from `Colours` and
-> drops `brown`, and the appearance parameterisation argued for here is the one chosen — see
-> [the chosen appearance parameterisation](appearance-parameterisation.md) and [the network
-> design](model-v1-bayesian-network.md). What remains open is the naming (`Colours` still holds
-> `yellow`/`red`/`green` rather than `groundColour`/`overcolour`), the pattern categorical, and
-> the elicitation protocol, which now needs to reach the data-collection form and not only the
-> type.
+> **Adopted, and two of the three remaining pieces have now landed.** The v1 schema in
+> `Gravensteiner.Model` already separates russet from `Colours` and drops `brown`, and the
+> appearance parameterisation argued for here is the one chosen — see [the chosen appearance
+> parameterisation](appearance-parameterisation.md) and [the network
+> design](model-v1-bayesian-network.md). The naming landed in `891d41d`: `Colours` is gone,
+> replaced by `Colouration` with `groundColour`/`overcolour` fields. The elicitation protocol
+> landed in `c21c393`, `gravensteiner/docs/collection-form.md`. What remains open is the pattern
+> categorical — `overcolourPattern` is a plain enumeration, not yet a node in the Bayesian
+> network, which needs milestone-6 discrete-node work; see [the network
+> design](model-v1-bayesian-network.md).
 
 ## Why it matters
 

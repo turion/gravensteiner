@@ -51,25 +51,37 @@ All features live on unconstrained scales, chosen so that each one is plausibly 
 transform is the same one that removes the constraint:
 
 ```
-  x = ( logit groundColour          -- green .. yellow
-      , logit overcolour            -- fraction of NON-russeted skin
-      , logit russet                -- only when russet > 0; see below
+  x = ( logit green                 -- GroundColour's chlorophyll axis; only when Graded, see below
+      , logit yellow                -- GroundColour's carotenoid axis; only when Graded, see below
+      , logit overcolour            -- fraction of NON-russeted skin; only when Graded, see below
+      , logit russet                -- only when Graded; see below
       , log weight
       , log maxDiameter
       , log (height / maxDiameter)
-      )                                                       d ~ 6
+      )                                                       d ~ 7
 ```
 
 Being deliberate about this is a design decision in its own right: *features live on a
 transformed scale where they are normal*, and every constrained quantity in the model gets there
-by log or logit. It is recorded once here rather than rediscovered per feature.
+by log or logit. It is recorded once here rather than rediscovered per feature. Ground colour
+contributes two coordinates, not one — `green` and `yellow` are independently phased fields of
+`GroundColour` (see `Gravensteiner.Model`), not two ends of a single axis.
 
-Russet is **zero-inflated**, and the crucial property is that its indicator is *observed* — the
-observer records whether there is any russet at all. So the presence layer contributes a
-Bernoulli likelihood with a Beta prior per cultivar and adds **no latent variable**, and the
-logit-normal coordinate is simply absent (in the phase-parameter sense) when russet is zero.
-This is why the parameterisation kills
-[the fatal-zeros problem](apple-model-zero-colours-are-fatal.md) rather than relocating it.
+Russet and overcolour are both **zero-and-one-inflated**: `overcolour :: p ClosedInterval`
+mirrors `russet :: p ClosedInterval` exactly, and `ClosedInterval = Closed Interval` with
+`Closed a = Minimal | Graded a | Maximal` gives each of them a discrete point mass at *both*
+ends, not only at zero. The crucial property is still that presence is *observed* — the
+observer records which of the three states a field is in, not a continuous judgement that
+happens to land on an endpoint. The presence indicator (which endpoint, if any) contributes
+a Bernoulli likelihood with no latent variable, and `Graded`'s payload is a second, nested
+Beta-Bernoulli layer inside it — two such layers in stick-breaking order are a generalized
+Dirichlet, which contains the Dirichlet as a special case (see `Gravensteiner.Model`'s
+own `Closed` haddock). The corresponding logit-normal coordinate is simply absent
+(in the phase-parameter sense) whenever the field is at either endpoint. This is why the
+parameterisation kills [the fatal-zeros problem](apple-model-zero-colours-are-fatal.md) rather
+than relocating it — though that diagnosis's own text, "no colour can be a structural
+zero", is now itself contradicted by `overcolour`'s presence layer; see [the chosen
+appearance parameterisation](appearance-parameterisation.md) for the decision that overrode it.
 
 Categorical features (`overcolourPattern`, and later shape class) are Dirichlet-categorical per
 cultivar and sit outside the Gaussian block entirely.

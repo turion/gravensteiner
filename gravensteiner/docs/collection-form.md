@@ -1,0 +1,247 @@
+# Collection form: recording one fruit's appearance
+
+This is the form a pomologist reads with an apple in hand. It covers **one fruit**. Answer the
+nine questions in the order given — several later questions refer back to an earlier answer, and
+answering out of order leaves you guessing at a definition you have not read yet.
+
+Anchors below (named cultivars, percentage bands) are quoted from UPOV TG/14/10 and the 2022 ECPGR
+Malus descriptors — see each question for the specific table. Where a state has no reference
+cultivar in that source, this form says so rather than supplying one: an invented anchor would
+poison a corpus that cannot be re-read cheaply.
+
+> **No answer on this form is ever exactly 0 or 1.** A feature that is genuinely absent (no
+> russet, no blush) is recorded by choosing "none"/"absent" — a separate answer, not the number 0
+> — and a feature that entirely covers the skin it is judged against is recorded by choosing
+> "entirely covered", not the number 1. Every other recorded value lies **strictly inside (0,
+> 1)**, however close to either end the judged reading is. This is not a stylistic preference: 0
+> and 1 belong only to the two named states above, never to the graded scale between them. Writing
+> 0 or 1 anywhere below does not mean "very little" or "all of it", it silently breaks the record —
+> use the named state instead.
+
+> **Any question may be answered "not observed"** when you cannot judge it confidently — not only
+> at the specific junctures below where a question has no subject at all. "Not observed" is not
+> the same as "none"/"absent": "none" asserts a positive fact about the fruit — the feature is
+> genuinely not there — while "not observed" records that no reading was taken, the same
+> distinction the "Reading from a published description" section below draws for a source's
+> silence. Declining is better than guessing: a judged number you do not trust is worse for the
+> corpus than a recorded absence of one, because nothing downstream can tell the two apart
+> afterwards. This is not licence to skip a reading the form insists on regardless of difficulty —
+> see question 6's note.
+
+## 1. Is there any russet at all?
+
+Russet is a dull, brown, rough, corky patch on the skin (UPOV *Ad. 35*) — it is a texture that
+*overlays* colour, not a shade of it. Look at the stalk cavity, the cheeks and the eye basin
+together.
+
+**Answer: none / some / entirely covered.**
+
+- **None** → skip question 2 and go straight to question 3. Non-russeted skin is the whole fruit's
+  surface.
+- **Entirely covered** → skip question 2. There is no non-russeted skin at all: an observer
+  cannot distinguish "no gap at all" from "one hairline gap left", so this is its own recorded
+  answer, not the number 1. With no non-russeted skin left to judge, questions 3, 5 and 6 have no
+  subject either: record all three as **not observed** for this fruit, and skip question 4 as a
+  result — question 4 is conditional on question 3, and "not observed" is not "absent".
+- **Some** → answer question 2.
+
+## 2. If there is russet, how much?
+
+Judge the overall coverage — cheeks, eye basin and stalk cavity together, as one average — and
+record the number you judge, strictly inside (0, 1). Use these bands (ECPGR Table 20, "Overall
+russet coverage") as calibration anchors to judge against, not as a set of six permitted answers:
+
+| You see about... | ECPGR band | Anchor | Reference cultivar |
+|---|---|---|---|
+| 1-10 % | Very low | 0.055 | |
+| 11-25 % | Low | 0.18 | Cox's Orange Pippin |
+| around 50 % | Medium | 0.50 | Boskoop |
+| around 75 % | High | 0.75 | Zabergäu Renette |
+| over 90 % | Very high | 0.95 | Egremont Russet, Canada Gris, Gris Braibant, Brownlee's Russet |
+
+("Absent, 0 %" is Lobo's band — but that answer belongs to question 1, not here; a "none" at
+question 1 already recorded it. Neither standard names a 100 % band with its own reference
+cultivar, so "entirely covered" has no anchor here either — it too belongs to question 1.)
+
+## 3. How much of the *non-russeted* skin carries a red blush (overcolour)?
+
+**Ask this as a fraction of the skin that is not russeted — not of the whole apple.** If question
+1/2 found russet, exclude that russeted area first and judge the blush against what remains. If
+question 1 was answered "entirely covered", there is no remains to judge: skip this question and
+record it, along with questions 5 and 6, as **not observed** — see question 1.
+
+**Answer: absent / some / entirely covered**, judging "some" against the bands below.
+
+*Why worded this way:* neither ECPGR nor UPOV states what its over-colour percentage scale is a
+share *of* — judging blush against the non-russeted skin, rather than the whole apple, is **this
+project's own convention**, not a reading of either standard.
+
+Judge against the same calibration anchors as question 2 (ECPGR Table 17, "Over colour coverage"),
+and record the number you judge, strictly inside (0, 1):
+
+| You see about... | ECPGR band | Anchor | Reference cultivar |
+|---|---|---|---|
+| (none) | Absent, 0 % | *absent* (see below) | Granny Smith |
+| 1-10 % | Very low | 0.055 | |
+| 11-25 % | Low | 0.18 | Cox's Orange Pippin |
+| around 50 % | Medium | 0.50 | |
+| around 75 % | High | 0.75 | Spartan |
+| over 90 % | Very high | 0.95 | |
+
+If there is no blush at all, record **absent** as its own answer (mirroring question 1), not 0 %.
+If the whole non-russeted skin is blushed, record **entirely covered** as its own answer, not
+100 % — an observer cannot distinguish "no unblushed skin left at all" from "one unblushed speck",
+so this is a state, not a number on the band scale. Neither ECPGR nor UPOV names a 100 % state with
+its own reference cultivar, so none is given here either. If question 4 does not apply (see below),
+the reason is that this question was answered "absent".
+
+**Warning — it is not known what the anchors above are a share of.** Neither ECPGR nor UPOV states
+what its over-colour or russet percentage scales are relative to, so it is not known whether the
+bands and cultivars above (both here and in question 2) already reflect non-russeted skin
+(matching this question) or the whole fruit (not matching it) — there is no published precedent
+either way. On a barely russeted cultivar this is close enough not to matter — Granny Smith and
+Spartan are safe anchors as given. On a russeted one it might not be: **Cox's Orange Pippin** is
+*both* Low russet (11-25 %) *and* Low overcolour (11-25 %), which makes it exactly the cultivar
+where a mismatch between the two readings would matter most — but with both standards silent,
+there is no known direction to correct it in. Judge the actual apple in front of you against the
+bands above as calibration only; do not read "Cox's Orange Pippin = Low" as telling you the number
+for this question — no correction is computable from these anchors.
+
+## 4. If question 3 was not "absent": what pattern is the blush?
+
+Skip this question entirely if question 3 was answered "absent" — a fruit with no blush has no
+pattern, and none of the eight states below means "no blush".
+
+Choose one of the eight states (the union of UPOV char. 33 and ECPGR Table 19's vocabulary):
+
+| State | Reference cultivar |
+|---|---|
+| Only solid flush | Richard Delicious (ECPGR); Bay 3484, Red Jonaprince, Telamon (UPOV) |
+| Solid flush with stripes | **Gravensteiner** (ECPGR); Charlotte, Cripps Pink, among others (UPOV) |
+| Only stripes (no flush) | Dülmener Rosenapfel |
+| Flushed and mottled | Dalinbel, Scifresh |
+| Flushed, striped and mottled | Elstar, Pinova, Topaz, among others |
+| Marbled | Karneval |
+| Mottled | *no reference cultivar in the source — none is given here either* |
+| Washed out | *no reference cultivar in the source — none is given here either* |
+
+## 5. What is the base skin's green (chlorophyll) reading?
+
+Read this **only off the base skin — the patch of skin that is neither russeted (question 1/2) nor
+blushed (question 3/4)**. This is why it and question 6 are asked after the four colouration
+questions above: you cannot pick out the base skin until you know which parts of the skin are
+excluded as russeted or blushed.
+
+Ground colour is **two separate readings, not one axis**: chlorophyll degrading and carotenoid
+being revealed do not move in lockstep, so a cultivar that goes deep green to deep gold and a paler
+one that goes green to near-cream would be indistinguishable on a single green-to-orange axis. This
+question is chlorophyll only; question 6 asks carotenoid separately.
+
+**Answer: none / some / entirely.**
+
+- **None** → there is no chlorophyll left in the base skin at all. Its own recorded answer, not the
+  number 0.
+- **Entirely** → the base skin is as green as chlorophyll gets — the fully green extreme. Its own
+  recorded answer, not the number 1.
+- **Some** → record the number you judge, strictly inside (0, 1), for where between those two
+  extremes the base skin's green reads.
+
+**No calibration anchor is established for this axis.** ECPGR Table 16 describes ground colour as a
+single ordinal state (quoted under question 6 below), not as a chlorophyll extent judged on its own
+— there are no published anchors for a standalone green axis, and inventing one would poison the
+corpus the same way an invented reference cultivar would. Record your own independent judgement.
+
+A fruit blushed so completely that the base skin cannot be seen at all (what UPOV calls ground
+colour "not visible") is not a value on this axis. Record **both this question and question 6** as
+**not observed** for this fruit.
+
+A fruit whose skin is entirely covered by russet (question 1) has no base skin either, for the same
+reason. Record **both this question and question 6** as **not observed** for this fruit.
+
+## 6. What is the base skin's yellow (carotenoid) reading?
+
+Read this off the same base skin as question 5. This question is carotenoid only, independent of
+question 5's green reading.
+
+**Always answer this question, even if question 5 read strongly green ("entirely").** Chlorophyll
+masks carotenoid, so a yellow reading taken under high green is arguably a ripeness prediction
+rather than an observation. Recording it as absent whenever question 5 reads high green was
+considered and rejected: whether the masking is a real problem for the corpus is something to
+settle empirically once there is data, not by construction now — so this question is never skipped
+on account of question 5's answer. That is a statement about difficulty, not about possibility:
+reserve "not observed" for a reading you genuinely cannot make, not for one that is merely harder
+to interpret under high green.
+
+**Answer: none / some / entirely.**
+
+- **None** → there is no carotenoid revealed in the base skin at all. Its own recorded answer, not
+  the number 0.
+- **Entirely** → the base skin is as yellow as carotenoid gets. Its own recorded answer, not the
+  number 1. **This axis does not currently separate yellow from orange**: what ECPGR calls
+  "(Yellow) - Orange" has no representation of its own here, so an orange base skin is recorded the
+  same way, as "entirely" — a limitation of the axis as it stands, not a claim that the two are the
+  same colour.
+- **Some** → record the number you judge, strictly inside (0, 1).
+
+**No calibration anchor is established for this axis**, for the same reason as question 5. ECPGR
+Table 16's six states below are a **one-dimensional ordinal descriptor** over the old conflated
+green-to-orange axis this project used before splitting ground colour into two — not anchors for a
+carotenoid reading taken alone. Quoted here for reference only, with no axis-band number or project
+anchor reproduced: ECPGR numbers these same states the other way round (Yellow is 1, Green is 5),
+and giving them a second, reversed number here invited exactly that mix-up.
+
+| ECPGR state | Reference cultivar |
+|---|---|
+| Green | Granny Smith |
+| Whitish green | |
+| Green yellow | Cox's Orange Pippin |
+| Whitish yellow | |
+| Yellow | Golden Delicious |
+| (Yellow) - Orange | |
+
+A fruit blushed so completely that the base skin cannot be seen at all (what UPOV calls ground
+colour "not visible") is not a value on this axis. Record **both this question and question 5** as
+**not observed** for this fruit.
+
+A fruit whose skin is entirely covered by russet (question 1) has no base skin either, for the same
+reason. Record **both this question and question 5** as **not observed** for this fruit.
+
+## 7. Height, in millimetres
+
+Measure at the tallest point of the flesh — not along the polar axis through the stalk cavity and
+calyx basin (UPOV TG/14 characteristic 23). Record in **millimetres**, e.g. `58`.
+
+## 8. Diameter, in millimetres
+
+Measure at the widest point — the fruit's equator (UPOV TG/14 characteristic 24). "Widest" names
+where you take the caliper reading, not a maximum over repeated measurements. Record in
+**millimetres**, e.g. `71`.
+
+## 9. Weight, in grams
+
+Weigh the whole fruit on a kitchen scale. Record in **grams**, e.g. `142`.
+
+## Reading from a published description
+
+A monograph or other published description is a fixed text, not a live observer — you cannot ask
+it a follow-up question, so a silence in it cannot be resolved the way a live observer's could. Two
+things follow:
+
+- **A source that says nothing about a feature has not said the feature is absent.** A monograph
+  silent about russet has not stated the fruit is unrusseted; one silent about Deckfarbe (blush)
+  has not stated the fruit is unblushed; and the same goes for the base skin's green and yellow
+  readings — a source that never brings up ground colour has not said the fruit carries no
+  chlorophyll or no carotenoid. **Record silence as "not mentioned", kept separate from "none".**
+  Writing "none" instead states a positive fact the source never gave you — that the fruit is
+  provably free of the feature — so record "none" only when the source explicitly says so, and
+  "not mentioned" whenever the feature simply never comes up.
+- **Published blush figures are recorded as stated, with no conversion.** This project's reading is
+  that a monograph scoring "the amount of over colour on the skin" already means the visible,
+  non-russeted skin question 3 asks a live observer for — the same convention this form uses
+  throughout. That is **this project's reading of an unstated convention, not a sourced fact**:
+  neither ECPGR nor UPOV says what a published over-colour or russet percentage is relative to (see
+  question 3's warning above). Recording as stated also fits a fact the standards *do* state: ECPGR
+  §2.13 scores russet as an average over "at least 12 representative fruits", so a published figure
+  is a **population average**, not a single fruit's reading — a population can legitimately show
+  more total coverage than any one fruit in it, so there is no per-fruit bound for a stated figure
+  to violate, and nothing to convert or clamp.

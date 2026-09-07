@@ -59,7 +59,11 @@ for. Why `-Werror` sits behind a flag instead of being always on, and which warn
 - `cabal run gravensteiner` **crashes** with `System.Random.MWC.Distributions.categorical: bad
   weights!`. This is known, diagnosed in `todo/apple-model-zero-colours-are-fatal.md`, and the
   maintainer has said not to worry about it — it dies with `Main.hs`.
-- `gravensteiner` has a `library` and an `executable` and **no `test-suite`**. That is the gap
-  tracked in `todo/no-evaluation-harness.md`, not an oversight to route around. `delayed-sampling`
-  does have one, and it is the model for style.
+- `gravensteiner` has a `library`, an `executable` and now a `test-suite` (`gravensteiner-test`,
+  `gravensteiner/test/Spec.hs` and `gravensteiner/test/Scale.hs`). What it still lacks — the
+  conjugate round-trip equality test and a finite-weights check over a seed corpus — is tracked in
+  `todo/no-evaluation-harness.md`, not an oversight to route around.
+- `gravensteiner/docs/collection-form.md` is the observer-facing data-collection form: the
+  nine-question protocol used to elicit an apple's appearance, including the "fraction of
+  non-russeted skin" wording that keeps the model conjugate.
 - `todo/README.md` names the **next planning session** at the top. Start there.

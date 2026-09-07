@@ -9,12 +9,14 @@ closed_by: "7dc5d7f todo: clean up completed items and align priorities"
 > **Now has a concrete client, and a concrete shape.** The v1 schema in
 > `Gravensteiner.Model` answers the `Main.hs` FIXME below directly: `Fruit`, `Collection`, `Tree` and
 > `Judgement` all take a higher-kinded phase parameter, so the phase *is* the partial-observation
-> mechanism. Two refinements since: the phase should be `Observed` rather than `Maybe`, so that "not
-> mentioned" and "not measurable" are distinguishable (see
-> [mention-vs-not-measured-deferred](mention-vs-not-measured-deferred.md)), and `Fruit.colours` is `p Colours`, which
-> makes the colour fields all-or-nothing where a literature source typically gives ground colour and
-> omits blush — see [nest the phase inside `Colours`](nest-phase-inside-colours.md). So the data side is settled in shape and needs
-> two fixes; what this item is now about is the **`Variable` side**: mapping a record of priors to a
+> mechanism. One refinement since is done: the colour fields nest the phase one level down, so a
+> literature source that gives ground colour and omits blush is now recordable as such — see [nest
+> the phase inside `Colours`](nest-phase-inside-colours.md), closed by `891d41d`. One refinement
+> remains: the phase should be `Observed` rather than `Maybe`, so that "not mentioned" and "not
+> measurable" are distinguishable (see
+> [mention-vs-not-measured-deferred](mention-vs-not-measured-deferred.md)). So the data side is
+> settled in shape and needs one fix; what this item is now about is the **`Variable` side**:
+> mapping a record of priors to a
 >
 > **`Observed`'s three-way split is collapsed to two for now**, `Observed a | NotObserved` — nothing
 > implements the mention likelihood that would make `NotMentioned` behave differently from
