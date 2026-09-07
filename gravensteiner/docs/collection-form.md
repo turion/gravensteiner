@@ -18,6 +18,16 @@ poison a corpus that cannot be re-read cheaply.
 > 0 or 1 anywhere below does not mean "very little" or "all of it", it silently breaks the record —
 > use the named state instead.
 
+> **Any question may be answered "not observed"** when you cannot judge it confidently — not only
+> at the specific junctures below where a question has no subject at all. "Not observed" is not
+> the same as "none"/"absent": "none" asserts a positive fact about the fruit — the feature is
+> genuinely not there — while "not observed" records that no reading was taken, the same
+> distinction the "Reading from a published description" section below draws for a source's
+> silence. Declining is better than guessing: a judged number you do not trust is worse for the
+> corpus than a recorded absence of one, because nothing downstream can tell the two apart
+> afterwards. This is not licence to skip a reading the form insists on regardless of difficulty —
+> see question 6's note.
+
 ## 1. Is there any russet at all?
 
 Russet is a dull, brown, rough, corky patch on the skin (UPOV *Ad. 35*) — it is a texture that
@@ -158,7 +168,9 @@ masks carotenoid, so a yellow reading taken under high green is arguably a ripen
 rather than an observation. Recording it as absent whenever question 5 reads high green was
 considered and rejected: whether the masking is a real problem for the corpus is something to
 settle empirically once there is data, not by construction now — so this question is never skipped
-on account of question 5's answer.
+on account of question 5's answer. That is a statement about difficulty, not about possibility:
+reserve "not observed" for a reading you genuinely cannot make, not for one that is merely harder
+to interpret under high green.
 
 **Answer: none / some / entirely.**
 
