@@ -12,21 +12,29 @@ module Gravensteiner.Model.Interval (
   unsafeInterval,
 ) where
 
-{- | A number known to lie strictly between 0 and 1, e.g. a probability or a coverage fraction.
-The only publicly reachable way to construct one is 'interval'.
--}
-newtype Interval = Interval {getInterval :: Double}
-  deriving stock (Show, Eq, Ord)
-  deriving newtype (Num, Fractional, Floating)
+{- | A number known to lie strictly between 0 and 1, e.g. a probability or a coverage fraction --
+backed by 'Rational' rather than 'Double', because every value the observer records is an exact
+reading, never a floating-point approximation of one. The only publicly reachable way to construct
+one is 'interval'.
 
-{- | The smart constructor: 'Nothing' for anything that is not strictly between 0 and 1, including
-@NaN@ and both infinities. Every 'Interval' eventually feeds @logit@ (see
+/No/ 'Floating' instance is derived, and none can be: 'Rational' has none, @logit@ of a rational is
+transcendental, and no exact representation of it exists even in principle. The logit\/logistic
+coordinate transform in "Gravensteiner.Model.Scale" is where the unavoidable 'Double' step happens.
+-}
+newtype Interval = Interval {getInterval :: Rational}
+  deriving stock (Show, Eq, Ord)
+  deriving newtype (Num, Fractional)
+
+{- | The smart constructor: 'Nothing' for anything that is not strictly between 0 and 1. There is
+no @isNaN@\/@isInfinite@ guard here any more -- not because the check became unneeded, but because
+it became /ill-typed/: 'Rational' has no @NaN@ and no infinity to admit in the first place, so the
+old guard would need a 'RealFloat' constraint this type can no longer satisfy. The strict @0 < x <
+1@ test is the whole check now. Every 'Interval' eventually feeds @logit@ (see
 "Gravensteiner.Model.Scale"), which is undefined at both endpoints, so this rejects them rather
 than silently producing an infinite coordinate downstream.
 -}
-interval :: Double -> Maybe Interval
+interval :: Rational -> Maybe Interval
 interval x
-  | isNaN x || isInfinite x = Nothing
   | x <= 0 || x >= 1 = Nothing
   | otherwise = Just (Interval x)
 
@@ -35,8 +43,10 @@ paying for the check -- currently only 'Gravensteiner.Model.Scale.logisticInterv
 fixed epsilon literals it can prove interior by inspection, /not/ for the logistic function's raw
 output: in 'Double', @1 \/ (1 + exp (-x))@ saturates to exactly @0.0@ or @1.0@ for large enough
 @|x|@, so "the logistic function's range is always (0, 1) for finite input" is false in floating
-point and is not a justification this constructor can rely on. Exported from this module only:
-"Gravensteiner.Model" does not re-export it, so every other consumer must go through 'interval'.
+point and is not a justification this constructor can rely on -- even once the saturated 'Double'
+is converted to an exact 'Rational', it is exactly @0@ or @1@, not merely close. Exported from this
+module only: "Gravensteiner.Model" does not re-export it, so every other consumer must go through
+'interval'.
 -}
-unsafeInterval :: Double -> Interval
+unsafeInterval :: Rational -> Interval
 unsafeInterval = Interval

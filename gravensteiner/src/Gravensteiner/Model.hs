@@ -211,12 +211,13 @@ data Colouration p = Colouration
 
 -- | Measurable large-scale shape of a fruit.
 data Shape p = Shape
-  { height :: p (Length Double)
+  { height :: p (Length Rational)
   {- ^ Taken at the tallest point of the flesh, not the polar axis through the stalk cavity and calyx basin, per UPOV TG/14
   characteristic 23. Units come from "Numeric.Units.Dimensional.SIUnits" via the re-exporting prelude, e.g. @58 *~ milli metre@.
-  The reference unit for the log scale this feeds is the __millimetre__.
+  The reference unit for the log scale this feeds is the __millimetre__. An exact 'Rational' reading,
+  like every other value the observer records -- see "Gravensteiner.Model.Interval"'s haddock for why.
   -}
-  , diameter :: p (Length Double)
+  , diameter :: p (Length Rational)
   {- ^ Taken at the widest point, the fruit's equator (UPOV TG/14 characteristic 24); "maximum" here
   names the caliper site, not a maximum over repeated measurements. E.g. @71 *~ milli metre@. The
   reference unit for the log scale this feeds is the __millimetre__.
@@ -234,7 +235,7 @@ To apply this to a recorded @Shape Observed@, first convert with
 @bmap (\\o -> case o of Observed a -> Just a; NotObserved -> Nothing) s@ to get a @Shape Maybe@;
 a partially measured fruit then yields 'Nothing' rather than a type error.
 -}
-heightDiameterRatio :: (Functor p, Applicative p) => Shape p -> p (Dimensionless Double)
+heightDiameterRatio :: (Functor p, Applicative p) => Shape p -> p (Dimensionless Rational)
 heightDiameterRatio s = (/) <$> s.height <*> s.diameter
 
 -- | Everything that can be directly observed about a fruit
@@ -251,9 +252,10 @@ data Appearance p = Appearance
   characteristics.
   -}
   , shape :: Shape p
-  , weight :: p (Mass Double)
+  , weight :: p (Mass Rational)
   {- ^ The whole fruit, weighed on a kitchen scale. Example: @142 *~ gram@. The reference unit for
-  the log scale this feeds is the __gram__.
+  the log scale this feeds is the __gram__. An exact 'Rational' reading, like every other value the
+  observer records.
   -}
   }
   deriving stock (Generic)

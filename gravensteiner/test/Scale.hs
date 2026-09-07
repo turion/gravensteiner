@@ -8,14 +8,13 @@ import Prelude
 -- hspec
 import Test.Hspec
 
--- dimensional. Deliberately not the wholesale prelude import: it hides 'log', 'exp', '(-)' and
--- '(/)', and these tests mix dimensional's '/' in @h / d@ with ordinary 'Double' subtraction and
--- @log 10@. So only the unit values and '(*~)' come in unqualified, and '(/)' comes in qualified.
+-- dimensional. Deliberately not the wholesale prelude import: it hides 'log', 'exp' and '(-)',
+-- and this module mixes those with ordinary 'Double' subtraction and @log 10@. So only the unit
+-- values and '(*~)' come in.
 import Numeric.Units.Dimensional.Prelude (centi, gram, metre, milli, (*~))
-import Numeric.Units.Dimensional.Prelude qualified as Dim ((/))
 
 -- gravensteiner
-import Gravensteiner.Model (Closed (..), ClosedInterval, GroundColour (..), Interval, getInterval, interval)
+import Gravensteiner.Model (Closed (..), ClosedInterval, GroundColour (..), Interval, Shape (..), getInterval, heightDiameterRatio, interval)
 import Gravensteiner.Model.Scale
 
 {- | Absolute-difference tolerance for every floating-point comparison in this module. None of
@@ -31,41 +30,52 @@ approx :: Double -> Double -> Bool
 approx expected actual = abs (actual - expected) < tol
 
 {- | Unwraps a known-interior literal into an 'Interval', for building test fixtures below --
-every literal passed here is safely inside (0, 1).
+every literal passed here is safely inside (0, 1). Decimal literals such as @0.02@ are exact as
+'Rational' (they go through 'fromRational'), so the suite's existing interior values need no
+re-tuning for the switch from 'Double'.
 -}
-mkInterval :: Double -> Interval
+mkInterval :: Rational -> Interval
 mkInterval = fromJust . interval
 
 {- | The 'logClosed'\/'unLogClosed' round trip, checked at whichever constructor it is given:
-'Minimal' and 'Maximal' round-trip exactly (no 'Double' payload to drift), and a 'Graded'
-payload round-trips within 'tol'. The one predicate every round-trip test below drives, so the
-check is stated once rather than once per constructor and again per 'GroundColour' field.
+'Minimal' and 'Maximal' round-trip exactly (no payload to drift), and a 'Graded' payload
+round-trips within 'tol' -- the round trip is 'Rational' -> 'Double' -> 'Rational', so it still
+loses precision in the 'Double' leg and stays a tolerance comparison, never '(==)'. The one
+predicate every round-trip test below drives, so the check is stated once rather than once per
+constructor and again per 'GroundColour' field.
 -}
 roundTripsClosed :: ClosedInterval -> Expectation
 roundTripsClosed Minimal = unLogClosed (logClosed Minimal) `shouldBe` (Minimal :: ClosedInterval)
 roundTripsClosed Maximal = unLogClosed (logClosed Maximal) `shouldBe` (Maximal :: ClosedInterval)
 roundTripsClosed (Graded iv) = case unLogClosed (logClosed (Graded iv)) of
-  Graded iv' -> getInterval iv' `shouldSatisfy` approx (getInterval iv)
+  Graded iv' -> fromRational (getInterval iv') `shouldSatisfy` approx (fromRational (getInterval iv))
   other -> expectationFailure ("expected Graded, got " <> show other)
 
 test :: Spec
 test = describe "Gravensteiner.Model.Scale" $ do
   describe "unit invariance" $ do
-    -- The canonical diameter from this module's own haddocks.
-    let d = (58 :: Double) *~ milli metre
-        h = (70 :: Double) *~ milli metre
+    -- The canonical diameter from this module's own haddocks, as an exact reading -- 'logLength'
+    -- now takes its 'Quantity' argument as 'Rational' (see part (c) of claude9).
+    let d = (58 :: Rational) *~ milli metre
+        h = (70 :: Rational) *~ milli metre
 
     it "shifts the length coordinate by log 10, centimetre minus millimetre" $
       (logLength (centi metre) d - logLength (milli metre) d)
         `shouldSatisfy` approx (negate (log 10))
 
     it "leaves the shape coordinate invariant under the length reference unit" $ do
-      let diffMilli = logLength (milli metre) h - logLength (milli metre) d
-          diffCenti = logLength (centi metre) h - logLength (centi metre) d
-          shapeVal = logShape (h Dim./ d)
-      diffCenti `shouldSatisfy` approx diffMilli
-      shapeVal `shouldSatisfy` approx diffMilli
-      shapeVal `shouldSatisfy` approx diffCenti
+      -- Same fruit, read off in millimetres for one 'Shape' and centimetres for the other --
+      -- not the same literal repeated under a different name, so agreement here is a real claim.
+      -- 'heightDiameterRatio' is unit-invariant by construction (a ratio of two lengths), and its
+      -- 'Rational' result makes the comparison exact: no tolerance to hide a real disagreement
+      -- behind.
+      let shapeMilli = Shape {height = Identity h, diameter = Identity d}
+          shapeCenti =
+            Shape
+              { height = Identity ((7.0 :: Rational) *~ centi metre)
+              , diameter = Identity ((5.8 :: Rational) *~ centi metre)
+              }
+      runIdentity (heightDiameterRatio shapeMilli) `shouldBe` runIdentity (heightDiameterRatio shapeCenti)
 
   describe "default units" $ do
     -- These pin the reference unit itself, unlike the round trips below: a round trip still
@@ -73,10 +83,10 @@ test = describe "Gravensteiner.Model.Scale" $ do
     -- the inverse absorbs the change. Comparing against 'log' of the bare magnitude, computed
     -- independently of the transform's own unit choice, is what catches that drift.
     it "logDiameter reads its argument in millimetres" $
-      logDiameter ((58 :: Double) *~ milli metre) `shouldSatisfy` approx (log 58)
+      logDiameter ((58 :: Rational) *~ milli metre) `shouldSatisfy` approx (log 58)
 
     it "logWeight reads its argument in grams" $
-      logWeight ((142 :: Double) *~ gram) `shouldSatisfy` approx (log 142)
+      logWeight ((142 :: Rational) *~ gram) `shouldSatisfy` approx (log 142)
 
   describe "round trips" $ do
     -- 'ClosedInterval' fields (overcolour, russet, and now ground colour's own 'green' and
@@ -86,10 +96,12 @@ test = describe "Gravensteiner.Model.Scale" $ do
     -- own; 'logitInterval'/'logisticInterval' below exercise the interior payload shared by that
     -- field and by every 'Graded' value.
     it "logit/logistic round-trips an interior Interval value" $
+      -- Still 'Rational' -> 'Double' -> 'Rational', so still a tolerance comparison: both sides
+      -- are converted to 'Double' with 'fromRational' before 'approx' sees them, never '(==)'.
       mapM_
         ( \p ->
-            getInterval (logisticInterval (logitInterval (mkInterval p)))
-              `shouldSatisfy` approx p
+            fromRational (getInterval (logisticInterval (logitInterval (mkInterval p))))
+              `shouldSatisfy` approx (fromRational p)
         )
         [0.02, 0.5, 0.97]
 
@@ -169,11 +181,6 @@ test = describe "Gravensteiner.Model.Scale" $ do
         (\x -> logWeight (unLogWeight x) `shouldSatisfy` approx x)
         [-2, 0, 5]
 
-    it "log/exp round-trips a height/diameter ratio" $
-      mapM_
-        (\x -> logShape (unLogShape x) `shouldSatisfy` approx x)
-        [-1, 0, 2]
-
   describe "absent coordinates" $ do
     it "Minimal has no coordinate to be non-finite" $
       logClosed (Minimal :: ClosedInterval) `shouldBe` Minimal
@@ -187,6 +194,11 @@ test = describe "Gravensteiner.Model.Scale" $ do
         other -> expectationFailure ("expected Graded, got " <> show other)
 
   describe "interval" $ do
+    -- No NaN/infinity cases here any more: 'interval' takes a 'Rational' argument now, and
+    -- 'Rational' has neither -- @0 / 0@ or @1 / 0@ as a 'Rational' does not evaluate to a sentinel
+    -- value the way it does for 'Double', it throws (Ratio's zero-denominator error) the moment the
+    -- comparison forces it. The old guard is gone from the implementation for the same reason (see
+    -- "Gravensteiner.Model.Interval"'s haddock), so there is nothing left here to exercise.
     it "rejects the lower endpoint" $
       interval 0 `shouldBe` Nothing
 
@@ -198,15 +210,6 @@ test = describe "Gravensteiner.Model.Scale" $ do
 
     it "rejects a value above 1" $
       interval 1.1 `shouldBe` Nothing
-
-    it "rejects NaN" $
-      interval (0 / 0) `shouldBe` Nothing
-
-    it "rejects positive infinity" $
-      interval (1 / 0) `shouldBe` Nothing
-
-    it "rejects negative infinity" $
-      interval (-1 / 0) `shouldBe` Nothing
 
     it "accepts an interior value" $
       interval 0.5 `shouldSatisfy` isJust
